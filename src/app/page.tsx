@@ -1,103 +1,187 @@
-import Image from "next/image";
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Package, Users, FileText, Calculator, Gavel, Truck, Ship } from 'lucide-react'
 
 export default function Home() {
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      {/* Hero Section */}
+      <div className="container mx-auto px-4 py-16">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
+            Sistema de Gestión de
+            <span className="text-blue-600"> Licitaciones</span>
+          </h1>
+          <p className="mt-6 text-lg leading-8 text-gray-600 max-w-2xl mx-auto">
+            Sistema integral para la gestión completa del proceso de licitaciones,
+            desde la recepción hasta la adjudicación y entrega de productos.
+          </p>
+          <div className="mt-10 flex items-center justify-center gap-x-6">
+            <Button asChild size="lg">
+              <Link href="/dashboard">Ir al Dashboard</Link>
+            </Button>
+            <Button variant="outline" size="lg">
+              Ver Demo
+            </Button>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </div>
+
+      {/* Features Grid */}
+      <div className="container mx-auto px-4 py-16">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold tracking-tight text-gray-900">
+            Módulos Principales
+          </h2>
+          <p className="mt-4 text-lg text-gray-600">
+            Todo lo que necesitas para gestionar tus licitaciones
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <Card>
+            <CardHeader>
+              <Package className="h-8 w-8 text-blue-600 mb-2" />
+              <CardTitle>Gestión de Productos</CardTitle>
+              <CardDescription>
+                Control completo de inventario con SKU, stock y proveedores asociados
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li>• ABM de productos</li>
+                <li>• Control de stock</li>
+                <li>• Historial de adjudicaciones</li>
+              </ul>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <Users className="h-8 w-8 text-blue-600 mb-2" />
+              <CardTitle>Proveedores y Clientes</CardTitle>
+              <CardDescription>
+                Gestión completa de proveedores y clientes del sistema
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li>• Registro de contactos</li>
+                <li>• Historial de licitaciones</li>
+                <li>• Validación de datos</li>
+              </ul>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <FileText className="h-8 w-8 text-blue-600 mb-2" />
+              <CardTitle>Licitaciones</CardTitle>
+              <CardDescription>
+                Gestión completa del ciclo de vida de las licitaciones
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li>• Creación y seguimiento</li>
+                <li>• Verificación de stock</li>
+                <li>• Control de estados</li>
+              </ul>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <Calculator className="h-8 w-8 text-blue-600 mb-2" />
+              <CardTitle>Cotizaciones</CardTitle>
+              <CardDescription>
+                Sistema de cotización automático con cálculos de IVA
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li>• Cálculo automático</li>
+                <li>• Múltiples productos</li>
+                <li>• Gestión de estados</li>
+              </ul>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <Gavel className="h-8 w-8 text-blue-600 mb-2" />
+              <CardTitle>Adjudicaciones</CardTitle>
+              <CardDescription>
+                Control de adjudicaciones parciales y totales
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li>• Adjudicación parcial/total</li>
+                <li>• Registro de ganadores</li>
+                <li>• Trazabilidad completa</li>
+              </ul>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <Truck className="h-8 w-8 text-blue-600 mb-2" />
+              <CardTitle>Entregas</CardTitle>
+              <CardDescription>
+                Seguimiento completo de entregas y facturación
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li>• Estados de entrega</li>
+                <li>• Gestión de facturas</li>
+                <li>• Fechas de entrega</li>
+              </ul>
+            </CardContent>
+          </Card>
+
+          <Card className="md:col-span-2 lg:col-span-3">
+            <CardHeader>
+              <Ship className="h-8 w-8 text-blue-600 mb-2" />
+              <CardTitle>Importaciones</CardTitle>
+              <CardDescription>
+                Sistema completo para gestión de importaciones con cálculo automático de costos y tributos
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="text-sm text-gray-600 space-y-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                <li>• Costos FOB, Flete, Seguro</li>
+                <li>• Cálculo automático de CIF</li>
+                <li>• Tributos oficiales (IVA, IMADUNI, etc.)</li>
+                <li>• Conversión de monedas</li>
+                <li>• Control de estados</li>
+                <li>• Asociación con productos</li>
+              </ul>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* CTA Section */}
+      <div className="bg-blue-600 text-white">
+        <div className="container mx-auto px-4 py-16">
+          <div className="text-center">
+            <h2 className="text-3xl font-bold tracking-tight">
+              ¿Listo para optimizar tu gestión de licitaciones?
+            </h2>
+            <p className="mt-4 text-lg text-blue-100">
+              Comienza a usar el sistema hoy mismo
+            </p>
+            <div className="mt-8">
+              <Button asChild size="lg" variant="secondary">
+                <Link href="/dashboard">Comenzar Ahora</Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-  );
+  )
 }
