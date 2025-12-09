@@ -12,13 +12,18 @@ export interface Proveedor {
 
 export interface Cliente {
   id: string
-  nombre: string
-  identificador: string
+  name: string
+  identifier: string
   email?: string
-  telefono?: string
-  direccion?: string
+  phone?: string
+  address?: string
   created_at: string
   updated_at: string
+  contacts?: Array<{ 
+    email?: string
+    phone?: string
+    address?: string
+  }>
 }
 
 export interface Producto {
@@ -291,11 +296,14 @@ export interface CreateProveedorForm {
 }
 
 export interface CreateClienteForm {
-  nombre: string
-  identificador: string
-  email?: string
-  telefono?: string
-  direccion?: string
+  name: string
+  identifier: string
+  contacts?: Array<{
+    name?: string
+    email?: string
+    phone?: string
+    address?: string
+  }>
 }
 
 export interface CreateLicitacionForm {

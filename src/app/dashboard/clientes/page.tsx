@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -25,55 +25,22 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Plus, Search, Edit, Trash2, Building2, Phone, Mail, FileText } from 'lucide-react'
 import { Cliente } from '@/types'
-import { clienteSchema } from '@/lib/validations/schema'
-
-// Mock data - en producción vendría de Supabase
-const mockClientes: Cliente[] = [
-  {
-    id: '1',
-    nombre: 'Municipalidad de Montevideo',
-    identificador: '215967890012',
-    email: 'compras@imm.gub.uy',
-    telefono: '19502020',
-    direccion: 'Av. 18 de Julio 1360, Montevideo',
-    created_at: '2024-01-01T00:00:00Z',
-    updated_at: '2024-01-01T00:00:00Z'
-  },
-  {
-    id: '2',
-    nombre: 'Empresa XYZ S.A.',
-    identificador: '987654321098',
-    email: 'licitaciones@empresa.com',
-    telefono: '24011234',
-    direccion: 'Ruta 8 km 17.500, Montevideo',
-    created_at: '2024-01-02T00:00:00Z',
-    updated_at: '2024-01-02T00:00:00Z'
-  },
-  {
-    id: '3',
-    nombre: 'Ministerio de Educación y Cultura',
-    identificador: '345678901234',
-    email: 'compras@mec.gub.uy',
-    telefono: '24002345',
-    direccion: 'Reconquista 535, Montevideo',
-    created_at: '2024-01-03T00:00:00Z',
-    updated_at: '2024-01-03T00:00:00Z'
-  },
-  {
-    id: '4',
-    nombre: 'Hospital Maciel',
-    identificador: '456789012345',
-    email: 'compras@hmaciel.gub.uy',
-    telefono: '29246161',
-    direccion: '25 de Mayo 275, Montevideo',
-    created_at: '2024-01-04T00:00:00Z',
-    updated_at: '2024-01-04T00:00:00Z'
-  }
-]
+import { useClientesStore, selectFilteredClientes } from '@/stores'
 
 export default function ClientesPage() {
-  const [clientes, setClientes] = useState<Cliente[]>(mockClientes)
-  const [searchTerm, setSearchTerm] = useState('')
+  const { 
+    clientes, 
+    selectedCliente,
+    isLoading, 
+    error,
+    fetchClientes, 
+    createCliente, 
+    updateCliente, 
+    deleteCliente,
+    setFilters,
+    filters
+  } = useClientesStore()
+  
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [editingCliente, setEditingCliente] = useState<Cliente | null>(null)
   const [formData, setFormData] = useState({
@@ -84,76 +51,81 @@ export default function ClientesPage() {
     direccion: ''
   })
 
-  const filteredClientes = clientes.filter(cliente => {
-    const matchesSearch = cliente.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         cliente.identificador.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         cliente.email?.toLowerCase().includes(searchTerm.toLowerCase())
-    return matchesSearch
-  })
+  useEffect(() => {
+    fetchClientes()
+  }, [fetchClientes])
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const filteredClientes = selectFilteredClientes({ clientes, filters, isLoading, error, selectedCliente });
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFilters({ search: e.target.value })
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (editingCliente) {
-      // Editar cliente existente
-      setClientes(prev => prev.map(c =>
-        c.id === editingCliente.id
-          ? {
-              ...c,
-              ...formData,
-              updated_at: new Date().toISOString()
-            }
-          : c
-      ))
-    } else {
-      // Crear nuevo cliente
-      const newCliente: Cliente = {
-        id: Date.now().toString(),
-        ...formData,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }
-      setClientes(prev => [...prev, newCliente])
-    }
+    try {
+      const clientData = {
+        name: formData.nombre,
+        identifier: formData.identificador,
+        contacts: [{
+          email: formData.email,
+          phone: formData.telefono,
+          address: formData.direccion
+        }]
+      };
 
-    // Reset form
-    setFormData({
-      nombre: '',
-      identificador: '',
-      email: '',
-      telefono: '',
-      direccion: ''
-    })
-    setEditingCliente(null)
-    setIsCreateDialogOpen(false)
+      if (editingCliente) {
+        // Editar cliente existente
+        await updateCliente(editingCliente.id, clientData)
+      } else {
+        // Crear nuevo cliente
+        await createCliente(clientData)
+      }
+
+      // Reset form
+      setFormData({
+        nombre: '',
+        identificador: '',
+        email: '',
+        telefono: '',
+        direccion: ''
+      })
+      setEditingCliente(null)
+      setIsCreateDialogOpen(false)
+    } catch (error) {
+      console.error('Error saving client:', error)
+      alert('Error al guardar el cliente: ' + (error as Error).message)
+    }
   }
 
   const handleEdit = (cliente: Cliente) => {
     setEditingCliente(cliente)
+    const contact = cliente.contacts?.[0] || {}
     setFormData({
-      nombre: cliente.nombre,
-      identificador: cliente.identificador,
-      email: cliente.email || '',
-      telefono: cliente.telefono || '',
-      direccion: cliente.direccion || ''
+      nombre: cliente.name,
+      identificador: cliente.identifier,
+      email: contact.email || '',
+      telefono: contact.phone || '',
+      direccion: contact.address || ''
     })
     setIsCreateDialogOpen(true)
   }
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm('¿Está seguro que desea eliminar este cliente?')) {
-      setClientes(prev => prev.filter(c => c.id !== id))
+      try {
+        await deleteCliente(id)
+      } catch (error) {
+        console.error('Error deleting client:', error)
+        alert('Error al eliminar el cliente: ' + (error as Error).message)
+      }
     }
   }
 
-  const hasAssociatedLicitaciones = (clienteId: string) => {
-    // En producción, verificar si hay licitaciones asociadas
-    return false
-  }
-
-  const getClienteType = (identificador: string) => {
+  const getClienteType = (identifier: string) => {
     // Lógica para determinar si es empresa o gobierno basado en el identificador
-    if (identificador.includes('gub.uy') || identificador.length < 12) {
+    if (identifier.includes('gub.uy') || identifier.length < 12) {
       return { type: 'Gobierno', variant: 'default' as const }
     }
     return { type: 'Empresa', variant: 'secondary' as const }
@@ -170,7 +142,16 @@ export default function ClientesPage() {
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => setEditingCliente(null)}>
+            <Button onClick={() => {
+              setEditingCliente(null)
+              setFormData({
+                nombre: '',
+                identificador: '',
+                email: '',
+                telefono: '',
+                direccion: ''
+              })
+            }}>
               <Plus className="mr-2 h-4 w-4" />
               Nuevo Cliente
             </Button>
@@ -246,8 +227,8 @@ export default function ClientesPage() {
                 <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
                   Cancelar
                 </Button>
-                <Button type="submit">
-                  {editingCliente ? 'Actualizar' : 'Crear'} Cliente
+                <Button type="submit" disabled={isLoading}>
+                  {isLoading ? 'Guardando...' : (editingCliente ? 'Actualizar' : 'Crear') + ' Cliente'}
                 </Button>
               </DialogFooter>
             </form>
@@ -277,7 +258,7 @@ export default function ClientesPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {clientes.filter(c => getClienteType(c.identificador).type === 'Empresa').length}
+              {clientes.filter(c => getClienteType(c.identifier).type === 'Empresa').length}
             </div>
             <p className="text-xs text-muted-foreground">
               Sector privado
@@ -292,7 +273,7 @@ export default function ClientesPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {clientes.filter(c => getClienteType(c.identificador).type === 'Gobierno').length}
+              {clientes.filter(c => getClienteType(c.identifier).type === 'Gobierno').length}
             </div>
             <p className="text-xs text-muted-foreground">
               Sector público
@@ -313,8 +294,8 @@ export default function ClientesPage() {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
                   placeholder="Buscar por nombre, RUT o email..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  value={filters.search}
+                  onChange={handleSearchChange}
                   className="pl-10"
                 />
               </div>
@@ -347,62 +328,79 @@ export default function ClientesPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredClientes.map((cliente) => {
-                const clienteType = getClienteType(cliente.identificador)
-                return (
-                  <TableRow key={cliente.id}>
-                    <TableCell className="font-medium">{cliente.nombre}</TableCell>
-                    <TableCell>{cliente.identificador}</TableCell>
-                    <TableCell>
-                      <Badge variant={clienteType.variant}>
-                        {clienteType.type}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="space-y-1">
-                        {cliente.email && (
-                          <div className="flex items-center space-x-2">
-                            <Mail className="h-3 w-3 text-gray-400" />
-                            <span className="text-sm">{cliente.email}</span>
-                          </div>
-                        )}
-                        {cliente.telefono && (
-                          <div className="flex items-center space-x-2">
-                            <Phone className="h-3 w-3 text-gray-400" />
-                            <span className="text-sm">{cliente.telefono}</span>
-                          </div>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="max-w-xs truncate" title={cliente.direccion}>
-                        {cliente.direccion || '-'}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end space-x-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEdit(cliente)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDelete(cliente.id)}
-                          className="text-red-600 hover:text-red-700"
-                          disabled={hasAssociatedLicitaciones(cliente.id)}
-                          title={hasAssociatedLicitaciones(cliente.id) ? 'No se puede eliminar, tiene licitaciones asociadas' : 'Eliminar cliente'}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                )
-              })}
+              {isLoading && clientes.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-4">
+                    Cargando clientes...
+                  </TableCell>
+                </TableRow>
+              ) : filteredClientes.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-4">
+                    {error ? <span className="text-red-500">{error}</span> : 'No se encontraron clientes'}
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredClientes.map((cliente) => {
+                  const clienteType = getClienteType(cliente.identifier)
+                  const contact = cliente.contacts?.[0]
+                  return (
+                    <TableRow key={cliente.id}>
+                      <TableCell className="font-medium">{cliente.name}</TableCell>
+                      <TableCell>{cliente.identifier}</TableCell>
+                      <TableCell>
+                        <Badge variant={clienteType.variant}>
+                          {clienteType.type}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-1">
+                          {contact?.email && (
+                            <div className="flex items-center space-x-2">
+                              <Mail className="h-3 w-3 text-gray-400" />
+                              <span className="text-sm">{contact.email}</span>
+                            </div>
+                          )}
+                          {contact?.phone && (
+                            <div className="flex items-center space-x-2">
+                              <Phone className="h-3 w-3 text-gray-400" />
+                              <span className="text-sm">{contact.phone}</span>
+                            </div>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {contact?.address && (
+                        <div className="max-w-xs truncate" title={contact.address}>
+                          {contact.address}
+                        </div>
+                        )
+                        }
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEdit(cliente)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDelete(cliente.id)}
+                            className="text-red-600 hover:text-red-700"
+                            title="Eliminar cliente"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })
+              )}
             </TableBody>
           </Table>
         </CardContent>
