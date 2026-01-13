@@ -4,77 +4,53 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+import { DataTable, DataTableColumn } from '@/components/ui/data-table'
+import { ActionCell, ExpandableListCell } from '@/components/ui/data-table-cells'
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { Label } from '@/components/ui/label'
-import { Badge } from '@/components/ui/badge'
-import { Plus, Search, Edit, Trash2, Building2, Phone, Mail, FileText } from 'lucide-react'
+import { Plus, Search, Building2, Phone, Mail } from 'lucide-react'
 import { Cliente } from '@/types'
-import { useClientesStore, selectFilteredClientes } from '@/stores'
+import { useClientesStore } from '@/stores'
+
+import { ClientForm } from '@/components/clientes/client-form'
 
 export default function ClientesPage() {
   const { 
     clientes, 
-    selectedCliente,
     isLoading, 
     error,
+    pagination,
     fetchClientes, 
     createCliente, 
     updateCliente, 
     deleteCliente,
     setFilters,
+    setCurrentPage,
     filters
   } = useClientesStore()
   
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [editingCliente, setEditingCliente] = useState<Cliente | null>(null)
-  const [formData, setFormData] = useState({
-    nombre: '',
-    identificador: '',
-    email: '',
-    telefono: '',
-    direccion: ''
-  })
 
   useEffect(() => {
-    fetchClientes()
-  }, [fetchClientes])
+    fetchClientes(pagination.page)
+  }, [fetchClientes, pagination.page])
 
-  const filteredClientes = selectFilteredClientes({ clientes, filters, isLoading, error, selectedCliente });
+  const filteredClientes = clientes;
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFilters({ search: e.target.value })
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleFormSubmit = async (clientData: any) => {
     try {
-      const clientData = {
-        name: formData.nombre,
-        identifier: formData.identificador,
-        contacts: [{
-          email: formData.email,
-          phone: formData.telefono,
-          address: formData.direccion
-        }]
-      };
-
       if (editingCliente) {
         // Editar cliente existente
         await updateCliente(editingCliente.id, clientData)
@@ -83,14 +59,6 @@ export default function ClientesPage() {
         await createCliente(clientData)
       }
 
-      // Reset form
-      setFormData({
-        nombre: '',
-        identificador: '',
-        email: '',
-        telefono: '',
-        direccion: ''
-      })
       setEditingCliente(null)
       setIsCreateDialogOpen(false)
     } catch (error) {
@@ -101,14 +69,6 @@ export default function ClientesPage() {
 
   const handleEdit = (cliente: Cliente) => {
     setEditingCliente(cliente)
-    const contact = cliente.contacts?.[0] || {}
-    setFormData({
-      nombre: cliente.name,
-      identificador: cliente.identifier,
-      email: contact.email || '',
-      telefono: contact.phone || '',
-      direccion: contact.address || ''
-    })
     setIsCreateDialogOpen(true)
   }
 
@@ -123,13 +83,68 @@ export default function ClientesPage() {
     }
   }
 
-  const getClienteType = (identifier: string) => {
-    // Lógica para determinar si es empresa o gobierno basado en el identificador
-    if (identifier.includes('gub.uy') || identifier.length < 12) {
-      return { type: 'Gobierno', variant: 'default' as const }
+  const columns: DataTableColumn<Cliente>[] = [
+    {
+      key: 'name',
+      header: 'Nombre',
+      accessorKey: 'name',
+      className: 'font-medium'
+    },
+    {
+      key: 'identifier',
+      header: 'Identificador/RUT',
+      accessorKey: 'identifier'
+    },
+    {
+      key: 'contacts',
+      header: 'Contacto',
+      render: (cliente) => (
+        <ExpandableListCell
+          items={cliente.contacts || []}
+          renderItem={(contact) => (
+            <div className="text-sm">
+              {contact.name && <div className="font-medium">{contact.name}</div>}
+              {contact.email && (
+                <div className="flex items-center space-x-2 text-muted-foreground">
+                  <Mail className="h-3 w-3" />
+                  <span>{contact.email}</span>
+                </div>
+              )}
+              {contact.phone && (
+                <div className="flex items-center space-x-2 text-muted-foreground">
+                  <Phone className="h-3 w-3" />
+                  <span>{contact.phone}</span>
+                </div>
+              )}
+            </div>
+          )}
+        />
+      )
+    },
+    {
+      key: 'address',
+      header: 'Dirección',
+      render: (cliente) => (
+        cliente.contacts?.[0]?.address && (
+          <div className="max-w-xs truncate" title={cliente.contacts[0].address}>
+            {cliente.contacts[0].address}
+          </div>
+        )
+      )
+    },
+    {
+      key: 'actions',
+      header: 'Acciones',
+      className: 'text-right',
+      render: (cliente) => (
+        <ActionCell
+          row={cliente}
+          onEdit={handleEdit}
+          onDelete={(c) => handleDelete(c.id)}
+        />
+      )
     }
-    return { type: 'Empresa', variant: 'secondary' as const }
-  }
+  ]
 
   return (
     <div className="space-y-6">
@@ -144,13 +159,6 @@ export default function ClientesPage() {
           <DialogTrigger asChild>
             <Button onClick={() => {
               setEditingCliente(null)
-              setFormData({
-                nombre: '',
-                identificador: '',
-                email: '',
-                telefono: '',
-                direccion: ''
-              })
             }}>
               <Plus className="mr-2 h-4 w-4" />
               Nuevo Cliente
@@ -165,122 +173,16 @@ export default function ClientesPage() {
                 Complete los datos del cliente para {editingCliente ? 'actualizar' : 'crear'} el registro.
               </DialogDescription>
             </DialogHeader>
-            <form onSubmit={handleSubmit}>
-              <div className="grid gap-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="nombre">Nombre del Cliente *</Label>
-                  <Input
-                    id="nombre"
-                    value={formData.nombre}
-                    onChange={(e) => setFormData(prev => ({ ...prev, nombre: e.target.value }))}
-                    placeholder="Ej: Empresa XYZ S.A."
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="identificador">Identificador/RUT *</Label>
-                  <Input
-                    id="identificador"
-                    value={formData.identificador}
-                    onChange={(e) => setFormData(prev => ({ ...prev, identificador: e.target.value }))}
-                    placeholder="Ej: 987654321098"
-                    required
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                      placeholder="Ej: contacto@cliente.com"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="telefono">Teléfono</Label>
-                    <Input
-                      id="telefono"
-                      value={formData.telefono}
-                      onChange={(e) => setFormData(prev => ({ ...prev, telefono: e.target.value }))}
-                      placeholder="Ej: 24011234"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="direccion">Dirección</Label>
-                  <textarea
-                    id="direccion"
-                    className="w-full p-3 border rounded-md"
-                    rows={3}
-                    value={formData.direccion}
-                    onChange={(e) => setFormData(prev => ({ ...prev, direccion: e.target.value }))}
-                    placeholder="Dirección completa del cliente..."
-                  />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                  Cancelar
-                </Button>
-                <Button type="submit" disabled={isLoading}>
-                  {isLoading ? 'Guardando...' : (editingCliente ? 'Actualizar' : 'Crear') + ' Cliente'}
-                </Button>
-              </DialogFooter>
-            </form>
+            <ClientForm
+              initialData={editingCliente}
+              onSubmit={handleFormSubmit}
+              onCancel={() => setIsCreateDialogOpen(false)}
+              isLoading={isLoading}
+            />
           </DialogContent>
         </Dialog>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Clientes</CardTitle>
-            <Building2 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{clientes.length}</div>
-            <p className="text-xs text-muted-foreground">
-              Activos en el sistema
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Empresas Privadas</CardTitle>
-            <Building2 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {clientes.filter(c => getClienteType(c.identifier).type === 'Empresa').length}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Sector privado
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Gobierno</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {clientes.filter(c => getClienteType(c.identifier).type === 'Gobierno').length}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Sector público
-            </p>
-          </CardContent>
-        </Card>
-      </div>
 
       {/* Filters */}
       <Card>
@@ -316,93 +218,19 @@ export default function ClientesPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nombre</TableHead>
-                <TableHead>Identificador/RUT</TableHead>
-                <TableHead>Tipo</TableHead>
-                <TableHead>Contacto</TableHead>
-                <TableHead>Dirección</TableHead>
-                <TableHead className="text-right">Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading && clientes.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-4">
-                    Cargando clientes...
-                  </TableCell>
-                </TableRow>
-              ) : filteredClientes.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-4">
-                    {error ? <span className="text-red-500">{error}</span> : 'No se encontraron clientes'}
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredClientes.map((cliente) => {
-                  const clienteType = getClienteType(cliente.identifier)
-                  const contact = cliente.contacts?.[0]
-                  return (
-                    <TableRow key={cliente.id}>
-                      <TableCell className="font-medium">{cliente.name}</TableCell>
-                      <TableCell>{cliente.identifier}</TableCell>
-                      <TableCell>
-                        <Badge variant={clienteType.variant}>
-                          {clienteType.type}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="space-y-1">
-                          {contact?.email && (
-                            <div className="flex items-center space-x-2">
-                              <Mail className="h-3 w-3 text-gray-400" />
-                              <span className="text-sm">{contact.email}</span>
-                            </div>
-                          )}
-                          {contact?.phone && (
-                            <div className="flex items-center space-x-2">
-                              <Phone className="h-3 w-3 text-gray-400" />
-                              <span className="text-sm">{contact.phone}</span>
-                            </div>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {contact?.address && (
-                        <div className="max-w-xs truncate" title={contact.address}>
-                          {contact.address}
-                        </div>
-                        )
-                        }
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end space-x-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEdit(cliente)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDelete(cliente.id)}
-                            className="text-red-600 hover:text-red-700"
-                            title="Eliminar cliente"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  )
-                })
-              )}
-            </TableBody>
-          </Table>
+          <DataTable
+            data={filteredClientes}
+            columns={columns}
+            isLoading={isLoading}
+            pagination={{
+              page: pagination.page,
+              limit: pagination.limit,
+              total: pagination.total,
+              totalPages: pagination.lastPage,
+              onPageChange: setCurrentPage
+            }}
+            emptyMessage={error ? error : "No se encontraron clientes"}
+          />
         </CardContent>
       </Card>
     </div>

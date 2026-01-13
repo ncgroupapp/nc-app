@@ -20,6 +20,7 @@ export interface Cliente {
   created_at: string
   updated_at: string
   contacts?: Array<{ 
+    name: string
     email?: string
     phone?: string
     address?: string
@@ -384,7 +385,20 @@ export interface ApiResponse<T> {
   success: boolean
 }
 
+export interface PaginationMeta {
+  total: number
+  page: number
+  lastPage: number
+  limit: number
+}
+
 export interface PaginatedResponse<T> {
+  data: T[]
+  meta: PaginationMeta
+  success: boolean
+}
+
+export interface PaginatedResponseLegacy<T> {
   data: T[]
   total: number
   page: number

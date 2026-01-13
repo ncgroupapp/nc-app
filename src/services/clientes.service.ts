@@ -1,9 +1,9 @@
 import api from '@/lib/axios';
-import { Cliente, CreateClienteForm, ApiResponse, Licitacion } from '@/types';
+import { Cliente, CreateClienteForm, ApiResponse, PaginatedResponse, Licitacion } from '@/types';
 
 export const clientesService = {
-  getAll: async (): Promise<ApiResponse<Cliente[]>> => {
-    const response = await api.get<ApiResponse<Cliente[]>>('/clients');
+  getAll: async (page: number = 1): Promise<PaginatedResponse<Cliente>> => {
+    const response = await api.get<PaginatedResponse<Cliente>>(`/clients?page=${page}`);
     return response.data;
   },
 
@@ -18,7 +18,7 @@ export const clientesService = {
   },
 
   update: async (id: string, data: Partial<Cliente>): Promise<ApiResponse<Cliente>> => {
-    const response = await api.put<ApiResponse<Cliente>>(`/clients/${id}`, data);
+    const response = await api.patch<ApiResponse<Cliente>>(`/clients/${id}`, data);
     return response.data;
   },
 

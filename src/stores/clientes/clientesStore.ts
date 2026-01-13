@@ -3,7 +3,25 @@ import { devtools } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 import { ClientesStore } from './types';
 import { clientesService } from '@/services/clientes.service';
-import { Cliente } from '@/types';
+import { PaginationMeta } from '@/types';
+
+const getErrorMessage = (error: unknown): string => {
+  const err = error as any;
+  if (err.code === 'ERR_NETWORK') {
+    return 'Error de conexión: No se pudo conectar con el servidor. Verifique que el backend esté en ejecución.';
+  }
+  if (err.response?.status === 401) {
+    return 'Sesión expirada. Por favor inicie sesión nuevamente.';
+  }
+  return err.message || 'Ocurrió un error inesperado';
+};
+
+const DEFAULT_PAGINATION: PaginationMeta = {
+  total: 0,
+  page: 1,
+  lastPage: 1,
+  limit: 10,
+};
 
 export const useClientesStore = create<ClientesStore>()(
   devtools(
@@ -13,60 +31,35 @@ export const useClientesStore = create<ClientesStore>()(
       selectedCliente: null,
       isLoading: false,
       error: null,
+      pagination: DEFAULT_PAGINATION,
       filters: {
         search: '',
       },
 
       // Actions
-      fetchClientes: async () => {
+      fetchClientes: async (page = 1) => {
         set((state) => {
           state.isLoading = true;
           state.error = null;
         });
         try {
-          const response = await clientesService.getAll();
+          const response = await clientesService.getAll(page);
           console.log('fetchClientes response:', response);
           
-          // Handle different response structures
-          let data: Cliente[] = [];
-          const rawResponse = response as unknown;
-
-          if (Array.isArray(rawResponse)) {
-            data = rawResponse as Cliente[];
-          } else if (
-            typeof rawResponse === 'object' && 
-            rawResponse !== null && 
-            'data' in rawResponse && 
-            Array.isArray((rawResponse as { data: unknown }).data)
-          ) {
-            data = (rawResponse as { data: unknown[] }).data as Cliente[];
-          } else if (
-            typeof rawResponse === 'object' && 
-            rawResponse !== null
-          ) {
-             // Try to find an array property if none of the above match
-             const possibleArray = Object.values(rawResponse).find(val => Array.isArray(val));
-             if (possibleArray) {
-                data = possibleArray as Cliente[];
-             }
-          }
-
-          if (data) {
-            set((state) => {
-              state.clientes = data;
+          set((state) => {
+            if (response.success && response.data && response.meta) {
+              state.clientes = response.data;
+              state.pagination = response.meta;
               state.isLoading = false;
-            });
-          } else {
-            console.error('fetchClientes failed: Invalid response format', response);
-            set((state) => {
+            } else {
               state.error = 'Formato de respuesta inválido';
               state.isLoading = false;
-            });
-          }
+            }
+          });
         } catch (error) {
           console.error('fetchClientes error:', error);
           set((state) => {
-            state.error = (error as Error).message;
+            state.error = getErrorMessage(error);
             state.isLoading = false;
           });
         }
@@ -78,7 +71,7 @@ export const useClientesStore = create<ClientesStore>()(
           state.error = null;
         });
         try {
-          const response = await clientesService.create(data);
+          const response = await clientesService.create(data);          
           if (response.success) {
             set((state) => {
               state.clientes.push(response.data);
@@ -89,7 +82,7 @@ export const useClientesStore = create<ClientesStore>()(
           }
         } catch (error) {
           set((state) => {
-            state.error = (error as Error).message;
+            state.error = getErrorMessage(error);
             state.isLoading = false;
           });
           throw error;
@@ -119,7 +112,7 @@ export const useClientesStore = create<ClientesStore>()(
           }
         } catch (error) {
           set((state) => {
-            state.error = (error as Error).message;
+            state.error = getErrorMessage(error);
             state.isLoading = false;
           });
           throw error;
@@ -133,10 +126,10 @@ export const useClientesStore = create<ClientesStore>()(
         });
         try {
           // Check for licitaciones before deleting
-          const hasLicitaciones = await clientesService.hasLicitaciones(id);
-          if (hasLicitaciones) {
-            throw new Error('No se puede eliminar el cliente porque tiene licitaciones asociadas.');
-          }
+          // const hasLicitaciones = await clientesService.hasLicitaciones(id);
+          // if (hasLicitaciones) {
+          //   throw new Error('No se puede eliminar el cliente porque tiene licitaciones asociadas.');
+          // }
 
           const response = await clientesService.delete(id);
           if (response.success) {
@@ -152,7 +145,7 @@ export const useClientesStore = create<ClientesStore>()(
           }
         } catch (error) {
           set((state) => {
-            state.error = (error as Error).message;
+            state.error = getErrorMessage(error);
             state.isLoading = false;
           });
           throw error;
@@ -168,6 +161,12 @@ export const useClientesStore = create<ClientesStore>()(
       setFilters: (filters) => {
         set((state) => {
           state.filters = { ...state.filters, ...filters };
+        });
+      },
+
+      setCurrentPage: (page) => {
+        set((state) => {
+          state.pagination.page = page;
         });
       },
 

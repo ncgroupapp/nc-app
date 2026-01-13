@@ -25,6 +25,18 @@ CREATE TABLE clientes (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Tabla de Contactos de Clientes
+CREATE TABLE contactos_clientes (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  cliente_id UUID REFERENCES clientes(id) ON DELETE CASCADE,
+  nombre VARCHAR(255) NOT NULL,
+  email VARCHAR(255),
+  telefono VARCHAR(50),
+  direccion TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- Tabla de Productos
 CREATE TABLE productos (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,

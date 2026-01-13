@@ -1,5 +1,11 @@
 import { z } from 'zod'
 
+// Esquema de validación para Login
+export const loginSchema = z.object({
+  email: z.string().email('Email inválido'),
+  password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
+})
+
 // Esquema de validación para Proveedores
 export const proveedorSchema = z.object({
   nombre: z.string().min(1, 'El nombre es obligatorio'),
@@ -16,7 +22,13 @@ export const clienteSchema = z.object({
   identificador: z.string().min(1, 'El identificador/RUT es obligatorio'),
   email: z.string().email('Email inválido').optional().or(z.literal('')),
   telefono: z.string().optional(),
-  direccion: z.string().optional()
+  direccion: z.string().optional(),
+  contactos: z.array(z.object({
+    nombre: z.string().min(1, 'El nombre del contacto es obligatorio'),
+    email: z.string().email('Email inválido').optional().or(z.literal('')),
+    telefono: z.string().optional(),
+    direccion: z.string().optional()
+  })).optional()
 })
 
 // Esquema de validación para Productos
@@ -133,11 +145,7 @@ export const searchFiltersSchema = z.object({
   limit: z.number().min(1).max(100).default(10)
 })
 
-// Esquema para login
-export const loginSchema = z.object({
-  email: z.string().email('Email inválido'),
-  password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres')
-})
+
 
 // Esquema para registro
 export const registerSchema = z.object({
