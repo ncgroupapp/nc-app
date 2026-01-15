@@ -1,13 +1,21 @@
 export interface Proveedor {
   id: string
-  nombre: string
+  name: string
+  rut: string
   pais: string
-  contacto: string
+  contacto?: string
   email?: string
   telefono?: string
   direccion?: string
   created_at: string
   updated_at: string
+  contacts?: Array<{ 
+    name: string
+    email?: string
+    phone?: string
+    address?: string
+    role?: string
+  }>
 }
 
 export interface Cliente {
@@ -289,11 +297,19 @@ export interface CreateProductoForm {
 
 export interface CreateProveedorForm {
   nombre: string
+  rut: string
   pais: string
-  contacto: string
+  contacto?: string
   email?: string
   telefono?: string
   direccion?: string
+  contacts?: Array<{
+    name: string
+    email?: string
+    phone?: string
+    address?: string
+    role?: string
+  }>
 }
 
 export interface CreateClienteForm {

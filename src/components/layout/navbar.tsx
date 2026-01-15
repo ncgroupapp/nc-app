@@ -1,7 +1,9 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
+import { signOut } from 'firebase/auth'
+import { auth } from '@/lib/firebase'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
@@ -66,10 +68,21 @@ const navigation = [
 
 export function Navbar() {
   const pathname = usePathname()
+  const router = useRouter()
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth)
+      localStorage.removeItem('backend_token')
+      router.push('/login')
+    } catch (error) {
+      console.error("Error signing out:", error)
+    }
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 max-w-screen-2xl items-center">
+      <div className="flex h-16 items-center px-8">
         <div className="mr-4 hidden md:flex">
           <Link className="mr-6 flex items-center space-x-2" href="/dashboard">
             <div className="flex items-center space-x-2">
@@ -98,7 +111,8 @@ export function Navbar() {
                                   href={child.href}
                                   className={cn(
                                     "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
-                                    pathname === child.href && "bg-accent text-accent-foreground"
+                                    pathname === child.href &&
+                                      "bg-accent text-accent-foreground"
                                   )}
                                 >
                                   <div className="flex items-center space-x-2">
@@ -120,7 +134,8 @@ export function Navbar() {
                         href={item.href}
                         className={cn(
                           "group inline-flex h-9 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50",
-                          pathname === item.href && "bg-accent text-accent-foreground"
+                          pathname === item.href &&
+                            "bg-accent text-accent-foreground"
                         )}
                       >
                         <item.icon className="mr-2 h-4 w-4" />
@@ -137,11 +152,7 @@ export function Navbar() {
         {/* Mobile menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button
-              variant="outline"
-              size="icon"
-              className="mr-2 md:hidden"
-            >
+            <Button variant="outline" size="icon" className="mr-2 md:hidden">
               <Menu className="h-4 w-4" />
               <span className="sr-only">Toggle Menu</span>
             </Button>
@@ -174,19 +185,28 @@ export function Navbar() {
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <Link href="/dashboard/licitaciones" className="flex items-center">
+              <Link
+                href="/dashboard/licitaciones"
+                className="flex items-center"
+              >
                 <FileText className="mr-2 h-4 w-4" />
                 Licitaciones
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link href="/dashboard/cotizaciones" className="flex items-center">
+              <Link
+                href="/dashboard/cotizaciones"
+                className="flex items-center"
+              >
                 <Calculator className="mr-2 h-4 w-4" />
                 Cotizaciones
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link href="/dashboard/adjudicaciones" className="flex items-center">
+              <Link
+                href="/dashboard/adjudicaciones"
+                className="flex items-center"
+              >
                 <Gavel className="mr-2 h-4 w-4" />
                 Adjudicaciones
               </Link>
@@ -199,7 +219,10 @@ export function Navbar() {
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <Link href="/dashboard/importaciones" className="flex items-center">
+              <Link
+                href="/dashboard/importaciones"
+                className="flex items-center"
+              >
                 <Ship className="mr-2 h-4 w-4" />
                 Importaciones
               </Link>
@@ -225,7 +248,7 @@ export function Navbar() {
                   Configuración
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
                   <LogOut className="mr-2 h-4 w-4" />
                   Cerrar sesión
                 </DropdownMenuItem>
@@ -235,5 +258,5 @@ export function Navbar() {
         </div>
       </div>
     </header>
-  )
+  );
 }

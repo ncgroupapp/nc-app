@@ -9,11 +9,19 @@ export const loginSchema = z.object({
 // Esquema de validación para Proveedores
 export const proveedorSchema = z.object({
   nombre: z.string().min(1, 'El nombre es obligatorio'),
+  rut: z.string().min(1, 'El RUT es obligatorio'),
   pais: z.string().min(1, 'El país es obligatorio'),
-  contacto: z.string().min(1, 'El contacto es obligatorio'),
+  contacto: z.string().optional(),
   email: z.string().email('Email inválido').optional().or(z.literal('')),
   telefono: z.string().optional(),
-  direccion: z.string().optional()
+  direccion: z.string().optional(),
+  contactos: z.array(z.object({
+    nombre: z.string().min(1, 'El nombre del contacto es obligatorio'),
+    email: z.string().email('Email inválido').optional().or(z.literal('')),
+    telefono: z.string().optional(),
+    direccion: z.string().optional(),
+    cargo: z.string().optional()
+  })).optional()
 })
 
 // Esquema de validación para Clientes

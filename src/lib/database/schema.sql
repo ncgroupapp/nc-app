@@ -4,11 +4,24 @@
 CREATE TABLE proveedores (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   nombre VARCHAR(255) NOT NULL,
+  rut VARCHAR(50) NOT NULL,
   pais VARCHAR(100) NOT NULL,
-  contacto VARCHAR(255) NOT NULL,
   email VARCHAR(255),
   telefono VARCHAR(50),
   direccion TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Tabla de Contactos de Proveedores
+CREATE TABLE contactos_proveedores (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  proveedor_id UUID REFERENCES proveedores(id) ON DELETE CASCADE,
+  nombre VARCHAR(255) NOT NULL,
+  email VARCHAR(255),
+  telefono VARCHAR(50),
+  direccion TEXT,
+  cargo VARCHAR(255),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
