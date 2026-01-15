@@ -28,7 +28,10 @@ api.interceptors.response.use(
     if (error.response && error.response.status === 401) {
       if (typeof window !== 'undefined') {
         localStorage.removeItem('backend_token');
-        window.location.href = '/login';
+        // Solo redireccionar si no estamos ya en /login para evitar recargas infinitas
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
       }
     }
     return Promise.reject(error);
