@@ -1,9 +1,17 @@
 import api from '@/lib/axios';
 import { Proveedor, CreateProveedorForm, ApiResponse, PaginatedResponse } from '@/types';
 
+export interface ProviderFilters {
+  page?: number;
+  search?: string;
+}
+
 export const proveedoresService = {
-  getAll: async (page: number = 1): Promise<PaginatedResponse<Proveedor>> => {
-    const response = await api.get<PaginatedResponse<Proveedor>>(`/providers?page=${page}`);
+  getAll: async (filters: ProviderFilters = {}): Promise<PaginatedResponse<Proveedor>> => {
+    const params = new URLSearchParams();
+    if (filters.page) params.append('page', filters.page.toString());
+    if (filters.search) params.append('search', filters.search);
+    const response = await api.get<PaginatedResponse<Proveedor>>(`/providers?${params.toString()}`);
     return response.data;
   },
 

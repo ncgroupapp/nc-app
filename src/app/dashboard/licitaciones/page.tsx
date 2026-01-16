@@ -41,8 +41,8 @@ import { licitacionSchema } from '@/lib/validations/schema'
 
 // Mock data - en producción vendría de Supabase
 const mockClientes: Cliente[] = [
-  { id: '1', nombre: 'Municipalidad de Montevideo', identificador: '215967890012', created_at: '', updated_at: '' },
-  { id: '2', nombre: 'Empresa XYZ S.A.', identificador: '987654321098', created_at: '', updated_at: '' },
+  { id: '1', name: 'Municipalidad de Montevideo', identifier: '215967890012', created_at: '', updated_at: '' },
+  { id: '2', name: 'Empresa XYZ S.A.', identifier: '987654321098', created_at: '', updated_at: '' },
 ]
 
 const mockProductos: Producto[] = [
@@ -107,14 +107,14 @@ export default function LicitacionesPage() {
   })
 
   const estados = ['En espera', 'Cotización', 'Adjudicada', 'No Adjudicada', 'Adjudicación Parcial', 'Adjudicación Total']
-  const clientesUnicos = Array.from(new Set(licitaciones.map(l => l.cliente?.nombre || '')))
+  const clientesUnicos = Array.from(new Set(licitaciones.map(l => l.cliente?.name || '')))
 
   const filteredLicitaciones = licitaciones.filter(licitacion => {
     const matchesSearch = licitacion.numero_llamado.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          licitacion.numero_interno.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         licitacion.cliente?.nombre.toLowerCase().includes(searchTerm.toLowerCase())
+                         licitacion.cliente?.name.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesEstado = selectedEstado === 'all' || licitacion.estado === selectedEstado
-    const matchesCliente = selectedCliente === 'all' || licitacion.cliente?.nombre === selectedCliente
+    const matchesCliente = selectedCliente === 'all' || licitacion.cliente?.name === selectedCliente
     return matchesSearch && matchesEstado && matchesCliente
   })
 
@@ -272,7 +272,7 @@ export default function LicitacionesPage() {
                       <SelectContent>
                         {clientes.map((cliente) => (
                           <SelectItem key={cliente.id} value={cliente.id}>
-                            {cliente.nombre}
+                            {cliente.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -483,7 +483,7 @@ export default function LicitacionesPage() {
                         <div className="text-sm text-gray-500">{licitacion.numero_interno}</div>
                       </div>
                     </TableCell>
-                    <TableCell>{licitacion.cliente?.nombre}</TableCell>
+                    <TableCell>{licitacion.cliente?.name}</TableCell>
                     <TableCell>{licitacion.fecha_inicio}</TableCell>
                     <TableCell>
                       <div className="flex items-center space-x-2">

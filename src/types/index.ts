@@ -2,7 +2,8 @@ export interface Proveedor {
   id: string
   name: string
   rut: string
-  pais: string
+  country: string
+  pais?: string // Deprecated: use country instead
   contacto?: string
   email?: string
   telefono?: string

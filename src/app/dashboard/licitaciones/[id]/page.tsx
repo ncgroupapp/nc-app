@@ -82,11 +82,11 @@ const mockLicitacion: Licitacion = {
   updated_at: "2024-01-15T00:00:00Z",
   cliente: {
     id: "1",
-    nombre: "Municipalidad de Montevideo",
-    identificador: "215967890012",
+    name: "Municipalidad de Montevideo",
+    identifier: "215967890012",
     email: "compras@imm.gub.uy",
-    telefono: "19502020",
-    direccion: "Av. 18 de Julio 1360, Montevideo",
+    phone: "19502020",
+    address: "Av. 18 de Julio 1360, Montevideo",
     created_at: "",
     updated_at: "",
   },
@@ -325,9 +325,9 @@ export default function LicitacionDetailPage() {
                 Cliente
               </Label>
               <div className="mt-1">
-                <p className="font-medium">{licitacion.cliente?.nombre}</p>
+                <p className="font-medium">{licitacion.cliente?.name}</p>
                 <p className="text-sm text-gray-500">
-                  {licitacion.cliente?.identificador}
+                  {licitacion.cliente?.identifier}
                 </p>
               </div>
             </div>
@@ -361,11 +361,11 @@ export default function LicitacionDetailPage() {
                     <span className="text-sm">{licitacion.cliente.email}</span>
                   </div>
                 )}
-                {licitacion.cliente?.telefono && (
+                {licitacion.cliente?.phone && (
                   <div className="flex items-center space-x-2">
                     <Phone className="h-4 w-4 text-gray-400" />
                     <span className="text-sm">
-                      {licitacion.cliente.telefono}
+                      {licitacion.cliente.phone}
                     </span>
                   </div>
                 )}
@@ -379,7 +379,7 @@ export default function LicitacionDetailPage() {
                 <div className="flex items-center space-x-2">
                   <MapPin className="h-4 w-4 text-gray-400" />
                   <span className="text-sm">
-                    {licitacion.cliente?.direccion}
+                    {licitacion.cliente?.address}
                   </span>
                 </div>
               </div>

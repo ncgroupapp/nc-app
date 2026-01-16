@@ -15,9 +15,10 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { Plus, Search, Building2 } from 'lucide-react'
-import { Proveedor } from '@/types'
+import { Proveedor, CreateProveedorForm } from '@/types'
 import { useProveedoresStore } from '@/stores'
 import { ProveedorForm } from '@/components/proveedores/proveedor-form'
+import { showSnackbar } from '@/components/ui/snackbar'
 
 export default function ProveedoresPage() {
   const { 
@@ -43,20 +44,21 @@ export default function ProveedoresPage() {
     setFilters({ query: e.target.value })
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleFormSubmit = async (data: any) => {
+  const handleFormSubmit = async (data: CreateProveedorForm | Partial<Proveedor>) => {
     try {
       if (editingProveedor) {
         await updateProveedor(editingProveedor.id, data as Partial<Proveedor>)
+        showSnackbar('Proveedor actualizado correctamente', 'success')
       } else {
-        await createProveedor(data as any)
+        await createProveedor(data as CreateProveedorForm)
+        showSnackbar('Proveedor creado correctamente', 'success')
       }
 
       setEditingProveedor(null)
       setIsCreateDialogOpen(false)
     } catch (error) {
       console.error('Error saving proveedor:', error)
-      alert('Error al guardar el proveedor: ' + (error as Error).message)
+      showSnackbar('Error al guardar el proveedor: ' + (error as Error).message, 'error')
     }
   }
 
@@ -69,9 +71,10 @@ export default function ProveedoresPage() {
     if (confirm('¿Está seguro que desea eliminar este proveedor?')) {
       try {
         await deleteProveedor(id)
+        showSnackbar('Proveedor eliminado correctamente', 'success')
       } catch (error) {
         console.error('Error deleting proveedor:', error)
-        alert('Error al eliminar el proveedor: ' + (error as Error).message)
+        showSnackbar('Error al eliminar el proveedor: ' + (error as Error).message, 'error')
       }
     }
   }
@@ -89,17 +92,17 @@ export default function ProveedoresPage() {
       accessorKey: 'rut'
     },
     {
-      key: 'pais',
+      key: 'country',
       header: 'País',
-      accessorKey: 'pais'
+      accessorKey: 'country'
     },
     {
       key: 'contacts',
       header: 'Contactos',
       render: (row) => (
         <ExpandableListCell 
-          items={(row as any).contacts || []}
-          renderItem={(contact: any) => (
+          items={row.contacts || []}
+          renderItem={(contact) => (
              <div className="text-sm py-1">
                  <div className="font-medium">{contact.name}</div>
                  {contact.role && <div className="text-xs text-muted-foreground">{contact.role}</div>}
@@ -209,7 +212,7 @@ export default function ProveedoresPage() {
                 totalPages: pagination.lastPage,
                 onPageChange: (page) => fetchProveedores(page)
             }}
-            emptyMessage={typeof error === 'string' ? error : 'No se encontraron proveedores'}
+            emptyMessage={'No se encontraron proveedores'}
           />
         </CardContent>
       </Card>
