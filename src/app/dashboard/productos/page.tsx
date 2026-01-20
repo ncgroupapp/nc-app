@@ -71,14 +71,21 @@ export default function ProductosPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const filteredProducts = products.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         product.brand?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         product.model?.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesProveedor = selectedProveedor === 'all' || 
-      product.providers?.some(p => p.id.toString() === selectedProveedor)
-    return matchesSearch && matchesProveedor
-  })
+  // Debounced backend search
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      fetchProducts(1, searchTerm || undefined)
+    }, 300)
+    return () => clearTimeout(timeoutId)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm])
+
+  // Filter by provider locally (backend doesn't support this filter yet)
+  const filteredProducts = selectedProveedor === 'all' 
+    ? products 
+    : products.filter(product => 
+        product.providers?.some(p => p.id.toString() === selectedProveedor)
+      )
 
   const getStockStatus = (stock?: number) => {
     const stockValue = stock ?? 0

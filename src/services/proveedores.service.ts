@@ -15,23 +15,22 @@ export const proveedoresService = {
     return response.data;
   },
 
-  getById: async (id: string): Promise<ApiResponse<Proveedor>> => {
+  getById: async (id: string): Promise<Proveedor> => {
     const response = await api.get<ApiResponse<Proveedor>>(`/providers/${id}`);
-    return response.data;
+    return response.data.data;
   },
 
-  create: async (data: CreateProveedorForm): Promise<ApiResponse<Proveedor>> => {
+  create: async (data: CreateProveedorForm): Promise<Proveedor> => {
     const response = await api.post<ApiResponse<Proveedor>>('/providers', data);
-    return response.data;
+    return response.data.data;
   },
 
-  update: async (id: string, data: Partial<Proveedor>): Promise<ApiResponse<Proveedor>> => {
+  update: async (id: string, data: Partial<Proveedor>): Promise<Proveedor> => {
     const response = await api.patch<ApiResponse<Proveedor>>(`/providers/${id}`, data);
-    return response.data;
+    return response.data.data;
   },
 
-  delete: async (id: string): Promise<ApiResponse<void>> => {
-    const response = await api.delete<ApiResponse<void>>(`/providers/${id}`);
-    return response.data;
+  delete: async (id: string): Promise<void> => {
+    await api.delete(`/providers/${id}`);
   }
 };

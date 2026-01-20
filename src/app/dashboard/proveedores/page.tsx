@@ -33,15 +33,26 @@ export default function ProveedoresPage() {
     filters 
   } = useProveedoresStore()
   
+  const [searchTerm, setSearchTerm] = useState('')
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [editingProveedor, setEditingProveedor] = useState<Proveedor | null>(null)
 
   useEffect(() => {
-    fetchProveedores(pagination.page)
-  }, [fetchProveedores, pagination.page])
+    fetchProveedores(1)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Debounced backend search
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      fetchProveedores(1, searchTerm || undefined)
+    }, 300)
+    return () => clearTimeout(timeoutId)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm])
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFilters({ query: e.target.value })
+    setSearchTerm(e.target.value)
   }
 
   const handleFormSubmit = async (data: CreateProveedorForm | Partial<Proveedor>) => {
@@ -180,7 +191,7 @@ export default function ProveedoresPage() {
                 <Input 
                   placeholder="Buscar por nombre o RUT..." 
                   className="pl-10"
-                  value={filters?.query || ''}
+                  value={searchTerm}
                   onChange={handleSearchChange}
                 />
               </div>

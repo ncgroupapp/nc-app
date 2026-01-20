@@ -16,6 +16,7 @@ import {
   Ship,
   BarChart3,
   Settings,
+  Tag,
 } from "lucide-react";
 
 const sidebarNavItems = [
@@ -41,6 +42,11 @@ const sidebarNavItems = [
         title: "Clientes",
         href: "/dashboard/clientes",
         icon: Users,
+      },
+      {
+        title: "Ofertas",
+        href: "/dashboard/ofertas",
+        icon: Tag,
       },
     ],
   },
