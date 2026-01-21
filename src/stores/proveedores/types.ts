@@ -10,7 +10,7 @@ export interface ProveedoresState {
 }
 
 export interface ProveedoresActions {
-  fetchProveedores: (page?: number) => Promise<void>;
+  fetchProveedores: (page?: number, search?: string) => Promise<void>;
   createProveedor: (data: CreateProveedorForm) => Promise<void>;
   updateProveedor: (id: string, data: Partial<Proveedor>) => Promise<void>;
   deleteProveedor: (id: string) => Promise<void>;

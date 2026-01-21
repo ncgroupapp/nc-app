@@ -1,8 +1,33 @@
+// Enums
+export enum QuotationStatus {
+  CREATED = 'creada',
+  FINALIZED = 'finalizada',
+}
+
+export enum QuotationAwardStatus {
+  AWARDED = 'adjudicado',
+  PARTIALLY_AWARDED = 'adjudicado_parcialmente',
+  NOT_AWARDED = 'no_adjudicado',
+  PENDING = 'en_espera',
+}
+
+export enum Currency {
+  UYU = 'UYU',
+  USD = 'USD',
+  EUR = 'EUR',
+}
+
+export enum AdjudicationStatus {
+  PARTIAL = 'PARTIAL',
+  TOTAL = 'TOTAL',
+}
+
 export interface Proveedor {
   id: string
   name: string
   rut: string
-  pais: string
+  country: string
+  pais?: string // Deprecated: use country instead
   contacto?: string
   email?: string
   telefono?: string

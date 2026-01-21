@@ -6,6 +6,7 @@ import { clientesService } from '@/services/clientes.service';
 import { PaginationMeta } from '@/types';
 
 const getErrorMessage = (error: unknown): string => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const err = error as any;
   if (err.code === 'ERR_NETWORK') {
     return 'Error de conexión: No se pudo conectar con el servidor. Verifique que el backend esté en ejecución.';

@@ -19,17 +19,17 @@ export const useProveedoresStore = create<ProveedoresStore>((set, get) => ({
     limit: 10
   },
 
-  fetchProveedores: async (page = 1) => {
+  fetchProveedores: async (page = 1, search?: string) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await proveedoresService.getAll(page);
+      const response = await proveedoresService.getAll({ page, search });
       set({
         proveedores: response.data,
         pagination: response.meta,
         isLoading: false
       });
-    } catch (error: any) {
-      set({ error: error.message || 'Error al cargar proveedores', isLoading: false });
+    } catch (error) {
+      set({ error: (error as Error).message || 'Error al cargar proveedores', isLoading: false });
     }
   },
 
@@ -38,8 +38,8 @@ export const useProveedoresStore = create<ProveedoresStore>((set, get) => ({
     try {
       await proveedoresService.create(data);
       await get().fetchProveedores(get().pagination.page);
-    } catch (error: any) {
-      set({ error: error.message || 'Error al crear proveedor', isLoading: false });
+    } catch (error) {
+      set({ error: (error as Error).message || 'Error al crear proveedor', isLoading: false });
       throw error;
     }
   },
@@ -49,8 +49,8 @@ export const useProveedoresStore = create<ProveedoresStore>((set, get) => ({
     try {
       await proveedoresService.update(id, data);
       await get().fetchProveedores(get().pagination.page);
-    } catch (error: any) {
-      set({ error: error.message || 'Error al actualizar proveedor', isLoading: false });
+    } catch (error) {
+      set({ error: (error as Error).message || 'Error al actualizar proveedor', isLoading: false });
       throw error;
     }
   },
@@ -60,8 +60,8 @@ export const useProveedoresStore = create<ProveedoresStore>((set, get) => ({
     try {
       await proveedoresService.delete(id);
       await get().fetchProveedores(1);
-    } catch (error: any) {
-      set({ error: error.message || 'Error al eliminar proveedor', isLoading: false });
+    } catch (error) {
+      set({ error: (error as Error).message || 'Error al eliminar proveedor', isLoading: false });
       throw error;
     }
   },

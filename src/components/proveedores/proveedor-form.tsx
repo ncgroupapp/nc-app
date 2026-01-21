@@ -41,18 +41,16 @@ export function ProveedorForm({ initialData, onSubmit, onCancel, isLoading = fal
 
   useEffect(() => {
     if (initialData) {
-      // Cast to any to access properties that might not be in the strict Proveedor type definition yet
-      const data = initialData as any
       setFormData({
-        name: data.name || '',
-        rut: data.rut || '',
-        country: data.country || '',
-        contacts: data.contacts && data.contacts.length > 0
-          ? data.contacts.map((c: any) => ({
-              name: c.name || c.nombre || '',
+        name: initialData.name || '',
+        rut: initialData.rut || '',
+        country: initialData.country || '',
+        contacts: initialData.contacts && initialData.contacts.length > 0
+          ? initialData.contacts.map((c) => ({
+              name: c.name || '',
               email: c.email || '',
-              phone: c.phone || c.telefono || '',
-              address: c.address || c.direccion || ''
+              phone: c.phone || '',
+              address: c.address || ''
             }))
           : [{ name: '', email: '', phone: '', address: '' }]
       })

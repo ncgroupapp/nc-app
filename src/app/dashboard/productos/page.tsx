@@ -31,155 +31,136 @@ import {
 } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
 import { Plus, Search, Edit, Trash2, Package, AlertTriangle } from 'lucide-react'
-import { Producto, Proveedor } from '@/types'
-import { productoSchema } from '@/lib/validations/schema'
-
-// Mock data - en producción vendría de Supabase
-const mockProveedores: Proveedor[] = [
-  { id: '1', nombre: 'Proveedor A', pais: 'Uruguay', contacto: 'Juan Pérez', email: 'juan@proveedora.com', telefono: '099123456', created_at: '', updated_at: '' },
-  { id: '2', nombre: 'Proveedor B', pais: 'Argentina', contacto: 'María García', email: 'maria@proveedorb.com', telefono: '011987654', created_at: '', updated_at: '' },
-]
-
-const mockProductos: Producto[] = [
-  {
-    id: '1',
-    sku: 'PROD-001',
-    nombre: 'Laptop Dell XPS 15',
-    proveedor_id: '1',
-    marca: 'Dell',
-    modelo: 'XPS 15',
-    cantidad_stock: 5,
-    detalles: 'Laptop de alto rendimiento',
-    created_at: '',
-    updated_at: '',
-    proveedor: mockProveedores[0]
-  },
-  {
-    id: '2',
-    sku: 'PROD-002',
-    nombre: 'Monitor Samsung 27"',
-    proveedor_id: '2',
-    marca: 'Samsung',
-    modelo: 'S27R350',
-    cantidad_stock: 15,
-    detalles: 'Monitor LED 27 pulgadas',
-    created_at: '',
-    updated_at: '',
-    proveedor: mockProveedores[1]
-  },
-  {
-    id: '3',
-    sku: 'PROD-003',
-    nombre: 'Teclado Mecánico Logitech',
-    proveedor_id: '1',
-    marca: 'Logitech',
-    modelo: 'MX Keys',
-    cantidad_stock: 2,
-    detalles: 'Teclado mecánico inalámbrico',
-    created_at: '',
-    updated_at: '',
-    proveedor: mockProveedores[0]
-  }
-]
+import { useProductsStore } from '@/stores'
+import { useProveedoresStore } from '@/stores'
+import { Product, CreateProductForm } from '@/services/products.service'
+import { showSnackbar } from '@/components/ui/snackbar'
 
 export default function ProductosPage() {
-  const [productos, setProductos] = useState<Producto[]>(mockProductos)
-  const [proveedores, setProveedores] = useState<Proveedor[]>(mockProveedores)
+  const {
+    products,
+    isLoading,
+    pagination,
+    fetchProducts,
+    createProduct,
+    updateProduct,
+    deleteProduct,
+  } = useProductsStore()
+
+  const { proveedores, fetchProveedores } = useProveedoresStore()
+
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedProveedor, setSelectedProveedor] = useState<string>('all')
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
-  const [editingProduct, setEditingProduct] = useState<Producto | null>(null)
-  const [formData, setFormData] = useState({
-    sku: '',
-    nombre: '',
-    proveedor_id: '',
-    marca: '',
-    modelo: '',
-    cantidad_stock: 0,
-    detalles: '',
-    observaciones: '',
-    chasis: '',
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null)
+  const [formData, setFormData] = useState<CreateProductForm>({
+    name: '',
+    providerIds: [],
+    brand: '',
+    model: '',
+    stockQuantity: 0,
+    details: '',
+    observations: '',
+    chassis: '',
     motor: ''
   })
 
-  const filteredProductos = productos.filter(producto => {
-    const matchesSearch = producto.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         producto.sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         producto.modelo?.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesProveedor = selectedProveedor === 'all' || producto.proveedor_id === selectedProveedor
-    return matchesSearch && matchesProveedor
-  })
+  useEffect(() => {
+    fetchProducts(1)
+    fetchProveedores(1)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
-  const getStockStatus = (stock: number) => {
-    if (stock === 0) return { label: 'Agotado', variant: 'destructive' as const }
-    if (stock <= 5) return { label: 'Bajo Stock', variant: 'secondary' as const }
+  // Debounced backend search
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      fetchProducts(1, searchTerm || undefined)
+    }, 300)
+    return () => clearTimeout(timeoutId)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm])
+
+  // Filter by provider locally (backend doesn't support this filter yet)
+  const filteredProducts = selectedProveedor === 'all' 
+    ? products 
+    : products.filter(product => 
+        product.providers?.some(p => p.id.toString() === selectedProveedor)
+      )
+
+  const getStockStatus = (stock?: number) => {
+    const stockValue = stock ?? 0
+    if (stockValue === 0) return { label: 'Agotado', variant: 'destructive' as const }
+    if (stockValue <= 5) return { label: 'Bajo Stock', variant: 'secondary' as const }
     return { label: 'Disponible', variant: 'default' as const }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (editingProduct) {
-      // Editar producto existente
-      setProductos(prev => prev.map(p =>
-        p.id === editingProduct.id
-          ? {
-              ...p,
-              ...formData,
-              updated_at: new Date().toISOString(),
-              proveedor: proveedores.find(pr => pr.id === formData.proveedor_id)
-            }
-          : p
-      ))
-    } else {
-      // Crear nuevo producto
-      const newProducto: Producto = {
-        id: Date.now().toString(),
-        ...formData,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        proveedor: proveedores.find(pr => pr.id === formData.proveedor_id)
+    try {
+      if (editingProduct) {
+        await updateProduct(editingProduct.id, formData)
+        showSnackbar('Producto actualizado correctamente', 'success')
+      } else {
+        await createProduct(formData)
+        showSnackbar('Producto creado correctamente', 'success')
       }
-      setProductos(prev => [...prev, newProducto])
-    }
 
-    // Reset form
+      resetForm()
+      setIsCreateDialogOpen(false)
+    } catch (error) {
+      console.error('Error saving product:', error)
+      showSnackbar('Error al guardar el producto: ' + (error as Error).message, 'error')
+    }
+  }
+
+  const resetForm = () => {
     setFormData({
-      sku: '',
-      nombre: '',
-      proveedor_id: '',
-      marca: '',
-      modelo: '',
-      cantidad_stock: 0,
-      detalles: '',
-      observaciones: '',
-      chasis: '',
+      name: '',
+      providerIds: [],
+      brand: '',
+      model: '',
+      stockQuantity: 0,
+      details: '',
+      observations: '',
+      chassis: '',
       motor: ''
     })
     setEditingProduct(null)
-    setIsCreateDialogOpen(false)
   }
 
-  const handleEdit = (producto: Producto) => {
-    setEditingProduct(producto)
+  const handleEdit = (product: Product) => {
+    setEditingProduct(product)
     setFormData({
-      sku: producto.sku,
-      nombre: producto.nombre,
-      proveedor_id: producto.proveedor_id,
-      marca: producto.marca || '',
-      modelo: producto.modelo || '',
-      cantidad_stock: producto.cantidad_stock,
-      detalles: producto.detalles || '',
-      observaciones: producto.observaciones || '',
-      chasis: producto.chasis || '',
-      motor: producto.motor || ''
+      name: product.name,
+      providerIds: product.providers?.map(p => p.id) || [],
+      brand: product.brand || '',
+      model: product.model || '',
+      stockQuantity: product.stockQuantity || 0,
+      details: product.details || '',
+      observations: product.observations || '',
+      chassis: product.chassis || '',
+      motor: product.motor || ''
     })
     setIsCreateDialogOpen(true)
   }
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: number) => {
     if (confirm('¿Está seguro que desea eliminar este producto?')) {
-      setProductos(prev => prev.filter(p => p.id !== id))
+      try {
+        await deleteProduct(id)
+        showSnackbar('Producto eliminado correctamente', 'success')
+      } catch (error) {
+        console.error('Error deleting product:', error)
+        showSnackbar('Error al eliminar el producto: ' + (error as Error).message, 'error')
+      }
+    }
+  }
+
+  const handleDialogChange = (open: boolean) => {
+    setIsCreateDialogOpen(open)
+    if (!open) {
+      setTimeout(() => resetForm(), 300)
     }
   }
 
@@ -192,9 +173,9 @@ export default function ProductosPage() {
             Gestión del inventario de productos
           </p>
         </div>
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <Dialog open={isCreateDialogOpen} onOpenChange={handleDialogChange}>
           <DialogTrigger asChild>
-            <Button onClick={() => setEditingProduct(null)}>
+            <Button onClick={() => resetForm()}>
               <Plus className="mr-2 h-4 w-4" />
               Nuevo Producto
             </Button>
@@ -212,29 +193,28 @@ export default function ProductosPage() {
               <div className="grid gap-4 py-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="sku">SKU *</Label>
+                    <Label htmlFor="name">Nombre *</Label>
                     <Input
-                      id="sku"
-                      value={formData.sku}
-                      onChange={(e) => setFormData(prev => ({ ...prev, sku: e.target.value }))}
-                      placeholder="Ej: PROD-001"
+                      id="name"
+                      value={formData.name}
+                      onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                      placeholder="Ej: Laptop Dell XPS 15"
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="proveedor_id">Proveedor *</Label>
+                    <Label htmlFor="proveedor_id">Proveedor</Label>
                     <Select
-                      value={formData.proveedor_id}
-                      onValueChange={(value) => setFormData(prev => ({ ...prev, proveedor_id: value }))}
-                      required
+                      value={formData.providerIds?.[0]?.toString() || ''}
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, providerIds: [parseInt(value)] }))}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Seleccionar proveedor" />
                       </SelectTrigger>
                       <SelectContent>
                         {proveedores.map((proveedor) => (
-                          <SelectItem key={proveedor.id} value={proveedor.id}>
-                            {proveedor.nombre}
+                          <SelectItem key={proveedor.id} value={proveedor.id.toString()}>
+                            {proveedor.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -242,70 +222,58 @@ export default function ProductosPage() {
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="nombre">Nombre del Producto *</Label>
-                  <Input
-                    id="nombre"
-                    value={formData.nombre}
-                    onChange={(e) => setFormData(prev => ({ ...prev, nombre: e.target.value }))}
-                    placeholder="Ej: Laptop Dell XPS 15"
-                    required
-                  />
-                </div>
-
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="marca">Marca</Label>
+                    <Label htmlFor="brand">Marca</Label>
                     <Input
-                      id="marca"
-                      value={formData.marca}
-                      onChange={(e) => setFormData(prev => ({ ...prev, marca: e.target.value }))}
+                      id="brand"
+                      value={formData.brand}
+                      onChange={(e) => setFormData(prev => ({ ...prev, brand: e.target.value }))}
                       placeholder="Ej: Dell"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="modelo">Modelo</Label>
+                    <Label htmlFor="model">Modelo</Label>
                     <Input
-                      id="modelo"
-                      value={formData.modelo}
-                      onChange={(e) => setFormData(prev => ({ ...prev, modelo: e.target.value }))}
+                      id="model"
+                      value={formData.model}
+                      onChange={(e) => setFormData(prev => ({ ...prev, model: e.target.value }))}
                       placeholder="Ej: XPS 15"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="cantidad_stock">Cantidad en Stock *</Label>
+                  <Label htmlFor="stockQuantity">Cantidad en Stock</Label>
                   <Input
-                    id="cantidad_stock"
+                    id="stockQuantity"
                     type="number"
                     min="0"
-                    value={formData.cantidad_stock}
-                    onChange={(e) => setFormData(prev => ({ ...prev, cantidad_stock: parseInt(e.target.value) || 0 }))}
+                    value={formData.stockQuantity}
+                    onChange={(e) => setFormData(prev => ({ ...prev, stockQuantity: parseInt(e.target.value) || 0 }))}
                     placeholder="0"
-                    required
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="detalles">Detalles</Label>
+                  <Label htmlFor="details">Detalles</Label>
                   <textarea
-                    id="detalles"
+                    id="details"
                     className="w-full p-3 border rounded-md"
                     rows={3}
-                    value={formData.detalles}
-                    onChange={(e) => setFormData(prev => ({ ...prev, detalles: e.target.value }))}
+                    value={formData.details}
+                    onChange={(e) => setFormData(prev => ({ ...prev, details: e.target.value }))}
                     placeholder="Descripción detallada del producto..."
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="chasis">Chasis</Label>
+                    <Label htmlFor="chassis">Chasis</Label>
                     <Input
-                      id="chasis"
-                      value={formData.chasis}
-                      onChange={(e) => setFormData(prev => ({ ...prev, chasis: e.target.value }))}
+                      id="chassis"
+                      value={formData.chassis}
+                      onChange={(e) => setFormData(prev => ({ ...prev, chassis: e.target.value }))}
                       placeholder="Número de chasis"
                     />
                   </div>
@@ -321,13 +289,13 @@ export default function ProductosPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="observaciones">Observaciones</Label>
+                  <Label htmlFor="observations">Observaciones</Label>
                   <textarea
-                    id="observaciones"
+                    id="observations"
                     className="w-full p-3 border rounded-md"
                     rows={2}
-                    value={formData.observaciones}
-                    onChange={(e) => setFormData(prev => ({ ...prev, observaciones: e.target.value }))}
+                    value={formData.observations}
+                    onChange={(e) => setFormData(prev => ({ ...prev, observations: e.target.value }))}
                     placeholder="Observaciones adicionales..."
                   />
                 </div>
@@ -336,8 +304,8 @@ export default function ProductosPage() {
                 <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
                   Cancelar
                 </Button>
-                <Button type="submit">
-                  {editingProduct ? 'Actualizar' : 'Crear'} Producto
+                <Button type="submit" disabled={isLoading}>
+                  {isLoading ? 'Guardando...' : editingProduct ? 'Actualizar' : 'Crear'} Producto
                 </Button>
               </DialogFooter>
             </form>
@@ -356,7 +324,7 @@ export default function ProductosPage() {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
-                  placeholder="Buscar por nombre, SKU o modelo..."
+                  placeholder="Buscar por nombre, marca o modelo..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -372,7 +340,7 @@ export default function ProductosPage() {
                   <SelectItem value="all">Todos los proveedores</SelectItem>
                   {proveedores.map((proveedor) => (
                     <SelectItem key={proveedor.id} value={proveedor.id}>
-                      {proveedor.nombre}
+                      {proveedor.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -388,76 +356,88 @@ export default function ProductosPage() {
           <CardTitle className="flex items-center space-x-2">
             <Package className="h-5 w-5" />
             <span>Listado de Productos</span>
-            <Badge variant="outline">{filteredProductos.length} productos</Badge>
+            <Badge variant="outline">{filteredProducts.length} productos</Badge>
           </CardTitle>
           <CardDescription>
             Gestione el inventario de productos del sistema
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>SKU</TableHead>
-                <TableHead>Nombre</TableHead>
-                <TableHead>Marca/Modelo</TableHead>
-                <TableHead>Proveedor</TableHead>
-                <TableHead>Stock</TableHead>
-                <TableHead>Estado</TableHead>
-                <TableHead className="text-right">Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredProductos.map((producto) => {
-                const stockStatus = getStockStatus(producto.cantidad_stock)
-                return (
-                  <TableRow key={producto.id}>
-                    <TableCell className="font-medium">{producto.sku}</TableCell>
-                    <TableCell>{producto.nombre}</TableCell>
-                    <TableCell>
-                      {producto.marca && producto.modelo
-                        ? `${producto.marca} ${producto.modelo}`
-                        : '-'
-                      }
-                    </TableCell>
-                    <TableCell>{producto.proveedor?.nombre}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center space-x-2">
-                        <span>{producto.cantidad_stock}</span>
-                        {producto.cantidad_stock <= 5 && (
-                          <AlertTriangle className="h-4 w-4 text-yellow-500" />
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={stockStatus.variant}>
-                        {stockStatus.label}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end space-x-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEdit(producto)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDelete(producto.id)}
-                          className="text-red-600 hover:text-red-700"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
+          {isLoading ? (
+            <div className="text-center py-8">Cargando productos...</div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nombre</TableHead>
+                  <TableHead>Marca/Modelo</TableHead>
+                  <TableHead>Proveedor</TableHead>
+                  <TableHead>Stock</TableHead>
+                  <TableHead>Estado</TableHead>
+                  <TableHead className="text-right">Acciones</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredProducts.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                      No se encontraron productos
                     </TableCell>
                   </TableRow>
-                )
-              })}
-            </TableBody>
-          </Table>
+                ) : (
+                  filteredProducts.map((product) => {
+                    const stockStatus = getStockStatus(product.stockQuantity)
+                    return (
+                      <TableRow key={product.id}>
+                        <TableCell className="font-medium">{product.name}</TableCell>
+                        <TableCell>
+                          {product.brand && product.model
+                            ? `${product.brand} ${product.model}`
+                            : product.brand || product.model || '-'
+                          }
+                        </TableCell>
+                        <TableCell>
+                          {product.providers?.map(p => p.name).join(', ') || '-'}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center space-x-2">
+                            <span>{product.stockQuantity ?? 0}</span>
+                            {(product.stockQuantity ?? 0) <= 5 && (
+                              <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={stockStatus.variant}>
+                            {stockStatus.label}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end space-x-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleEdit(product)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDelete(product.id)}
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })
+                )}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>

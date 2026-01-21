@@ -6,6 +6,13 @@
         "-y",
         "@upstash/context7-mcp"
       ]
+    },
+    "shadcn": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@heilgar/shadcn-ui-mcp-server"
+      ]
     }
   }
 }

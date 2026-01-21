@@ -15,24 +15,23 @@ export const clientesService = {
     return response.data;
   },
 
-  getById: async (id: string): Promise<ApiResponse<Cliente>> => {
+  getById: async (id: string): Promise<Cliente> => {
     const response = await api.get<ApiResponse<Cliente>>(`/clients/${id}`);
-    return response.data;
+    return response.data.data;
   },
 
-  create: async (data: CreateClienteForm): Promise<ApiResponse<Cliente>> => {
+  create: async (data: CreateClienteForm): Promise<Cliente> => {
     const response = await api.post<ApiResponse<Cliente>>('/clients', data);
-    return response.data;
+    return response.data.data;
   },
 
-  update: async (id: string, data: Partial<Cliente>): Promise<ApiResponse<Cliente>> => {
+  update: async (id: string, data: Partial<Cliente>): Promise<Cliente> => {
     const response = await api.patch<ApiResponse<Cliente>>(`/clients/${id}`, data);
-    return response.data;
+    return response.data.data;
   },
 
-  delete: async (id: string): Promise<ApiResponse<void>> => {
-    const response = await api.delete<ApiResponse<void>>(`/clients/${id}`);
-    return response.data;
+  delete: async (id: string): Promise<void> => {
+    await api.delete<ApiResponse<void>>(`/clients/${id}`);
   },
 
   hasLicitaciones: async (id: string): Promise<boolean> => {
