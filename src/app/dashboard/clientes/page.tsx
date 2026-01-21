@@ -19,6 +19,8 @@ import { Cliente } from '@/types'
 import { useClientesStore } from '@/stores'
 
 import { ClientForm } from '@/components/clientes/client-form'
+import { SearchInput } from '@/components/common/search-input'
+import { useDebounce } from '@/hooks/use-debounce'
 
 export default function ClientesPage() {
   const { 
@@ -38,14 +40,16 @@ export default function ClientesPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [editingCliente, setEditingCliente] = useState<Cliente | null>(null)
 
+  const debouncedSearch = useDebounce(filters.search, 500)
+
   useEffect(() => {
     fetchClientes(pagination.page)
-  }, [fetchClientes, pagination.page])
+  }, [fetchClientes, pagination.page, debouncedSearch])
 
   const filteredClientes = clientes;
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFilters({ search: e.target.value })
+  const handleSearchChange = (value: string) => {
+    setFilters({ search: value })
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -192,15 +196,11 @@ export default function ClientesPage() {
         <CardContent>
           <div className="flex gap-4 items-center">
             <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input
-                  placeholder="Buscar por nombre, RUT o email..."
-                  value={filters.search}
-                  onChange={handleSearchChange}
-                  className="pl-10"
-                />
-              </div>
+              <SearchInput
+                placeholder="Buscar por nombre, RUT o email..."
+                value={filters.search}
+                onChange={handleSearchChange}
+              />
             </div>
           </div>
         </CardContent>

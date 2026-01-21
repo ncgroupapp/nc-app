@@ -26,7 +26,7 @@ const DEFAULT_PAGINATION: PaginationMeta = {
 
 export const useClientesStore = create<ClientesStore>()(
   devtools(
-    immer((set) => ({
+    immer((set, get) => ({
       // Initial State
       clientes: [],
       selectedCliente: null,
@@ -43,8 +43,9 @@ export const useClientesStore = create<ClientesStore>()(
           state.isLoading = true;
           state.error = null;
         });
+        const { filters } = get();
         try {
-          const response = await clientesService.getAll(page);
+          const response = await clientesService.getAll(page, filters.search);
           console.log('fetchClientes response:', response);
           
           set((state) => {

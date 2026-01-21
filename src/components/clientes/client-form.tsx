@@ -82,7 +82,9 @@ export function ClientForm({ initialData, onSubmit, onCancel, isLoading = false 
           <Input
             id="nombre"
             value={formData.nombre}
-            onChange={(e) => setFormData(prev => ({ ...prev, nombre: e.target.value }))}
+            onChange={(e) =>
+              setFormData((prev) => ({ ...prev, nombre: e.target.value }))
+            }
             placeholder="Ej: Empresa XYZ S.A."
             required
           />
@@ -93,7 +95,12 @@ export function ClientForm({ initialData, onSubmit, onCancel, isLoading = false 
           <Input
             id="identificador"
             value={formData.identificador}
-            onChange={(e) => setFormData(prev => ({ ...prev, identificador: e.target.value }))}
+            onChange={(e) =>
+              setFormData((prev) => ({
+                ...prev,
+                identificador: e.target.value,
+              }))
+            }
             placeholder="Ej: 987654321098"
             required
           />
@@ -106,94 +113,120 @@ export function ClientForm({ initialData, onSubmit, onCancel, isLoading = false 
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => setFormData(prev => ({
-                ...prev,
-                contactos: [...prev.contactos, { nombre: '', email: '', telefono: '', direccion: '' }]
-              }))}
+              onClick={() =>
+                setFormData((prev) => ({
+                  ...prev,
+                  contactos: [
+                    ...prev.contactos,
+                    { nombre: "", email: "", telefono: "", direccion: "" },
+                  ],
+                }))
+              }
             >
               <Plus className="h-4 w-4 mr-2" />
               Agregar Contacto
             </Button>
           </div>
-          
-          {formData.contactos.map((contacto, index) => (
-            <div key={index} className="p-4 border rounded-md space-y-4 relative">
-              {formData.contactos.length > 1 && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute top-2 right-2 text-red-500 hover:text-red-700"
-                  onClick={() => setFormData(prev => ({
-                    ...prev,
-                    contactos: prev.contactos.filter((_, i) => i !== index)
-                  }))}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              )}
-              
-              <div className="space-y-2">
-                <Label htmlFor={`contact-name-${index}`}>Nombre del Contacto</Label>
-                <Input
-                  id={`contact-name-${index}`}
-                  value={contacto.nombre}
-                  onChange={(e) => {
-                    const newContactos = [...formData.contactos]
-                    newContactos[index].nombre = e.target.value
-                    setFormData(prev => ({ ...prev, contactos: newContactos }))
-                  }}
-                  placeholder="Ej: Juan Pérez"
-                />
-              </div>
 
-              <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2">
+            {formData.contactos.map((contacto, index) => (
+              <div
+                key={index}
+                className="relative grid gap-3 p-4 border rounded-lg bg-muted/20"
+              >
+                {formData.contactos.length > 1 && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute top-2 right-2 text-red-500 hover:text-red-700"
+                    onClick={() =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        contactos: prev.contactos.filter((_, i) => i !== index),
+                      }))
+                    }
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
+
                 <div className="space-y-2">
-                  <Label htmlFor={`contact-email-${index}`}>Email</Label>
+                  <Label htmlFor={`contact-name-${index}`}>
+                    Nombre del Contacto
+                  </Label>
                   <Input
-                    id={`contact-email-${index}`}
-                    type="email"
-                    value={contacto.email}
+                    id={`contact-name-${index}`}
+                    value={contacto.nombre}
                     onChange={(e) => {
-                      const newContactos = [...formData.contactos]
-                      newContactos[index].email = e.target.value
-                      setFormData(prev => ({ ...prev, contactos: newContactos }))
+                      const newContactos = [...formData.contactos];
+                      newContactos[index].nombre = e.target.value;
+                      setFormData((prev) => ({
+                        ...prev,
+                        contactos: newContactos,
+                      }));
                     }}
-                    placeholder="Ej: contacto@cliente.com"
+                    placeholder="Ej: Juan Pérez"
                   />
                 </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor={`contact-email-${index}`}>Email</Label>
+                    <Input
+                      id={`contact-email-${index}`}
+                      type="email"
+                      value={contacto.email}
+                      onChange={(e) => {
+                        const newContactos = [...formData.contactos];
+                        newContactos[index].email = e.target.value;
+                        setFormData((prev) => ({
+                          ...prev,
+                          contactos: newContactos,
+                        }));
+                      }}
+                      placeholder="Ej: contacto@cliente.com"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor={`contact-phone-${index}`}>Teléfono</Label>
+                    <Input
+                      id={`contact-phone-${index}`}
+                      value={contacto.telefono}
+                      onChange={(e) => {
+                        const newContactos = [...formData.contactos];
+                        newContactos[index].telefono = e.target.value;
+                        setFormData((prev) => ({
+                          ...prev,
+                          contactos: newContactos,
+                        }));
+                      }}
+                      placeholder="Ej: 24011234"
+                    />
+                  </div>
+                </div>
+
                 <div className="space-y-2">
-                  <Label htmlFor={`contact-phone-${index}`}>Teléfono</Label>
-                  <Input
-                    id={`contact-phone-${index}`}
-                    value={contacto.telefono}
+                  <Label htmlFor={`contact-address-${index}`}>Dirección</Label>
+                  <textarea
+                    id={`contact-address-${index}`}
+                    className="w-full p-3 border rounded-md text-sm"
+                    rows={2}
+                    value={contacto.direccion}
                     onChange={(e) => {
-                      const newContactos = [...formData.contactos]
-                      newContactos[index].telefono = e.target.value
-                      setFormData(prev => ({ ...prev, contactos: newContactos }))
+                      const newContactos = [...formData.contactos];
+                      newContactos[index].direccion = e.target.value;
+                      setFormData((prev) => ({
+                        ...prev,
+                        contactos: newContactos,
+                      }));
                     }}
-                    placeholder="Ej: 24011234"
+                    placeholder="Dirección del contacto..."
                   />
                 </div>
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor={`contact-address-${index}`}>Dirección</Label>
-                <textarea
-                  id={`contact-address-${index}`}
-                  className="w-full p-3 border rounded-md text-sm"
-                  rows={2}
-                  value={contacto.direccion}
-                  onChange={(e) => {
-                    const newContactos = [...formData.contactos]
-                    newContactos[index].direccion = e.target.value
-                    setFormData(prev => ({ ...prev, contactos: newContactos }))
-                  }}
-                  placeholder="Dirección del contacto..."
-                />
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
       <DialogFooter>
@@ -201,9 +234,11 @@ export function ClientForm({ initialData, onSubmit, onCancel, isLoading = false 
           Cancelar
         </Button>
         <Button type="submit" disabled={isLoading}>
-          {isLoading ? 'Guardando...' : (initialData ? 'Actualizar' : 'Crear') + ' Cliente'}
+          {isLoading
+            ? "Guardando..."
+            : (initialData ? "Actualizar" : "Crear") + " Cliente"}
         </Button>
       </DialogFooter>
     </form>
-  )
+  );
 }
