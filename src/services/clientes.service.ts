@@ -1,10 +1,13 @@
 import api from '@/lib/axios';
-import { Cliente, CreateClienteForm, ApiResponse, PaginatedResponse, Licitacion } from '@/types';
+import { Cliente, CreateClienteForm, ApiResponse, PaginatedResponse, Licitacion, ClienteResponse } from '@/types';
 
 export const clientesService = {
-  getAll: async (page: number = 1, search?: string): Promise<PaginatedResponse<Cliente>> => {
+  getAll: async (
+    page: number = 1,
+    search?: string,
+  ): Promise<PaginatedResponse<Cliente>> => {
     let url = `/clients?page=${page}`;
-    
+
     if (search) {
       const term = encodeURIComponent(search);
       // Enviamos el mismo término para todos los campos para permitir búsqueda general (OR en backend)
@@ -15,19 +18,25 @@ export const clientesService = {
     return response.data;
   },
 
-  getById: async (id: string): Promise<Cliente> => {
+  getById: async (id: string): Promise<ClienteResponse> => {
     const response = await api.get<ApiResponse<Cliente>>(`/clients/${id}`);
-    return response.data.data;
+    return response.data;
   },
 
-  create: async (data: CreateClienteForm): Promise<Cliente> => {
-    const response = await api.post<ApiResponse<Cliente>>('/clients', data);
-    return response.data.data;
+  create: async (data: CreateClienteForm): Promise<ClienteResponse> => {
+    const response = await api.post<ApiResponse<Cliente>>("/clients", data);
+    return response.data;
   },
 
-  update: async (id: string, data: Partial<Cliente>): Promise<Cliente> => {
-    const response = await api.patch<ApiResponse<Cliente>>(`/clients/${id}`, data);
-    return response.data.data;
+  update: async (
+    id: string,
+    data: Partial<Cliente>,
+  ): Promise<ClienteResponse> => {
+    const response = await api.patch<ApiResponse<Cliente>>(
+      `/clients/${id}`,
+      data,
+    );
+    return response.data;
   },
 
   delete: async (id: string): Promise<void> => {
@@ -36,7 +45,9 @@ export const clientesService = {
 
   hasLicitaciones: async (id: string): Promise<boolean> => {
     try {
-      const response = await api.get<ApiResponse<Licitacion[]>>(`/licitaciones?cliente_id=${id}`);
+      const response = await api.get<ApiResponse<Licitacion[]>>(
+        `/licitaciones?cliente_id=${id}`,
+      );
       // Assuming the API returns an array of licitaciones in data.data or just data depending on ApiResponse structure
       // Based on other methods, it seems response.data is the payload.
       // If ApiResponse<T> has a 'data' property which is T.
@@ -45,8 +56,8 @@ export const clientesService = {
       // Wait, let's check ApiResponse type definition to be sure.
       return Array.isArray(response.data.data) && response.data.data.length > 0;
     } catch (error) {
-      console.error('Error checking licitaciones:', error);
+      console.error("Error checking licitaciones:", error);
       return false;
     }
-  }
+  },
 };
