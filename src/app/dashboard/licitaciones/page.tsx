@@ -77,6 +77,18 @@ export default function LicitacionesPage() {
   const [selectedEstado, setSelectedEstado] = useState<string>('all')
   const [selectedCliente, setSelectedCliente] = useState<string>('all')
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+  
+  // Paginación
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalItems, setTotalItems] = useState(0)
+  
+  // Autocompletar cliente en formulario
+  const [openClientCombobox, setOpenClientCombobox] = useState(false)
+  const [clientSearch, setClientSearch] = useState('')
+  const [filteredClients, setFilteredClients] = useState<Cliente[]>([])
+  const [selectedClientName, setSelectedClientName] = useState('')
+  
   const [formData, setFormData] = useState({
     startDate: '',
     deadlineDate: '',
@@ -87,21 +99,32 @@ export default function LicitacionesPage() {
   })
 
   const estados = Object.values(LicitationStatus)
-  const clientesUnicos = Array.from(new Set(licitaciones.map(l => l.client?.name || ''))).filter(Boolean)
 
   const loadData = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
       
+      // Preparar filtros para el backend
+      const filters = {
+        page: currentPage,
+        limit: 10,
+        search: searchTerm || undefined,
+        status: selectedEstado !== 'all' ? selectedEstado as LicitationStatus : undefined,
+        clientId: selectedCliente !== 'all' ? parseInt(selectedCliente) : undefined,
+      }
+      
       const [licitacionesRes, clientesRes, productosRes] = await Promise.all([
-        licitacionesService.getAll(),
+        licitacionesService.getAll(filters),
         clientesService.getAll(),
         productsService.getAll()
       ])
       
       setLicitaciones(licitacionesRes.data || [])
+      setTotalPages(licitacionesRes.meta?.lastPage || 1)
+      setTotalItems(licitacionesRes.meta?.total || 0)
       setClientes(clientesRes.data || [])
+      setFilteredClients(clientesRes.data || [])
       setSearchResults(productosRes.data || [])
     } catch (err) {
       console.error('Error loading data:', err)
@@ -109,7 +132,7 @@ export default function LicitacionesPage() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [currentPage, searchTerm, selectedEstado, selectedCliente])
 
   useEffect(() => {
     loadData()
@@ -129,14 +152,23 @@ export default function LicitacionesPage() {
     return () => clearTimeout(timeoutId)
   }, [productSearch])
 
-  const filteredLicitaciones = licitaciones.filter(licitacion => {
-    const matchesSearch = licitacion.callNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         licitacion.internalNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         licitacion.client?.name?.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesEstado = selectedEstado === 'all' || licitacion.status === selectedEstado
-    const matchesCliente = selectedCliente === 'all' || licitacion.client?.name === selectedCliente
-    return matchesSearch && matchesEstado && matchesCliente
-  })
+  // Filtrar clientes para autocompletar en formulario
+  useEffect(() => {
+    if (clientSearch) {
+      const filtered = clientes.filter(c => 
+        c.name.toLowerCase().includes(clientSearch.toLowerCase()) ||
+        c.identifier.toLowerCase().includes(clientSearch.toLowerCase())
+      )
+      setFilteredClients(filtered)
+    } else {
+      setFilteredClients(clientes)
+    }
+  }, [clientSearch, clientes])
+
+  // Resetear página cuando cambian los filtros
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchTerm, selectedEstado, selectedCliente])
 
   const getEstadoInfo = (status: LicitationStatus) => {
     switch (status) {
@@ -176,11 +208,24 @@ export default function LicitacionesPage() {
     setSelectedProducts(prev => prev.filter(p => p.id !== productId))
   }
 
+  const handleSelectClient = (cliente: Cliente) => {
+    setFormData(prev => ({ ...prev, clientId: cliente.id.toString() }))
+    setSelectedClientName(cliente.name)
+    setOpenClientCombobox(false)
+    setClientSearch('')
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
     if (!formData.clientId || !formData.callNumber || !formData.startDate || !formData.deadlineDate) {
       setError('Por favor complete todos los campos requeridos')
+      return
+    }
+
+    // Validación de fechas
+    if (new Date(formData.deadlineDate) < new Date(formData.startDate)) {
+      setError('La fecha límite no puede ser menor que la fecha de inicio')
       return
     }
 
@@ -214,6 +259,7 @@ export default function LicitacionesPage() {
         productIds: []
       })
       setSelectedProducts([])
+      setSelectedClientName('')
       setIsCreateDialogOpen(false)
       
       // Reload data
@@ -268,8 +314,20 @@ export default function LicitacionesPage() {
             </DialogHeader>
             <form onSubmit={handleSubmit}>
               {error && (
-                <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-md">
-                  {error}
+                <div className="mb-4 p-3 bg-destructive/10 border border-destructive/20 text-destructive rounded-md flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                    <span>{error}</span>
+                  </div>
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => setError(null)}
+                    className="h-6 w-6 p-0 hover:bg-destructive/20"
+                  >
+                    <XCircle className="h-4 w-4" />
+                  </Button>
                 </div>
               )}
               <Tabs defaultValue="datos" className="w-full">
@@ -304,21 +362,55 @@ export default function LicitacionesPage() {
 
                   <div className="space-y-2">
                     <Label htmlFor="clientId">Cliente *</Label>
-                    <Select
-                      value={formData.clientId}
-                      onValueChange={(value) => setFormData(prev => ({ ...prev, clientId: value }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleccionar cliente" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {clientes.map((cliente) => (
-                          <SelectItem key={cliente.id} value={cliente.id.toString()}>
-                            {cliente.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Popover open={openClientCombobox} onOpenChange={setOpenClientCombobox}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={openClientCombobox}
+                          className="w-full justify-between"
+                        >
+                          {selectedClientName || "Seleccionar cliente..."}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[400px] p-0" align="start">
+                        <Command shouldFilter={false}>
+                          <CommandInput 
+                            placeholder="Buscar cliente..." 
+                            value={clientSearch}
+                            onValueChange={setClientSearch}
+                          />
+                          <CommandList>
+                            <CommandEmpty>No se encontraron clientes.</CommandEmpty>
+                            <CommandGroup>
+                              {filteredClients.map((cliente) => (
+                                <CommandItem
+                                  key={cliente.id}
+                                  value={cliente.name}
+                                  onSelect={() => handleSelectClient(cliente)}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      formData.clientId === cliente.id.toString()
+                                        ? "opacity-100"
+                                        : "opacity-0"
+                                    )}
+                                  />
+                                  <div>
+                                    <span className="font-medium">{cliente.name}</span>
+                                    <span className="text-sm text-muted-foreground ml-2">
+                                      ({cliente.identifier})
+                                    </span>
+                                  </div>
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
@@ -506,9 +598,9 @@ export default function LicitacionesPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos los clientes</SelectItem>
-                  {clientesUnicos.map((cliente) => (
-                    <SelectItem key={cliente} value={cliente}>
-                      {cliente}
+                  {clientes.map((cliente) => (
+                    <SelectItem key={cliente.id} value={cliente.id.toString()}>
+                      {cliente.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -524,18 +616,19 @@ export default function LicitacionesPage() {
           <CardTitle className="flex items-center space-x-2">
             <FileText className="h-5 w-5" />
             <span>Listado de Licitaciones</span>
-            <Badge variant="outline">{filteredLicitaciones.length} licitaciones</Badge>
+            <Badge variant="outline">{totalItems} licitaciones</Badge>
           </CardTitle>
           <CardDescription>
             Gestione todas las licitaciones del sistema
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {filteredLicitaciones.length === 0 ? (
+          {licitaciones.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               No hay licitaciones que coincidan con los filtros seleccionados.
             </div>
           ) : (
+            <>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -548,7 +641,7 @@ export default function LicitacionesPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredLicitaciones.map((licitacion) => {
+                {licitaciones.map((licitacion) => {
                   const estadoInfo = getEstadoInfo(licitacion.status)
                   const vencida = isVencida(licitacion.deadlineDate) && licitacion.status === LicitationStatus.PENDING
 
@@ -595,6 +688,35 @@ export default function LicitacionesPage() {
                 })}
               </TableBody>
             </Table>
+            
+            {/* Paginación */}
+            <div className="flex items-center justify-between mt-4 pt-4 border-t">
+              <span className="text-sm text-muted-foreground">
+                Mostrando {licitaciones.length} de {totalItems} resultados
+              </span>
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage(p => p - 1)}
+                >
+                  Anterior
+                </Button>
+                <span className="px-3 py-2 text-sm">
+                  Página {currentPage} de {totalPages}
+                </span>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage(p => p + 1)}
+                >
+                  Siguiente
+                </Button>
+              </div>
+            </div>
+            </>
           )}
         </CardContent>
       </Card>

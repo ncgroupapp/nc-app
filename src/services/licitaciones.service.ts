@@ -68,6 +68,7 @@ export interface LicitationFilters {
   limit?: number;
   search?: string;
   status?: LicitationStatus;
+  clientId?: number;
 }
 
 export const licitacionesService = {
@@ -77,6 +78,7 @@ export const licitacionesService = {
     if (filters.limit) params.append('limit', filters.limit.toString());
     if (filters.search) params.append('search', filters.search);
     if (filters.status) params.append('status', filters.status);
+    if (filters.clientId) params.append('clientId', filters.clientId.toString());
     
     const response = await api.get<PaginatedResponse<Licitation>>(`/licitations?${params.toString()}`);
     return response.data;
