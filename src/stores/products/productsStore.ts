@@ -19,10 +19,10 @@ export const useProductsStore = create<ProductsStore>((set, get) => ({
     limit: 10
   },
 
-  fetchProducts: async (page = 1, search?: string) => {
+  fetchProducts: async (page = 1, search?: string, providerId?: number) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await productsService.getAll({ page, search });
+      const response = await productsService.getAll({ page, search, providerId });
       set({
         products: response.data,
         pagination: response.meta,

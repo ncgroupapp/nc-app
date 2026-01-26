@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Edit, Trash2 } from "lucide-react"
+import { Edit, Trash2, Eye } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -14,11 +14,24 @@ interface ActionCellProps<T> {
   row: T
   onEdit?: (row: T) => void
   onDelete?: (row: T) => void
+  onView?: (row: T) => void
 }
 
-export function ActionCell<T>({ row, onEdit, onDelete }: ActionCellProps<T>) {
+export function ActionCell<T>({ row, onEdit, onDelete, onView }: ActionCellProps<T>) {
   return (
     <div className="flex justify-end space-x-2">
+      {onView && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation()
+            onView(row)
+          }}
+        >
+          <Eye className="h-4 w-4" />
+        </Button>
+      )}
       {onEdit && (
         <Button
           variant="outline"

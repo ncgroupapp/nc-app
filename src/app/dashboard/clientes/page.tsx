@@ -21,6 +21,7 @@ import { useClientesStore } from '@/stores'
 import { ClientForm } from '@/components/clientes/client-form'
 import { SearchInput } from '@/components/common/search-input'
 import { useDebounce } from '@/hooks/use-debounce'
+import { useConfirm } from '@/hooks/use-confirm'
 
 export default function ClientesPage() {
   const { 
@@ -36,6 +37,8 @@ export default function ClientesPage() {
     setCurrentPage,
     filters
   } = useClientesStore()
+  
+  const { confirm } = useConfirm()
   
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [editingCliente, setEditingCliente] = useState<Cliente | null>(null)
@@ -77,7 +80,11 @@ export default function ClientesPage() {
   }
 
   const handleDelete = async (id: string) => {
-    if (confirm('¿Está seguro que desea eliminar este cliente?')) {
+    if (await confirm({
+      title: 'Eliminar Cliente',
+      message: '¿Está seguro que desea eliminar este cliente?',
+      variant: 'destructive'
+    })) {
       try {
         await deleteCliente(id)
       } catch (error) {

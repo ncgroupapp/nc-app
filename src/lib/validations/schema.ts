@@ -51,7 +51,8 @@ export const productoSchema = z.object({
   detalles: z.string().optional(),
   observaciones: z.string().optional(),
   chasis: z.string().optional(),
-  motor: z.string().optional()
+  motor: z.string().optional(),
+  equipamiento: z.string().optional()
 })
 
 // Esquema de validación para Ofertas

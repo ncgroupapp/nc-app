@@ -1,19 +1,8 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Dialog,
   DialogContent,
@@ -23,6 +12,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { MultiSelectSearch } from '@/components/ui/multi-select-search'
 import {
   Select,
   SelectContent,
@@ -30,30 +22,30 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Label } from '@/components/ui/label'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
-import { cn } from "@/lib/utils"
-import {
-  Plus, Search, Edit, Eye, Clock, CheckCircle, XCircle,
-  AlertCircle, FileText, Loader2, Check, ChevronsUpDown
-} from 'lucide-react'
-import { licitacionesService, Licitation, LicitationStatus, CreateLicitationDto } from '@/services/licitaciones.service'
 import { clientesService } from '@/services/clientes.service'
-import { productsService, Product } from '@/services/products.service'
+import { CreateLicitationDto, licitacionesService, Licitation, LicitationStatus } from '@/services/licitaciones.service'
+import { Product, productsService } from '@/services/products.service'
 import { Cliente } from '@/types'
+import {
+  AlertCircle,
+  CheckCircle,
+  Clock,
+  Edit, Eye,
+  FileText, Loader2,
+  Plus, Search,
+  XCircle
+} from 'lucide-react'
+import Link from 'next/link'
+import { useCallback, useEffect, useState } from 'react'
 
 // Map backend status to Spanish display labels
 const statusLabels: Record<LicitationStatus, string> = {
@@ -346,83 +338,53 @@ export default function LicitacionesPage() {
                 </TabsContent>
 
                 <TabsContent value="productos" className="space-y-4">
-                  <div className="space-y-2">
+                   <div className="space-y-2">
                     <Label>Agregar Producto</Label>
-                    <Popover open={openCombobox} onOpenChange={setOpenCombobox}>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          aria-expanded={openCombobox}
-                          className="w-full justify-between"
-                        >
-                          Seleccionar producto para agregar...
-                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-[400px] p-0" align="start">
-                        <Command shouldFilter={false}>
-                          <CommandInput 
-                            placeholder="Buscar producto..." 
-                            value={productSearch}
-                            onValueChange={setProductSearch}
-                          />
-                          <CommandList>
-                            <CommandEmpty>No se encontraron productos.</CommandEmpty>
-                            <CommandGroup>
-                              {searchResults.map((product) => (
-                                <CommandItem
-                                  key={product.id}
-                                  value={product.name}
-                                  onSelect={() => handleAddProduct(product)}
-                                  disabled={formData.productIds.includes(product.id)}
-                                >
-                                  <Check
-                                    className={cn(
-                                      "mr-2 h-4 w-4",
-                                      formData.productIds.includes(product.id)
-                                        ? "opacity-100"
-                                        : "opacity-0"
-                                    )}
-                                  />
-                                  {product.name} (Stock: {product.stockQuantity || 0})
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
+                    <MultiSelectSearch 
+                      options={searchResults.map(product => ({ 
+                        id: product.id, 
+                        label: `${product.name} (Stock: ${product.stockQuantity || 0})`
+                      }))}
+                      selectedValues={formData.productIds}
+                      onSelect={(val) => {
+                        const id = typeof val === 'string' ? parseInt(val) : val;
+                        const product = searchResults.find(p => p.id === id);
+                        if(product) handleAddProduct(product);
+                      }}
+                      onRemove={(val) => {
+                         const id = typeof val === 'string' ? parseInt(val) : val;
+                         handleRemoveProduct(id);
+                      }}
+                      placeholder="Seleccionar producto para agregar..."
+                      searchPlaceholder="Buscar producto..."
+                      emptyMessage="No se encontraron productos."
+                      
+                      // Search handling
+                      searchValue={productSearch}
+                      onSearchValueChange={setProductSearch}
+                      shouldFilter={false}
+                    />
                   </div>
 
-                  {formData.productIds.length === 0 ? (
+                  {/* 
+                   * Previously there was a manual list of selected products here.
+                   * MultiSelectSearch now displays selected items as badges.
+                   * If you prefer the detailed list with stock info below, you can keep the code below.
+                   * However, MultiSelectSearch already shows the selected items.
+                   * Usually we remove the duplication.
+                   * But the previous list had more details (Stock) and a different layout.
+                   * The user asked to replace the "autocomplete component". 
+                   * The "autocomplete component" is the input part.
+                   * 
+                   * If I remove the code below, the user loses the list with stock info unless I put it into badges.
+                   * I put "Stock: ..." into the badge label in the map above.
+                   * So badges will say "Product Name (Stock: 5)".
+                   * So I can remove the manual list to avoid duplication.
+                   */}
+
+                  {formData.productIds.length === 0 && (
                     <div className="text-center py-8 text-gray-500">
                       No hay productos agregados. Busque y seleccione productos.
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <Label>Productos Seleccionados</Label>
-                      <div className="space-y-2 max-h-60 overflow-y-auto">
-                        {selectedProducts.map((product) => (
-                          <div key={product.id} className="flex items-center justify-between p-3 border rounded-lg">
-                            <div>
-                              <span className="font-medium">{product.name}</span>
-                              <span className="text-sm text-gray-500 ml-2">
-                                (Stock: {product.stockQuantity || 0})
-                              </span>
-                            </div>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleRemoveProduct(product.id)}
-                              className="text-red-600 hover:text-red-700"
-                            >
-                              <XCircle className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
                     </div>
                   )}
                 </TabsContent>

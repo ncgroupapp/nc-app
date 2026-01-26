@@ -36,8 +36,10 @@ import { productsService, Product } from '@/services/products.service'
 import { proveedoresService } from '@/services/proveedores.service'
 import { Proveedor } from '@/types'
 import { toast } from 'sonner'
+import { useConfirm } from '@/hooks/use-confirm'
 
 export default function OfertasPage() {
+  const { confirm } = useConfirm()
   const [ofertas, setOfertas] = useState<Offer[]>([])
   const [productos, setProductos] = useState<Product[]>([])
   const [proveedores, setProveedores] = useState<Proveedor[]>([])
@@ -127,7 +129,11 @@ export default function OfertasPage() {
   }
 
   const handleDelete = async (id: number) => {
-    if (!confirm('¿Está seguro de eliminar esta oferta?')) return
+    if (!await confirm({
+      title: 'Eliminar Oferta',
+      message: '¿Está seguro de eliminar esta oferta?',
+      variant: 'destructive'
+    })) return
 
     try {
       await offersService.delete(id)

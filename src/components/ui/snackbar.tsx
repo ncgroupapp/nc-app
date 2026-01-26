@@ -20,7 +20,7 @@ export const showSnackbar = (
 ) => {
   const toastOptions = {
     description: options?.description,
-    duration: options?.duration,
+    duration: options?.duration || 4000,
     action: options?.action,
   }
 
