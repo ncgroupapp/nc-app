@@ -11,7 +11,7 @@ export interface ProductsState {
 }
 
 export interface ProductsActions {
-  fetchProducts: (page?: number, search?: string) => Promise<void>;
+  fetchProducts: (page?: number, search?: string, providerId?: number) => Promise<void>;
   createProduct: (data: CreateProductForm) => Promise<void>;
   updateProduct: (id: number, data: Partial<CreateProductForm>) => Promise<void>;
   deleteProduct: (id: number) => Promise<void>;
