@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -54,6 +54,7 @@ import { licitacionesService, Licitation, LicitationStatus, CreateLicitationDto 
 import { clientesService } from '@/services/clientes.service'
 import { productsService, Product } from '@/services/products.service'
 import { Cliente } from '@/types'
+import { showSnackbar } from '@/components/ui/snackbar'
 
 // Map backend status to Spanish display labels
 const statusLabels: Record<LicitationStatus, string> = {
@@ -63,14 +64,30 @@ const statusLabels: Record<LicitationStatus, string> = {
   [LicitationStatus.TOTAL_ADJUDICATION]: 'Adjudicación Total',
 }
 
+// Interface para productos con cantidad
+interface ProductWithQuantity {
+  product: Product;
+  quantity: number;
+}
+
+// Helper para formatear fecha a DD/MM/YYYY
+const formatDateDisplay = (dateString: string): string => {
+  if (!dateString) return ''
+  const date = new Date(dateString)
+  const day = date.getDate().toString().padStart(2, '0')
+  const month = (date.getMonth() + 1).toString().padStart(2, '0')
+  const year = date.getFullYear()
+  return `${day}/${month}/${year}`
+}
+
 export default function LicitacionesPage() {
   const [licitaciones, setLicitaciones] = useState<Licitation[]>([])
   const [clientes, setClientes] = useState<Cliente[]>([])
   const [searchResults, setSearchResults] = useState<Product[]>([])
-  const [selectedProducts, setSelectedProducts] = useState<Product[]>([])
   const [openCombobox, setOpenCombobox] = useState(false)
   const [productSearch, setProductSearch] = useState('')
-  const [loading, setLoading] = useState(true)
+  const [initialLoading, setInitialLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
@@ -88,6 +105,7 @@ export default function LicitacionesPage() {
   const [clientSearch, setClientSearch] = useState('')
   const [filteredClients, setFilteredClients] = useState<Cliente[]>([])
   const [selectedClientName, setSelectedClientName] = useState('')
+  const [dateError, setDateError] = useState<string | null>(null)
   
   const [formData, setFormData] = useState({
     startDate: '',
@@ -95,48 +113,84 @@ export default function LicitacionesPage() {
     clientId: '',
     callNumber: '',
     internalNumber: '',
-    productIds: [] as number[]
+    productsWithQuantity: [] as ProductWithQuantity[]
   })
+
 
   const estados = Object.values(LicitationStatus)
 
-  const loadData = useCallback(async () => {
+  // Función para cargar solo licitaciones con los filtros actuales
+  const fetchLicitaciones = async (page: number, search?: string, status?: string, clientId?: string) => {
     try {
       setLoading(true)
       setError(null)
       
-      // Preparar filtros para el backend
       const filters = {
-        page: currentPage,
-        limit: 10,
-        search: searchTerm || undefined,
-        status: selectedEstado !== 'all' ? selectedEstado as LicitationStatus : undefined,
-        clientId: selectedCliente !== 'all' ? parseInt(selectedCliente) : undefined,
+        page,
+        search: search || undefined,
+        status: status !== 'all' ? status as LicitationStatus : undefined,
+        clientId: clientId !== 'all' && clientId ? parseInt(clientId) : undefined,
       }
       
-      const [licitacionesRes, clientesRes, productosRes] = await Promise.all([
-        licitacionesService.getAll(filters),
-        clientesService.getAll(),
-        productsService.getAll()
-      ])
+      const licitacionesRes = await licitacionesService.getAll(filters)
       
       setLicitaciones(licitacionesRes.data || [])
       setTotalPages(licitacionesRes.meta?.lastPage || 1)
       setTotalItems(licitacionesRes.meta?.total || 0)
-      setClientes(clientesRes.data || [])
-      setFilteredClients(clientesRes.data || [])
-      setSearchResults(productosRes.data || [])
     } catch (err) {
-      console.error('Error loading data:', err)
+      console.error('Error loading licitaciones:', err)
       setError('Error al cargar los datos. Por favor, intente nuevamente.')
     } finally {
       setLoading(false)
     }
-  }, [currentPage, searchTerm, selectedEstado, selectedCliente])
+  }
 
+  // Carga inicial de datos estáticos (clientes y productos) - solo una vez
   useEffect(() => {
-    loadData()
-  }, [loadData])
+    const loadInitialData = async () => {
+      try {
+        const [clientesRes, productosRes] = await Promise.all([
+          clientesService.getAll(),
+          productsService.getAll()
+        ])
+        setClientes(clientesRes.data || [])
+        setFilteredClients(clientesRes.data || [])
+        setSearchResults(productosRes.data || [])
+      } catch (err) {
+        console.error('Error loading initial data:', err)
+      }
+    }
+    loadInitialData()
+    fetchLicitaciones(1, '', 'all', 'all').finally(() => setInitialLoading(false))
+  }, [])
+
+  // Debounce para búsqueda de texto
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setCurrentPage(1)
+      fetchLicitaciones(1, searchTerm, selectedEstado, selectedCliente)
+    }, 300)
+    return () => clearTimeout(timeoutId)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm])
+
+  // Cambio de filtros de select (sin debounce)
+  const handleEstadoChange = (value: string) => {
+    setSelectedEstado(value)
+    setCurrentPage(1)
+    fetchLicitaciones(1, searchTerm, value, selectedCliente)
+  }
+
+  const handleClienteChange = (value: string) => {
+    setSelectedCliente(value)
+    setCurrentPage(1)
+    fetchLicitaciones(1, searchTerm, selectedEstado, value)
+  }
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage)
+    fetchLicitaciones(newPage, searchTerm, selectedEstado, selectedCliente)
+  }
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -165,11 +219,6 @@ export default function LicitacionesPage() {
     }
   }, [clientSearch, clientes])
 
-  // Resetear página cuando cambian los filtros
-  useEffect(() => {
-    setCurrentPage(1)
-  }, [searchTerm, selectedEstado, selectedCliente])
-
   const getEstadoInfo = (status: LicitationStatus) => {
     switch (status) {
       case LicitationStatus.PENDING:
@@ -190,12 +239,12 @@ export default function LicitacionesPage() {
   }
 
   const handleAddProduct = (product: Product) => {
-    if (!formData.productIds.includes(product.id)) {
+    const exists = formData.productsWithQuantity.some(p => p.product.id === product.id)
+    if (!exists) {
       setFormData(prev => ({
         ...prev,
-        productIds: [...prev.productIds, product.id]
+        productsWithQuantity: [...prev.productsWithQuantity, { product, quantity: 1 }]
       }))
-      setSelectedProducts(prev => [...prev, product])
     }
     setOpenCombobox(false)
   }
@@ -203,9 +252,36 @@ export default function LicitacionesPage() {
   const handleRemoveProduct = (productId: number) => {
     setFormData(prev => ({
       ...prev,
-      productIds: prev.productIds.filter(id => id !== productId)
+      productsWithQuantity: prev.productsWithQuantity.filter(p => p.product.id !== productId)
     }))
-    setSelectedProducts(prev => prev.filter(p => p.id !== productId))
+  }
+
+  const handleUpdateQuantity = (productId: number, quantity: number) => {
+    setFormData(prev => ({
+      ...prev,
+      productsWithQuantity: prev.productsWithQuantity.map(p =>
+        p.product.id === productId ? { ...p, quantity: Math.max(1, quantity) } : p
+      )
+    }))
+  }
+
+  // Validación de fecha en tiempo real
+  const handleStartDateChange = (value: string) => {
+    setFormData(prev => ({ ...prev, startDate: value }))
+    if (formData.deadlineDate && new Date(formData.deadlineDate) < new Date(value)) {
+      setDateError('La fecha límite no puede ser menor que la fecha de inicio')
+    } else {
+      setDateError(null)
+    }
+  }
+
+  const handleDeadlineDateChange = (value: string) => {
+    setFormData(prev => ({ ...prev, deadlineDate: value }))
+    if (formData.startDate && new Date(value) < new Date(formData.startDate)) {
+      setDateError('La fecha límite no puede ser menor que la fecha de inicio')
+    } else {
+      setDateError(null)
+    }
   }
 
   const handleSelectClient = (cliente: Cliente) => {
@@ -219,18 +295,18 @@ export default function LicitacionesPage() {
     e.preventDefault()
     
     if (!formData.clientId || !formData.callNumber || !formData.startDate || !formData.deadlineDate) {
-      setError('Por favor complete todos los campos requeridos')
+      showSnackbar('Por favor complete todos los campos requeridos', 'error')
       return
     }
 
     // Validación de fechas
     if (new Date(formData.deadlineDate) < new Date(formData.startDate)) {
-      setError('La fecha límite no puede ser menor que la fecha de inicio')
+      showSnackbar('La fecha límite no puede ser menor que la fecha de inicio', 'error')
       return
     }
 
-    if (formData.productIds.length === 0) {
-      setError('Debe agregar al menos un producto')
+    if (formData.productsWithQuantity.length === 0) {
+      showSnackbar('Debe agregar al menos un producto', 'error')
       return
     }
 
@@ -244,7 +320,10 @@ export default function LicitacionesPage() {
         clientId: parseInt(formData.clientId),
         callNumber: formData.callNumber,
         internalNumber: formData.internalNumber,
-        productIds: formData.productIds
+        products: formData.productsWithQuantity.map(p => ({
+          productId: p.product.id,
+          quantity: p.quantity
+        }))
       }
 
       await licitacionesService.create(createData)
@@ -256,17 +335,18 @@ export default function LicitacionesPage() {
         clientId: '',
         callNumber: '',
         internalNumber: '',
-        productIds: []
+        productsWithQuantity: []
       })
-      setSelectedProducts([])
       setSelectedClientName('')
       setIsCreateDialogOpen(false)
       
       // Reload data
-      await loadData()
+      await fetchLicitaciones(1, searchTerm, selectedEstado, selectedCliente)
+      
+      showSnackbar('Licitación creada correctamente', 'success')
     } catch (err) {
       console.error('Error creating licitation:', err)
-      setError('Error al crear la licitación. Por favor, intente nuevamente.')
+      showSnackbar('Error al crear la licitación. Por favor, intente nuevamente.', 'error')
     } finally {
       setSubmitting(false)
     }
@@ -280,7 +360,7 @@ export default function LicitacionesPage() {
     }))
   }
 
-  if (loading) {
+  if (initialLoading) {
     return (
       <div className="flex items-center justify-center h-96">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -420,9 +500,14 @@ export default function LicitacionesPage() {
                         id="startDate"
                         type="date"
                         value={formData.startDate}
-                        onChange={(e) => setFormData(prev => ({ ...prev, startDate: e.target.value }))}
+                        onChange={(e) => handleStartDateChange(e.target.value)}
                         required
                       />
+                      {formData.startDate && (
+                        <span className="text-xs text-muted-foreground">
+                          {formatDateDisplay(formData.startDate)}
+                        </span>
+                      )}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="deadlineDate">Fecha Límite *</Label>
@@ -430,11 +515,21 @@ export default function LicitacionesPage() {
                         id="deadlineDate"
                         type="date"
                         value={formData.deadlineDate}
-                        onChange={(e) => setFormData(prev => ({ ...prev, deadlineDate: e.target.value }))}
+                        onChange={(e) => handleDeadlineDateChange(e.target.value)}
                         required
+                        min={formData.startDate}
+                        className={dateError ? 'border-red-500' : ''}
                       />
+                      {formData.deadlineDate && (
+                        <span className="text-xs text-muted-foreground">
+                          {formatDateDisplay(formData.deadlineDate)}
+                        </span>
+                      )}
                     </div>
                   </div>
+                  {dateError && (
+                    <p className="text-sm text-red-500 mt-2">{dateError}</p>
+                  )}
                 </TabsContent>
 
                 <TabsContent value="productos" className="space-y-4">
@@ -467,12 +562,12 @@ export default function LicitacionesPage() {
                                   key={product.id}
                                   value={product.name}
                                   onSelect={() => handleAddProduct(product)}
-                                  disabled={formData.productIds.includes(product.id)}
+                                  disabled={formData.productsWithQuantity.some(p => p.product.id === product.id)}
                                 >
                                   <Check
                                     className={cn(
                                       "mr-2 h-4 w-4",
-                                      formData.productIds.includes(product.id)
+                                      formData.productsWithQuantity.some(p => p.product.id === product.id)
                                         ? "opacity-100"
                                         : "opacity-0"
                                     )}
@@ -487,7 +582,7 @@ export default function LicitacionesPage() {
                     </Popover>
                   </div>
 
-                  {formData.productIds.length === 0 ? (
+                  {formData.productsWithQuantity.length === 0 ? (
                     <div className="text-center py-8 text-gray-500">
                       No hay productos agregados. Busque y seleccione productos.
                     </div>
@@ -495,13 +590,24 @@ export default function LicitacionesPage() {
                     <div className="space-y-2">
                       <Label>Productos Seleccionados</Label>
                       <div className="space-y-2 max-h-60 overflow-y-auto">
-                        {selectedProducts.map((product) => (
-                          <div key={product.id} className="flex items-center justify-between p-3 border rounded-lg">
-                            <div>
+                        {formData.productsWithQuantity.map(({ product, quantity }) => (
+                          <div key={product.id} className="flex items-center justify-between p-3 border rounded-lg gap-3">
+                            <div className="flex-1">
                               <span className="font-medium">{product.name}</span>
                               <span className="text-sm text-gray-500 ml-2">
                                 (Stock: {product.stockQuantity || 0})
                               </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Label htmlFor={`qty-${product.id}`} className="text-sm whitespace-nowrap">Cantidad:</Label>
+                              <Input
+                                id={`qty-${product.id}`}
+                                type="number"
+                                min="1"
+                                value={quantity}
+                                onChange={(e) => handleUpdateQuantity(product.id, parseInt(e.target.value) || 1)}
+                                className="w-20"
+                              />
                             </div>
                             <Button
                               type="button"
@@ -524,7 +630,7 @@ export default function LicitacionesPage() {
                 <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
                   Cancelar
                 </Button>
-                <Button type="submit" disabled={submitting || formData.productIds.length === 0}>
+                <Button type="submit" disabled={submitting || formData.productsWithQuantity.length === 0 || !!dateError}>
                   {submitting ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -577,7 +683,7 @@ export default function LicitacionesPage() {
               </div>
             </div>
             <div className="w-48">
-              <Select value={selectedEstado} onValueChange={setSelectedEstado}>
+              <Select value={selectedEstado} onValueChange={handleEstadoChange}>
                 <SelectTrigger>
                   <SelectValue placeholder="Todos los estados" />
                 </SelectTrigger>
@@ -592,7 +698,7 @@ export default function LicitacionesPage() {
               </Select>
             </div>
             <div className="w-48">
-              <Select value={selectedCliente} onValueChange={setSelectedCliente}>
+              <Select value={selectedCliente} onValueChange={handleClienteChange}>
                 <SelectTrigger>
                   <SelectValue placeholder="Todos los clientes" />
                 </SelectTrigger>
@@ -623,7 +729,12 @@ export default function LicitacionesPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {licitaciones.length === 0 ? (
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              <span className="ml-2 text-muted-foreground">Cargando...</span>
+            </div>
+          ) : licitaciones.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               No hay licitaciones que coincidan con los filtros seleccionados.
             </div>
@@ -699,7 +810,7 @@ export default function LicitacionesPage() {
                   variant="outline" 
                   size="sm" 
                   disabled={currentPage === 1}
-                  onClick={() => setCurrentPage(p => p - 1)}
+                  onClick={() => handlePageChange(currentPage - 1)}
                 >
                   Anterior
                 </Button>
@@ -710,7 +821,7 @@ export default function LicitacionesPage() {
                   variant="outline" 
                   size="sm" 
                   disabled={currentPage === totalPages}
-                  onClick={() => setCurrentPage(p => p + 1)}
+                  onClick={() => handlePageChange(currentPage + 1)}
                 >
                   Siguiente
                 </Button>

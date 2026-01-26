@@ -228,10 +228,11 @@ export default function LicitacionDetailPage() {
         observations: createQuotationData.observations || undefined,
         paymentForm: createQuotationData.paymentForm || undefined,
         validity: createQuotationData.validity || undefined,
-        items: licitation.products?.map(product => ({
-          productId: product.id,
-          inStock: (product.stockQuantity || 0) > 0,
-          quantity: 1,
+        items: licitation.licitationProducts?.map(lp => ({
+          productId: lp.product.id,
+          productName: lp.product.name,
+          inStock: (lp.product.stockQuantity || 0) > 0,
+          quantity: lp.quantity,
           priceWithoutIVA: 0.01,
           priceWithIVA: 0.01,
           ivaPercentage: 22,
@@ -643,7 +644,7 @@ export default function LicitacionDetailPage() {
                   <span>Productos Solicitados</span>
                 </span>
                 <Badge variant="outline">
-                  {licitation.products?.length || 0} productos
+                  {licitation.licitationProducts?.length || 0} productos
                 </Badge>
               </CardTitle>
               <CardDescription>
@@ -651,25 +652,31 @@ export default function LicitacionDetailPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {licitation.products && licitation.products.length > 0 ? (
+            {licitation.licitationProducts && licitation.licitationProducts.length > 0 ? (
                 <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Producto</TableHead>
                       <TableHead>Marca/Modelo</TableHead>
+                      <TableHead className="text-center">Cantidad Solicitada</TableHead>
                       <TableHead>Stock Disponible</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {licitation.products.map((product) => (
-                      <TableRow key={product.id}>
-                        <TableCell className="font-medium">{product.name}</TableCell>
+                    {licitation.licitationProducts.map((lp) => (
+                      <TableRow key={lp.id}>
+                        <TableCell className="font-medium">{lp.product.name}</TableCell>
                         <TableCell>
-                          {product.brand} {product.model}
+                          {lp.product.brand} {lp.product.model}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Badge variant="secondary" className="font-bold">
+                            {lp.quantity}
+                          </Badge>
                         </TableCell>
                         <TableCell>
-                          <Badge variant={product.stockQuantity && product.stockQuantity > 0 ? "default" : "destructive"}>
-                            {product.stockQuantity || 0}
+                          <Badge variant={lp.product.stockQuantity && lp.product.stockQuantity > 0 ? "default" : "destructive"}>
+                            {lp.product.stockQuantity || 0}
                           </Badge>
                         </TableCell>
                       </TableRow>
