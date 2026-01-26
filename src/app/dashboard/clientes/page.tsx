@@ -43,7 +43,7 @@ export default function ClientesPage() {
   const debouncedSearch = useDebounce(filters.search, 500)
 
   useEffect(() => {
-    fetchClientes(pagination.page)
+    fetchClientes(pagination.page, debouncedSearch)
   }, [fetchClientes, pagination.page, debouncedSearch])
 
   const filteredClientes = clientes;

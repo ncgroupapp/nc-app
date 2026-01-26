@@ -1,20 +1,21 @@
 import api from '@/lib/axios';
 import { Cliente, CreateClienteForm, ApiResponse, PaginatedResponse, Licitacion, ClienteResponse } from '@/types';
 
+export interface ClientFilters { 
+  page?: number;
+  search?: string;
+}
+
 export const clientesService = {
   getAll: async (
-    page: number = 1,
-    search?: string,
+ filters: ClientFilters = {}
   ): Promise<PaginatedResponse<Cliente>> => {
-    let url = `/clients?page=${page}`;
+    const params = new URLSearchParams();
 
-    if (search) {
-      const term = encodeURIComponent(search);
-      // Enviamos el mismo término para todos los campos para permitir búsqueda general (OR en backend)
-      url += `&name=${term}&identifier=${term}&email=${term}`;
-    }
+    if (filters.page) params.append('page', filters.page.toString());
+    if (filters.search) params.append('search', filters.search);
 
-    const response = await api.get<PaginatedResponse<Cliente>>(url);
+    const response = await api.get<PaginatedResponse<Cliente>>(`/clients?${params.toString()}`);
     return response.data;
   },
 
