@@ -5,7 +5,7 @@ import { PaginatedResponse, ApiResponse, AdjudicationStatus } from '@/types';
 export interface AdjudicationItem {
   id?: number;
   adjudicationId?: number;
-  productId: number;
+  productId?: number;
   productName?: string;
   quantity: number;
   unitPrice: number;
@@ -13,7 +13,7 @@ export interface AdjudicationItem {
 }
 
 export interface NonAwardedItem {
-  productId: number;
+  productId?: number;
   competitorName?: string;
   competitorRut?: string;
   competitorPrice?: number;
@@ -44,7 +44,7 @@ export interface CreateAdjudicationDto {
 }
 
 export interface AddAdjudicationItemDto {
-  productId: number;
+  productId?: number;
   productName?: string;
   quantity: number;
   unitPrice: number;

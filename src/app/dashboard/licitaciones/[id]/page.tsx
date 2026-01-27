@@ -66,8 +66,8 @@ import {
   CreateQuotationDto 
 } from "@/services/cotizaciones.service";
 import { adjudicacionesService, Adjudication, CreateAdjudicationDto } from "@/services/adjudicaciones.service";
-import { offersService, Offer } from "@/services/offers.service";
 import { QuotationStatus, QuotationAwardStatus, Currency, AdjudicationStatus } from "@/types";
+import { QuotationItemForm } from "@/components/quotations";
 
 
 export default function LicitacionDetailPage() {
@@ -96,12 +96,13 @@ export default function LicitacionDetailPage() {
   // Item Editing State
   const [editingItem, setEditingItem] = useState<QuotationItem | null>(null);
   const [isEditItemDialogOpen, setIsEditItemDialogOpen] = useState(false);
-  const [offersForProduct, setOffersForProduct] = useState<Offer[]>([]);
   
   // Adjudication State
   const [awardingItem, setAwardingItem] = useState<QuotationItem | null>(null);
   const [isAwardDialogOpen, setIsAwardDialogOpen] = useState(false);
   const [awardQuantity, setAwardQuantity] = useState<number>(0);
+  const [isFullAward, setIsFullAward] = useState(false);
+
   
   const [rejectingItem, setRejectingItem] = useState<QuotationItem | null>(null);
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
@@ -332,7 +333,7 @@ export default function LicitacionDetailPage() {
   };
 
   
-  const handleEditItem = async (item: QuotationItem) => {
+  const handleEditItem = (item: QuotationItem) => {
     setEditingItem(item);
     setNewItemData({
       productId: item.productId?.toString() || '',
@@ -344,32 +345,10 @@ export default function LicitacionDetailPage() {
       inStock: item.inStock,
       currency: item.currency
     });
-    
-    if (item.productId) {
-      try {
-        const offersRes = await offersService.getAll({ productId: item.productId });
-        setOffersForProduct(offersRes.data || []);
-      } catch (e) {
-        console.error("Error fetching offers", e);
-      }
-    } else {
-      setOffersForProduct([]);
-    }
-    
     setIsEditItemDialogOpen(true);
   };
 
-  const handleSelectOffer = (offerId: string) => {
-    const offer = offersForProduct.find(o => o.id.toString() === offerId);
-    if (offer) {
-      setNewItemData(prev => ({
-        ...prev,
-        priceWithoutIVA: offer.price,
-        deliveryTime: 0, 
-        quantity: offer.quantity,
-      }));
-    }
-  };
+
 
   const handleUpdateItem = async () => {
     if (!quotation || !editingItem) return;
@@ -410,9 +389,10 @@ export default function LicitacionDetailPage() {
     }
   };
 
-  const handleOpenAward = (item: QuotationItem) => {
+  const handleOpenAward = (item: QuotationItem, isTotal: boolean = false) => {
     setAwardingItem(item);
     setAwardQuantity(item.quantity);
+    setIsFullAward(isTotal);
     setIsAwardDialogOpen(true);
   };
 
@@ -422,12 +402,14 @@ export default function LicitacionDetailPage() {
     try {
       setSubmitting(true);
       
-      const adjudicationData: CreateAdjudicationDto = {
+      const status = isFullAward || awardQuantity >= awardingItem.quantity ? 'total' : 'parcial';
+
+      const adjudicationData: any = {
         quotationId: quotation.id,
         licitationId: licitationId,
-        status: AdjudicationStatus.PARTIAL,
+        status: status,
         items: [{
-          productId: awardingItem.productId || 0,
+          productId: awardingItem.productId || undefined,
           quantity: awardQuantity,
           unitPrice: awardingItem.priceWithoutIVA
         }],
@@ -466,7 +448,7 @@ export default function LicitacionDetailPage() {
         status: AdjudicationStatus.PARTIAL,
         items: [],
         nonAwardedItems: [{
-          productId: rejectingItem.productId || 0,
+          productId: rejectingItem.productId || undefined,
           competitorName: competitorData.winnerName,
           competitorRut: competitorData.winnerRut || 'N/A',
           competitorPrice: competitorData.winnerPrice,
@@ -484,6 +466,18 @@ export default function LicitacionDetailPage() {
       setError('Error al rechazar item');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleStatusChange = (item: QuotationItem, status: QuotationAwardStatus) => {
+    if (quotation?.status === QuotationStatus.FINALIZED) return;
+
+    if (status === QuotationAwardStatus.AWARDED) {
+      handleOpenAward(item, true); // true for Total
+    } else if (status === QuotationAwardStatus.PARTIALLY_AWARDED) {
+      handleOpenAward(item, false); // false for Partial
+    } else if (status === QuotationAwardStatus.NOT_AWARDED) {
+      handleOpenReject(item);
     }
   };
 
@@ -736,72 +730,11 @@ export default function LicitacionDetailPage() {
                           Complete los detalles del producto
                         </DialogDescription>
                       </DialogHeader>
-                      <div className="space-y-4">
-                        <div className="space-y-2">
-                          <Label>Nombre del Producto</Label>
-                          <Input
-                            value={newItemData.productName}
-                            onChange={(e) => setNewItemData(prev => ({ ...prev, productName: e.target.value }))}
-                            placeholder="Nombre del producto"
-                          />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label>Cantidad</Label>
-                            <Input
-                              type="number"
-                              min="1"
-                              value={newItemData.quantity}
-                              onChange={(e) => setNewItemData(prev => ({ ...prev, quantity: parseInt(e.target.value) || 1 }))}
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label>Precio sin IVA</Label>
-                            <Input
-                              type="number"
-                              min="0"
-                              step="0.01"
-                              value={newItemData.priceWithoutIVA}
-                              onChange={(e) => setNewItemData(prev => ({ ...prev, priceWithoutIVA: parseFloat(e.target.value) || 0 }))}
-                            />
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label>% IVA</Label>
-                            <Input
-                              type="number"
-                              value={newItemData.ivaPercentage}
-                              onChange={(e) => setNewItemData(prev => ({ ...prev, ivaPercentage: parseFloat(e.target.value) || 0 }))}
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label>Plazo Entrega (días)</Label>
-                            <Input
-                              type="number"
-                              min="1"
-                              value={newItemData.deliveryTime}
-                              onChange={(e) => setNewItemData(prev => ({ ...prev, deliveryTime: parseInt(e.target.value) || 1 }))}
-                            />
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Moneda</Label>
-                          <Select
-                            value={newItemData.currency}
-                            onValueChange={(value) => setNewItemData(prev => ({ ...prev, currency: value as Currency }))}
-                          >
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {Object.values(Currency).map(currency => (
-                                <SelectItem key={currency} value={currency}>{currency}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
+                      <QuotationItemForm
+                        data={newItemData}
+                        onChange={setNewItemData}
+                        showOfferSearch={true}
+                      />
                       <DialogFooter>
                         <Button variant="outline" onClick={() => setIsQuotationDialogOpen(false)}>
                           Cancelar
@@ -841,7 +774,20 @@ export default function LicitacionDetailPage() {
                           </TableHeader>
                           <TableBody>
                             {quotation.items.map((item, index) => {
-                              const statusBadge = getAwardStatusBadge(item.awardStatus);
+                              const getStatusParams = (status: string) => {
+                                switch (status) {
+                                  case QuotationAwardStatus.AWARDED:
+                                    return { label: 'Adjudicado', color: 'bg-green-100 text-green-800 hover:bg-green-100' };
+                                  case QuotationAwardStatus.PARTIALLY_AWARDED:
+                                    return { label: 'Parcial', color: 'bg-blue-100 text-blue-800 hover:bg-blue-100' };
+                                  case QuotationAwardStatus.NOT_AWARDED:
+                                    return { label: 'No Adjudicada', color: 'bg-red-100 text-red-800 hover:bg-red-100' };
+                                  default:
+                                    return { label: 'En Espera', color: 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100' };
+                                }
+                              };
+                              const statusParams = getStatusParams(item.awardStatus);
+                              
                               return (
                                 <TableRow key={item.id || index}>
                                   <TableCell>
@@ -857,11 +803,27 @@ export default function LicitacionDetailPage() {
                                   <TableCell>${(Number(item.priceWithIVA) * Number(item.quantity)).toFixed(2)}</TableCell>
                                   <TableCell>
                                     <div className="flex flex-col gap-1">
-                                      <Badge className={`${statusBadge.color} border-none`}>
-                                        {statusBadge.label}
-                                      </Badge>
+                                      <Select
+                                        value={item.awardStatus}
+                                        onValueChange={(val) => handleStatusChange(item, val as QuotationAwardStatus)}
+                                        disabled={quotation.status === QuotationStatus.FINALIZED}
+                                      >
+                                        <SelectTrigger className="w-[180px] h-8">
+                                          <div className="flex items-center gap-2">
+                                            <Badge className={`${statusParams.color} border-none`}>
+                                              {statusParams.label}
+                                            </Badge>
+                                          </div>
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value={QuotationAwardStatus.PENDING}>En Espera</SelectItem>
+                                          <SelectItem value={QuotationAwardStatus.AWARDED}>Adjudicado</SelectItem>
+                                          <SelectItem value={QuotationAwardStatus.PARTIALLY_AWARDED}>Adjudicación Parcial</SelectItem>
+                                          <SelectItem value={QuotationAwardStatus.NOT_AWARDED}>No Adjudicada</SelectItem>
+                                        </SelectContent>
+                                      </Select>
                                       {item.awardStatus === QuotationAwardStatus.PARTIALLY_AWARDED && (
-                                        <span className="text-xs text-muted-foreground">
+                                        <span className="text-xs text-muted-foreground ml-2">
                                           ({item.awardedQuantity}/{item.quantity})
                                         </span>
                                       )}
@@ -998,14 +960,14 @@ export default function LicitacionDetailPage() {
                             <TableRow key={item.id}>
                               <TableCell>{item.productName}</TableCell>
                               <TableCell>{item.quantity}</TableCell>
-                              <TableCell>${item.unitPrice.toFixed(2)}</TableCell>
+                              <TableCell>${Number(item.unitPrice).toFixed(2)}</TableCell>
                             </TableRow>
                           ))}
                         </TableBody>
                       </Table>
                       <div className="mt-4 pt-4 border-t">
                         <p className="text-sm text-gray-500">
-                          Total: ${adjudication.totalPriceWithIVA.toFixed(2)} (con IVA)
+                          Total: ${Number(adjudication.totalPriceWithIVA).toFixed(2)} (con IVA)
                         </p>
                       </div>
                     </div>
@@ -1023,55 +985,11 @@ export default function LicitacionDetailPage() {
           <DialogHeader>
             <DialogTitle>Editar Item de Cotización</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            {/* Offer Selector */}
-            {offersForProduct.length > 0 && (
-              <div className="space-y-2">
-                <Label>Seleccionar Oferta Disponible</Label>
-                <Select onValueChange={handleSelectOffer}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccionar oferta..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {offersForProduct.map(offer => (
-                      <SelectItem key={offer.id} value={offer.id.toString()}>
-                        {offer.name || `Oferta #${offer.id}`} - ${offer.price} ({offer.provider?.name})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-            
-            <div className="space-y-2">
-              <Label>Nombre del Producto</Label>
-              <Input
-                value={newItemData.productName}
-                onChange={(e) => setNewItemData(prev => ({ ...prev, productName: e.target.value }))}
-              />
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-               <div className="space-y-2">
-                <Label>Cantidad</Label>
-                <Input type="number" value={newItemData.quantity} onChange={(e) => setNewItemData(prev => ({ ...prev, quantity: parseInt(e.target.value) || 0 }))} />
-               </div>
-               <div className="space-y-2">
-                <Label>Precio sin IVA</Label>
-                <Input type="number" value={newItemData.priceWithoutIVA} onChange={(e) => setNewItemData(prev => ({ ...prev, priceWithoutIVA: parseFloat(e.target.value) || 0 }))} />
-               </div>
-            </div>
-             <div className="grid grid-cols-2 gap-4">
-               <div className="space-y-2">
-                <Label>% IVA</Label>
-                <Input type="number" value={newItemData.ivaPercentage} onChange={(e) => setNewItemData(prev => ({ ...prev, ivaPercentage: parseFloat(e.target.value) || 0 }))} />
-               </div>
-               <div className="space-y-2">
-                <Label>Plazo Entrega (días)</Label>
-                <Input type="number" value={newItemData.deliveryTime} onChange={(e) => setNewItemData(prev => ({ ...prev, deliveryTime: parseInt(e.target.value) || 0 }))} />
-               </div>
-            </div>
-          </div>
+          <QuotationItemForm
+            data={newItemData}
+            onChange={setNewItemData}
+            showOfferSearch={true}
+          />
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditItemDialogOpen(false)}>Cancelar</Button>
             <Button onClick={handleUpdateItem} disabled={submitting}>Guardar Cambios</Button>
@@ -1082,9 +1000,11 @@ export default function LicitacionDetailPage() {
       <Dialog open={isAwardDialogOpen} onOpenChange={setIsAwardDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Adjudicar Item</DialogTitle>
+            <DialogTitle>{isFullAward ? "Confirmar Adjudicación Total" : "Adjudicar Item Parcialmente"}</DialogTitle>
             <DialogDescription>
-              Confirme la cantidad a adjudicar.
+              {isFullAward 
+                ? "Confirme que desea adjudicar la cantidad total de este ítem."
+                : "Ingrese la cantidad a adjudicar."}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -1095,13 +1015,16 @@ export default function LicitacionDetailPage() {
                 max={awardingItem?.quantity}
                 min={1}
                 value={awardQuantity}
+                disabled={isFullAward}
                 onChange={(e) => setAwardQuantity(parseInt(e.target.value) || 0)}
               />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsAwardDialogOpen(false)}>Cancelar</Button>
-            <Button onClick={handleConfirmAward} disabled={submitting}>Confirmar Adjudicación</Button>
+            <Button onClick={handleConfirmAward} disabled={submitting}>
+              {isFullAward ? "Confirmar Total" : "Confirmar Adjudicación"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

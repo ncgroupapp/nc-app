@@ -36,7 +36,7 @@ export interface CreateOfferDto {
   deliveryDate?: string;
 }
 
-export interface UpdateOfferDto extends Partial<CreateOfferDto> {}
+export type UpdateOfferDto = Partial<CreateOfferDto>;
 
 export const offersService = {
   getAll: async (filters: OfferFilters = {}): Promise<PaginatedResponse<Offer>> => {
