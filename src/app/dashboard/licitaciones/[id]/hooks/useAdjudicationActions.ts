@@ -86,6 +86,7 @@ export const useAdjudicationActions = (
         status: status as AdjudicationStatus,
         items: [{
           productId: awardingItem.productId || undefined,
+          productName: awardingItem.productName,
           quantity: awardQuantity,
           unitPrice: awardingItem.priceWithoutIVA
         }],

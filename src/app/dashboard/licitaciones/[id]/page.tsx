@@ -130,7 +130,7 @@ export default function LicitacionDetailPage() {
         {/* Tab: Entrega */}
         <TabsContent value="entrega" className="space-y-4">
           <DeliveryTab 
-            adjudications={adjudications} 
+            licitationId={licitationId}
             licitationStatus={licitation.status as LicitationStatus} 
           />
         </TabsContent>

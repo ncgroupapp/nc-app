@@ -18,9 +18,10 @@ export enum Currency {
 }
 
 export enum AdjudicationStatus {
-  PARTIAL = 'PARTIAL',
-  TOTAL = 'TOTAL',
+  PARTIAL = 'parcial',
+  TOTAL = 'total',
 }
+
 
 export interface Proveedor {
   id: string
