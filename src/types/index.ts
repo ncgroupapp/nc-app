@@ -474,3 +474,20 @@ export interface DateRange {
   start: string
   end: string
 }
+
+export interface Brand {
+  id: number
+  name: string
+  createdAt?: string
+  updatedAt?: string
+  models?: Model[]
+}
+
+export interface Model {
+  id: number
+  name: string
+  brandId: number
+  brand?: Brand
+  createdAt?: string
+  updatedAt?: string
+}

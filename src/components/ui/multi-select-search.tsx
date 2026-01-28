@@ -36,6 +36,7 @@ interface MultiSelectSearchProps {
   searchValue?: string
   onSearchValueChange?: (value: string) => void
   shouldFilter?: boolean
+  single?: boolean
 }
 
 export function MultiSelectSearch({
@@ -49,7 +50,8 @@ export function MultiSelectSearch({
   className,
   searchValue,
   onSearchValueChange,
-  shouldFilter = true
+  shouldFilter = true,
+  single
 }: MultiSelectSearchProps) {
   const [open, setOpen] = React.useState(false)
 
@@ -63,14 +65,16 @@ export function MultiSelectSearch({
             aria-expanded={open}
             className="w-full justify-between"
           >
-            {placeholder}
+            {single && selectedValues.length > 0
+              ? (options.find((option) => option.id === selectedValues[0])?.label || selectedValues[0])
+              : placeholder}
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
           <Command shouldFilter={shouldFilter}>
-            <CommandInput 
-              placeholder={searchPlaceholder} 
+            <CommandInput
+              placeholder={searchPlaceholder}
               value={searchValue}
               onValueChange={onSearchValueChange}
             />
@@ -82,12 +86,17 @@ export function MultiSelectSearch({
                     key={option.id}
                     value={option.label}
                     onSelect={() => {
-                      if (!selectedValues.includes(option.id)) {
+                      if (single) {
                         onSelect(option.id)
+                        setOpen(false)
+                      } else {
+                        if (!selectedValues.includes(option.id)) {
+                          onSelect(option.id)
+                        }
+                        setOpen(false)
                       }
-                      setOpen(false)
                     }}
-                    disabled={selectedValues.includes(option.id)}
+                    disabled={!single && selectedValues.includes(option.id)}
                   >
                     <Check
                       className={cn(
@@ -106,7 +115,7 @@ export function MultiSelectSearch({
         </PopoverContent>
       </Popover>
 
-      {selectedValues.length > 0 && (
+      {!single && selectedValues.length > 0 && (
         <div className="flex flex-wrap gap-2 mt-3">
           {/* We try to find the label from options. If not found, show ID or fallback */}
           {selectedValues.map((val) => {

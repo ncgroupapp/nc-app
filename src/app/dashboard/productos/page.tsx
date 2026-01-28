@@ -24,6 +24,7 @@ import { uploadProductImage } from '@/lib/firebase'
 import { CreateProductForm, Product } from '@/services/products.service'
 import { proveedoresService } from '@/services/proveedores.service'
 import { useProductsStore, useProveedoresStore } from '@/stores'
+import { useBrandsStore } from '@/stores/brands/brandsStore'
 import { Proveedor } from '@/types'
 import { AlertTriangle, Package, Plus, Search, Upload, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
@@ -45,10 +46,12 @@ export default function ProductosPage() {
   const { confirm } = useConfirm()
 
   const { proveedores, fetchProveedores } = useProveedoresStore()
+  const { brands, fetchBrands, selectedBrand, fetchBrandById } = useBrandsStore()
 
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedProveedor, setSelectedProveedor] = useState<string>('all')
   const [proveedorSearch, setProveedorSearch] = useState('')
+  const [brandSearch, setBrandSearch] = useState('')
   const [searchResults, setSearchResults] = useState<Proveedor[]>([])
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
@@ -77,6 +80,7 @@ export default function ProductosPage() {
   useEffect(() => {
     fetchProducts(1)
     fetchProveedores(1)
+    fetchBrands(1)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -89,6 +93,14 @@ export default function ProductosPage() {
     return () => clearTimeout(timeoutId)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm, selectedProveedor])
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      fetchBrands(1, brandSearch)
+    }, 300)
+    return () => clearTimeout(timeoutId)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [brandSearch])
 
   useEffect(() => {
       const fetchProducts = async () => {
@@ -407,6 +419,7 @@ export default function ProductosPage() {
                     <div className="flex items-center gap-4">
                       {imagePreview && (
                         <div className="relative w-24 h-24 border rounded-md overflow-hidden">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={imagePreview}
                             alt="Preview"
@@ -453,30 +466,69 @@ export default function ProductosPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="brand">Marca</Label>
-                      <Input
-                        id="brand"
-                        value={formData.brand}
-                        onChange={(e) =>
+                      <MultiSelectSearch
+                        single={true}
+                        shouldFilter={false}
+                        searchValue={brandSearch}
+                        onSearchValueChange={setBrandSearch}
+                        options={brands.map((b) => ({
+                          id: b.name,
+                          label: b.name,
+                        }))}
+                        selectedValues={formData.brand ? [formData.brand] : []}
+                        onSelect={(value) => {
+                          const brandName = value as string
                           setFormData((prev) => ({
                             ...prev,
-                            brand: e.target.value,
+                            brand: brandName,
+                            model: '',
+                          }))
+                          const brandObj = brands.find(b => b.name === brandName)
+                          if (brandObj) {
+                            fetchBrandById(brandObj.id)
+                          }
+                        }}
+                        onRemove={() =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            brand: '',
+                            model: '',
                           }))
                         }
-                        placeholder="Ej: Dell"
+                        placeholder="Seleccionar marca..."
+                        searchPlaceholder="Buscar marca..."
+                        emptyMessage="No se encontraron marcas."
                       />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="model">Modelo</Label>
-                      <Input
-                        id="model"
-                        value={formData.model}
-                        onChange={(e) =>
+                      <MultiSelectSearch
+                        single={true}
+                        options={
+                          brands
+                            .find((b) => b.name === formData.brand)
+                            ?.models?.map((m) => ({
+                              id: m.name,
+                              label: m.name,
+                            })) || []
+                        }
+                        selectedValues={formData.model ? [formData.model] : []}
+                        onSelect={(value) => {
+                          const modelName = value as string;
                           setFormData((prev) => ({
                             ...prev,
-                            model: e.target.value,
+                            model: modelName,
+                          }));
+                        }}
+                        onRemove={() =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            model: '',
                           }))
                         }
-                        placeholder="Ej: XPS 15"
+                        placeholder="Seleccionar modelo..."
+                        searchPlaceholder="Buscar modelo..."
+                        emptyMessage={formData.brand ? "No se encontraron modelos." : "Seleccione una marca primero."}
                       />
                     </div>
                   </div>
