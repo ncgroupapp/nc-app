@@ -3,6 +3,7 @@ import {
   CheckCircle, 
   XCircle, 
   AlertCircle,
+  FileText,
   LucideIcon 
 } from "lucide-react";
 import { LicitationStatus } from "@/services/licitaciones.service";
@@ -29,6 +30,8 @@ export const getEstadoInfo = (status: LicitationStatus): EstadoInfo => {
   switch (status) {
     case LicitationStatus.PENDING:
       return { icon: Clock, color: "text-yellow-600", bgColor: "bg-yellow-100", label: "En espera" };
+    case LicitationStatus.QUOTED:
+      return { icon: FileText, color: "text-blue-600", bgColor: "bg-blue-100", label: "Cotizada" };
     case LicitationStatus.PARTIAL_ADJUDICATION:
       return { icon: AlertCircle, color: "text-orange-600", bgColor: "bg-orange-100", label: "Adjudicación Parcial" };
     case LicitationStatus.NOT_ADJUDICATED:
