@@ -34,18 +34,18 @@ export const useClientesStore = create<ClientesStore>()(
       error: null,
       pagination: DEFAULT_PAGINATION,
       filters: {
+        page: 1,
         search: '',
       },
 
       // Actions
-      fetchClientes: async (page = 1) => {
+      fetchClientes: async (page = 1, search?: string) => {
         set((state) => {
           state.isLoading = true;
           state.error = null;
         });
-        const { filters } = get();
         try {
-          const response = await clientesService.getAll(page, filters.search);
+          const response = await clientesService.getAll({ page, search });
           console.log('fetchClientes response:', response);
           
           set((state) => {

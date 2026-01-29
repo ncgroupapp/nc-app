@@ -1,3 +1,5 @@
+import { boolean, success } from "zod"
+
 // Enums
 export enum QuotationStatus {
   CREATED = 'creada',
@@ -59,6 +61,12 @@ export interface Cliente {
     phone?: string
     address?: string
   }>
+}
+
+export interface ClienteResponse {
+  success: boolean
+  data: Cliente
+  message: string
 }
 
 export interface Producto {

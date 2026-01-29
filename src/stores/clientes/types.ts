@@ -12,7 +12,7 @@ export interface ClientesState {
 }
 
 export interface ClientesActions {
-  fetchClientes: (page?: number) => Promise<void>;
+  fetchClientes: (page?: number, search?: string) => Promise<void>;
   createCliente: (data: CreateClienteForm) => Promise<void>;
   updateCliente: (id: string, data: Partial<Cliente>) => Promise<void>;
   deleteCliente: (id: string) => Promise<void>;

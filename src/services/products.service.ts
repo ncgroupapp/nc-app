@@ -15,14 +15,38 @@ export interface Product {
   }>;
   brand?: string;
   model?: string;
-  stockQuantity?: number;
+  code?: string;
+  equivalentCodes?: string[];
+  stockQuantity?: number; // mapped to stock in JSON
+  stock?: number;
   details?: string;
   observations?: string;
   chassis?: string;
   motor?: string;
   equipment?: string;
-  quotationHistory?: unknown[];
-  adjudicationHistory?: unknown[];
+  quotationHistory?: Array<{
+    date: string;
+    status: string;
+    currency: string;
+    provider: string;
+    validUntil?: string;
+    quotationId?: string;
+    quotedPrice: number;
+    ivaPercentage?: number;
+    associatedPurchase?: string;
+  }>;
+  adjudicationHistory?: Array<{
+    date: string;
+    entity: string; // The "client" or entity
+    status: string;
+    quantity: number;
+    unitPrice: number;
+    contractId?: string;
+    deadlineDate?: string;
+    internalNumber?: string;
+  }>;
+  description?: string;
+  price?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -33,18 +57,24 @@ export interface CreateProductForm {
   providerIds?: number[];
   brand?: string;
   model?: string;
+  code?: string;
+  equivalentCodes?: string[];
   stockQuantity?: number;
+  stock?: number;
   details?: string;
   observations?: string;
   chassis?: string;
   motor?: string;
   equipment?: string;
+  description?: string;
+  price?: number;
 }
 
 export interface ProductFilters {
   page?: number;
   limit?: number;
   search?: string;
+  providerId?: number;
 }
 
 export const productsService = {
@@ -53,6 +83,7 @@ export const productsService = {
     if (filters.page) params.append('page', filters.page.toString());
     if (filters.limit) params.append('limit', filters.limit.toString());
     if (filters.search) params.append('search', filters.search);
+    if (filters.providerId) params.append('providerIds', filters.providerId.toString());
     const response = await api.get<PaginatedResponse<Product>>(`/products?${params.toString()}`);
     return response.data;
   },

@@ -7,14 +7,6 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -23,6 +15,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label'
+import { MultiSelectSearch } from '@/components/ui/multi-select-search'
 import {
   Select,
   SelectContent,
@@ -30,31 +24,34 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Label } from '@/components/ui/label'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
-import { cn } from "@/lib/utils"
-import {
-  Plus, Search, Edit, Eye, Clock, CheckCircle, XCircle,
-  AlertCircle, FileText, Loader2, Check, ChevronsUpDown
-} from 'lucide-react'
-import { licitacionesService, Licitation, LicitationStatus, CreateLicitationDto } from '@/services/licitaciones.service'
 import { clientesService } from '@/services/clientes.service'
-import { productsService, Product } from '@/services/products.service'
+import { CreateLicitationDto, licitacionesService, Licitation, LicitationStatus } from '@/services/licitaciones.service'
+import { Product, productsService } from '@/services/products.service'
 import { Cliente } from '@/types'
+import {
+  AlertCircle,
+  Check,
+  CheckCircle,
+  ChevronsUpDown,
+  Clock,
+  Edit, Eye,
+  FileText, Loader2,
+  Plus, Search,
+  XCircle
+} from 'lucide-react'
 import { showSnackbar } from '@/components/ui/snackbar'
+import { Popover, PopoverContent, PopoverTrigger } from '@radix-ui/react-popover'
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from 'cmdk'
+import { cn } from '@/lib/utils'
 
 // Map backend status to Spanish display labels
 const statusLabels: Record<LicitationStatus, string> = {
@@ -62,6 +59,7 @@ const statusLabels: Record<LicitationStatus, string> = {
   [LicitationStatus.PARTIAL_ADJUDICATION]: 'Adjudicación Parcial',
   [LicitationStatus.NOT_ADJUDICATED]: 'No Adjudicada',
   [LicitationStatus.TOTAL_ADJUDICATION]: 'Adjudicación Total',
+  [LicitationStatus.QUOTED]: ''
 }
 
 // Interface para productos con cantidad
@@ -533,7 +531,7 @@ export default function LicitacionesPage() {
                 </TabsContent>
 
                 <TabsContent value="productos" className="space-y-4">
-                  <div className="space-y-2">
+                   <div className="space-y-2">
                     <Label>Agregar Producto</Label>
                     <Popover open={openCombobox} onOpenChange={setOpenCombobox}>
                       <PopoverTrigger asChild>

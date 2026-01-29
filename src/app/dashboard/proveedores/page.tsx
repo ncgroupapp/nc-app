@@ -19,6 +19,7 @@ import { Proveedor, CreateProveedorForm } from '@/types'
 import { useProveedoresStore } from '@/stores'
 import { ProveedorForm } from '@/components/proveedores/proveedor-form'
 import { showSnackbar } from '@/components/ui/snackbar'
+import { useConfirm } from '@/hooks/use-confirm'
 
 export default function ProveedoresPage() {
   const { 
@@ -32,6 +33,8 @@ export default function ProveedoresPage() {
     setFilters,
     filters 
   } = useProveedoresStore()
+  
+  const { confirm } = useConfirm()
   
   const [searchTerm, setSearchTerm] = useState('')
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
@@ -79,7 +82,11 @@ export default function ProveedoresPage() {
   }
 
   const handleDelete = async (id: string) => {
-    if (confirm('¿Está seguro que desea eliminar este proveedor?')) {
+    if (await confirm({ 
+      title: 'Eliminar Proveedor', 
+      message: '¿Está seguro que desea eliminar este proveedor?',
+      variant: 'destructive'
+    })) {
       try {
         await deleteProveedor(id)
         showSnackbar('Proveedor eliminado correctamente', 'success')
