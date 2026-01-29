@@ -36,6 +36,7 @@ interface MultiSelectSearchProps {
   searchValue?: string
   onSearchValueChange?: (value: string) => void
   shouldFilter?: boolean
+  hideTags?: boolean
 }
 
 export function MultiSelectSearch({
@@ -49,7 +50,8 @@ export function MultiSelectSearch({
   className,
   searchValue,
   onSearchValueChange,
-  shouldFilter = true
+  shouldFilter = true,
+  hideTags = false
 }: MultiSelectSearchProps) {
   const [open, setOpen] = React.useState(false)
 
@@ -106,13 +108,10 @@ export function MultiSelectSearch({
         </PopoverContent>
       </Popover>
 
-      {selectedValues.length > 0 && (
+      {!hideTags && selectedValues.length > 0 && (
         <div className="flex flex-wrap gap-2 mt-3">
-          {/* We try to find the label from options. If not found, show ID or fallback */}
           {selectedValues.map((val) => {
             const option = options.find(o => o.id === val);
-            // If option is not in current list (e.g. filtered out), we might want to handle it.
-            // But if the parent passes the full list of providers, it's fine.
             return (
               <Badge key={val} variant="secondary" className="px-2 py-1 flex items-center gap-1">
                 {option ? option.label : val}

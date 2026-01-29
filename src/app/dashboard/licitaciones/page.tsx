@@ -82,7 +82,6 @@ export default function LicitacionesPage() {
   const [licitaciones, setLicitaciones] = useState<Licitation[]>([])
   const [clientes, setClientes] = useState<Cliente[]>([])
   const [searchResults, setSearchResults] = useState<Product[]>([])
-  const [openCombobox, setOpenCombobox] = useState(false)
   const [productSearch, setProductSearch] = useState('')
   const [initialLoading, setInitialLoading] = useState(true)
   const [loading, setLoading] = useState(false)
@@ -99,9 +98,8 @@ export default function LicitacionesPage() {
   const [totalItems, setTotalItems] = useState(0)
   
   // Autocompletar cliente en formulario
-  const [openClientCombobox, setOpenClientCombobox] = useState(false)
-  const [clientSearch, setClientSearch] = useState('')
-  const [filteredClients, setFilteredClients] = useState<Cliente[]>([])
+  
+  // Autocompletar cliente en formulario
   const [selectedClientName, setSelectedClientName] = useState('')
   const [dateError, setDateError] = useState<string | null>(null)
   
@@ -152,7 +150,6 @@ export default function LicitacionesPage() {
           productsService.getAll()
         ])
         setClientes(clientesRes.data || [])
-        setFilteredClients(clientesRes.data || [])
         setSearchResults(productosRes.data || [])
       } catch (err) {
         console.error('Error loading initial data:', err)
@@ -204,18 +201,7 @@ export default function LicitacionesPage() {
     return () => clearTimeout(timeoutId)
   }, [productSearch])
 
-  // Filtrar clientes para autocompletar en formulario
-  useEffect(() => {
-    if (clientSearch) {
-      const filtered = clientes.filter(c => 
-        c.name.toLowerCase().includes(clientSearch.toLowerCase()) ||
-        c.identifier.toLowerCase().includes(clientSearch.toLowerCase())
-      )
-      setFilteredClients(filtered)
-    } else {
-      setFilteredClients(clientes)
-    }
-  }, [clientSearch, clientes])
+
 
   const getEstadoInfo = (status: LicitationStatus) => {
     switch (status) {
@@ -244,7 +230,6 @@ export default function LicitacionesPage() {
         productsWithQuantity: [...prev.productsWithQuantity, { product, quantity: 1 }]
       }))
     }
-    setOpenCombobox(false)
   }
 
   const handleRemoveProduct = (productId: number) => {
@@ -282,12 +267,7 @@ export default function LicitacionesPage() {
     }
   }
 
-  const handleSelectClient = (cliente: Cliente) => {
-    setFormData(prev => ({ ...prev, clientId: cliente.id.toString() }))
-    setSelectedClientName(cliente.name)
-    setOpenClientCombobox(false)
-    setClientSearch('')
-  }
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -440,55 +420,32 @@ export default function LicitacionesPage() {
 
                   <div className="space-y-2">
                     <Label htmlFor="clientId">Cliente *</Label>
-                    <Popover open={openClientCombobox} onOpenChange={setOpenClientCombobox}>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          aria-expanded={openClientCombobox}
-                          className="w-full justify-between"
-                        >
-                          {selectedClientName || "Seleccionar cliente..."}
-                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-[400px] p-0" align="start">
-                        <Command shouldFilter={false}>
-                          <CommandInput 
-                            placeholder="Buscar cliente..." 
-                            value={clientSearch}
-                            onValueChange={setClientSearch}
-                          />
-                          <CommandList>
-                            <CommandEmpty>No se encontraron clientes.</CommandEmpty>
-                            <CommandGroup>
-                              {filteredClients.map((cliente) => (
-                                <CommandItem
-                                  key={cliente.id}
-                                  value={cliente.name}
-                                  onSelect={() => handleSelectClient(cliente)}
-                                >
-                                  <Check
-                                    className={cn(
-                                      "mr-2 h-4 w-4",
-                                      formData.clientId === cliente.id.toString()
-                                        ? "opacity-100"
-                                        : "opacity-0"
-                                    )}
-                                  />
-                                  <div>
-                                    <span className="font-medium">{cliente.name}</span>
-                                    <span className="text-sm text-muted-foreground ml-2">
-                                      ({cliente.identifier})
-                                    </span>
-                                  </div>
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
+                  <div className="space-y-2">
+                    <Label htmlFor="clientId">Cliente *</Label>
+                    <MultiSelectSearch
+                      options={clientes.map(c => ({
+                        id: c.id,
+                        label: `${c.name} (${c.identifier})`
+                      }))}
+                      selectedValues={formData.clientId ? [parseInt(formData.clientId)] : []}
+                      onSelect={(id) => {
+                        const client = clientes.find(c => c.id === id)
+                        if (client) {
+                          setFormData(prev => ({ ...prev, clientId: client.id.toString() }))
+                          setSelectedClientName(client.name)
+                        }
+                      }}
+                      onRemove={() => {
+                        setFormData(prev => ({ ...prev, clientId: '' }))
+                        setSelectedClientName('')
+                      }}
+                      placeholder={selectedClientName || "Seleccionar cliente..."}
+                      searchPlaceholder="Buscar cliente..."
+                      emptyMessage="No se encontraron clientes."
+                      hideTags={true}
+                      shouldFilter={true}
+                    />
+                  </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
@@ -531,53 +488,27 @@ export default function LicitacionesPage() {
                 </TabsContent>
 
                 <TabsContent value="productos" className="space-y-4">
-                   <div className="space-y-2">
+                  <div className="space-y-2">
                     <Label>Agregar Producto</Label>
-                    <Popover open={openCombobox} onOpenChange={setOpenCombobox}>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          aria-expanded={openCombobox}
-                          className="w-full justify-between"
-                        >
-                          Seleccionar producto para agregar...
-                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-[400px] p-0" align="start">
-                        <Command shouldFilter={false}>
-                          <CommandInput 
-                            placeholder="Buscar producto..." 
-                            value={productSearch}
-                            onValueChange={setProductSearch}
-                          />
-                          <CommandList>
-                            <CommandEmpty>No se encontraron productos.</CommandEmpty>
-                            <CommandGroup>
-                              {searchResults.map((product) => (
-                                <CommandItem
-                                  key={product.id}
-                                  value={product.name}
-                                  onSelect={() => handleAddProduct(product)}
-                                  disabled={formData.productsWithQuantity.some(p => p.product.id === product.id)}
-                                >
-                                  <Check
-                                    className={cn(
-                                      "mr-2 h-4 w-4",
-                                      formData.productsWithQuantity.some(p => p.product.id === product.id)
-                                        ? "opacity-100"
-                                        : "opacity-0"
-                                    )}
-                                  />
-                                  {product.name} (Stock: {product.stockQuantity || 0})
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
+                    <MultiSelectSearch
+                      options={searchResults.map(p => ({ 
+                        id: p.id, 
+                        label: `${p.name} (Stock: ${p.stockQuantity || 0})` 
+                      }))}
+                      selectedValues={formData.productsWithQuantity.map(p => p.product.id)}
+                      onSelect={(id) => {
+                        const product = searchResults.find(p => p.id === id)
+                        if (product) handleAddProduct(product)
+                      }}
+                      onRemove={(id) => handleRemoveProduct(Number(id))}
+                      placeholder="Seleccionar producto para agregar..."
+                      searchPlaceholder="Buscar producto..."
+                      emptyMessage="No se encontraron productos."
+                      searchValue={productSearch}
+                      onSearchValueChange={setProductSearch}
+                      shouldFilter={false}
+                      hideTags={true}
+                    />
                   </div>
 
                   {formData.productsWithQuantity.length === 0 ? (
