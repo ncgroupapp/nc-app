@@ -14,6 +14,7 @@ export interface Offer {
   provider?: Proveedor;
   price: number;
   quantity: number;
+  origin?: string;
   deliveryDate?: string;
   createdAt: string;
   updatedAt: string;
@@ -33,6 +34,7 @@ export interface CreateOfferDto {
   providerId: number;
   price: number;
   quantity: number;
+  origin?: string;
   deliveryDate?: string;
 }
 

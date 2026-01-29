@@ -48,6 +48,7 @@ export function CreateOfferDialog({
     providerId: 0,
     price: 0,
     quantity: 1,
+    origin: "",
     deliveryDate: "",
   });
   
@@ -83,6 +84,7 @@ export function CreateOfferDialog({
         providerId: 0,
         price: 0,
         quantity: 1,
+        origin: "",
         deliveryDate: "",
       });
       setError(null);
@@ -161,14 +163,24 @@ export function CreateOfferDialog({
               />
             </div>
 
-            {/* Delivery Date */}
-            <div className="space-y-2">
-              <Label>Fecha de Entrega *</Label>
-              <Input
-                type="date"
-                value={formData.deliveryDate ? new Date(formData.deliveryDate).toISOString().split('T')[0] : ''}
-                onChange={(e) => setFormData((prev) => ({ ...prev, deliveryDate: e.target.value }))}
-              />
+            {/* Delivery Date & Origin */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Fecha de Entrega *</Label>
+                <Input
+                  type="date"
+                  value={formData.deliveryDate ? new Date(formData.deliveryDate).toISOString().split('T')[0] : ''}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, deliveryDate: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Origen (opcional)</Label>
+                <Input
+                  value={formData.origin || ""}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, origin: e.target.value }))}
+                  placeholder="Ej: China, USA..."
+                />
+              </div>
             </div>
 
             {/* Product */}

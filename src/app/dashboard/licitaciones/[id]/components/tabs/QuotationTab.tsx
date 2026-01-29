@@ -167,6 +167,8 @@ export const QuotationTab = ({
                   <TableHeader>
                     <TableRow>
                       <TableHead>Producto</TableHead>
+                      <TableHead>Marca</TableHead>
+                      <TableHead>Origen</TableHead>
                       <TableHead>Cantidad</TableHead>
                       <TableHead>Precio Unit.</TableHead>
                       <TableHead>Total</TableHead>
@@ -188,9 +190,15 @@ export const QuotationTab = ({
                               </p>
                             </div>
                           </TableCell>
+                          <TableCell className="text-muted-foreground">{item.brand || '-'}</TableCell>
+                          <TableCell className="text-muted-foreground">{item.origin || '-'}</TableCell>
                           <TableCell>{item.quantity}</TableCell>
-                          <TableCell>${Number(item.priceWithoutIVA).toFixed(2)}</TableCell>
-                          <TableCell>${(Number(item.priceWithIVA) * Number(item.quantity)).toFixed(2)}</TableCell>
+                          <TableCell>
+                            {item.priceWithoutIVA.toLocaleString()} {item.currency}
+                          </TableCell>
+                          <TableCell className="font-semibold">
+                            {(item.priceWithIVA * item.quantity).toLocaleString()} {item.currency}
+                          </TableCell>
                           <TableCell>
                             <div className="flex flex-col gap-1">
                               <Select

@@ -16,6 +16,8 @@ import { Offer } from "@/services/offers.service";
 export type QuotationItemFormData = {
   productId: string;
   productName: string;
+  brand: string;
+  origin: string;
   quantity: number;
   priceWithoutIVA: number;
   ivaPercentage: number;
@@ -41,6 +43,8 @@ export function QuotationItemForm({
     onChange({
       ...data,
       productName: offer.product?.name || offer.name || data.productName,
+      brand: offer.product?.brand || data.brand,
+      origin: offer.product?.origin || data.origin,
       priceWithoutIVA: offer.price,
       quantity: offer.quantity,
       deliveryTime: 0,
@@ -71,7 +75,6 @@ export function QuotationItemForm({
         </div>
       )}
 
-      {/* Product Name */}
       <div className="space-y-2">
         <Label>Nombre del Producto</Label>
         <Input
@@ -79,6 +82,26 @@ export function QuotationItemForm({
           onChange={(e) => handleChange("productName", e.target.value)}
           placeholder="Nombre del producto"
         />
+      </div>
+
+      {/* Marca y Origen */}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>Marca</Label>
+          <Input
+            value={data.brand}
+            onChange={(e) => handleChange("brand", e.target.value)}
+            placeholder="Marca"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>Origen</Label>
+          <Input
+            value={data.origin}
+            onChange={(e) => handleChange("origin", e.target.value)}
+            placeholder="Origen"
+          />
+        </div>
       </div>
 
       {/* Quantity and Price */}

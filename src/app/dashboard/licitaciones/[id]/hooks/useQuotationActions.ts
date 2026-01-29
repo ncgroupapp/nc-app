@@ -13,6 +13,8 @@ import { QuotationStatus, QuotationAwardStatus, Currency } from "@/types";
 export interface NewItemData {
   productId: string;
   productName: string;
+  brand: string;
+  origin: string;
   quantity: number;
   priceWithoutIVA: number;
   ivaPercentage: number;
@@ -62,6 +64,8 @@ export interface UseQuotationActionsReturn {
 const initialNewItemData: NewItemData = {
   productId: '',
   productName: '',
+  brand: '',
+  origin: '',
   quantity: 1,
   priceWithoutIVA: 0,
   ivaPercentage: 22,
@@ -164,16 +168,18 @@ export const useQuotationActions = (
       const priceWithIVA = newItemData.priceWithoutIVA * (1 + newItemData.ivaPercentage / 100);
       
       const newItem: QuotationItem = {
-        productId: parseInt(newItemData.productId) || undefined,
+        productId: newItemData.productId ? parseInt(newItemData.productId) : undefined,
         productName: newItemData.productName,
+        brand: newItemData.brand,
+        origin: newItemData.origin,
         inStock: newItemData.inStock,
         quantity: newItemData.quantity,
         priceWithoutIVA: newItemData.priceWithoutIVA,
         priceWithIVA: priceWithIVA,
         ivaPercentage: newItemData.ivaPercentage,
-        deliveryTime: newItemData.deliveryTime,
         currency: newItemData.currency,
-        awardStatus: QuotationAwardStatus.PENDING
+        deliveryTime: newItemData.deliveryTime,
+        awardStatus: QuotationAwardStatus.PENDING,
       };
       
       const updatedQuotation = await cotizacionesService.update(quotation.id, {
@@ -196,6 +202,8 @@ export const useQuotationActions = (
     setNewItemData({
       productId: item.productId?.toString() || '',
       productName: item.productName,
+      brand: item.brand || '',
+      origin: item.origin || '',
       quantity: item.quantity,
       priceWithoutIVA: item.priceWithoutIVA,
       ivaPercentage: item.ivaPercentage,
@@ -217,14 +225,17 @@ export const useQuotationActions = (
         if (item.id === editingItem.id) {
           return {
             ...item,
+            productId: newItemData.productId ? parseInt(newItemData.productId) : undefined,
             productName: newItemData.productName,
+            brand: newItemData.brand,
+            origin: newItemData.origin,
             inStock: newItemData.inStock,
             quantity: newItemData.quantity,
             priceWithoutIVA: newItemData.priceWithoutIVA,
-            priceWithIVA: priceWithIVA,
+            priceWithIVA: newItemData.priceWithoutIVA * (1 + newItemData.ivaPercentage / 100),
             ivaPercentage: newItemData.ivaPercentage,
+            currency: newItemData.currency,
             deliveryTime: newItemData.deliveryTime,
-            currency: newItemData.currency
           };
         }
         return item;

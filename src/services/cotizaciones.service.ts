@@ -7,6 +7,8 @@ export interface QuotationItem {
   quotationId?: number;
   productId?: number;
   productName: string;
+  brand?: string;
+  origin?: string;
   providerId?: number;
   providerName?: string;
   inStock: boolean;
@@ -50,6 +52,8 @@ export interface Quotation {
 export interface CreateQuotationItemDto {
   productId?: number;
   productName: string;
+  brand?: string;
+  origin?: string;
   providerId?: number;
   providerName?: string;
   inStock: boolean;
@@ -154,6 +158,8 @@ export const cotizacionesService = {
       cleanedData.items = cleanedData.items.map(item => ({
         productId: item.productId,
         productName: item.productName,
+        brand: item.brand,
+        origin: item.origin,
         providerId: item.providerId,
         providerName: item.providerName,
         inStock: item.inStock,
