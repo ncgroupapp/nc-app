@@ -63,6 +63,8 @@ interface QuotationTabProps {
   onStatusChange: (item: QuotationItem, status: QuotationAwardStatus) => void;
   onOpenAward: (item: QuotationItem) => void;
   onOpenReject: (item: QuotationItem) => void;
+  // Edit awarded quantity
+  onEditAwardedQuantity: (item: QuotationItem) => void;
   // Finalize and PDF
   onFinalize: () => Promise<void>;
   onDownloadPdf: () => Promise<void>;
@@ -81,6 +83,7 @@ export const QuotationTab = ({
   onStatusChange,
   onOpenAward,
   onOpenReject,
+  onEditAwardedQuantity,
   onFinalize,
   onDownloadPdf,
 }: QuotationTabProps) => {
@@ -221,9 +224,19 @@ export const QuotationTab = ({
                                 </SelectContent>
                               </Select>
                               {item.awardStatus === QuotationAwardStatus.PARTIALLY_AWARDED && (
-                                <span className="text-xs text-muted-foreground ml-2">
-                                  ({item.awardedQuantity}/{item.quantity})
-                                </span>
+                                <div className="flex items-center gap-1 ml-2">
+                                  <span className="text-xs text-muted-foreground">
+                                    ({item.awardedQuantity}/{item.quantity})
+                                  </span>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    className="h-5 w-5 p-0"
+                                    onClick={() => onEditAwardedQuantity(item)}
+                                  >
+                                    <Edit className="h-3 w-3" />
+                                  </Button>
+                                </div>
                               )}
                             </div>
                           </TableCell>

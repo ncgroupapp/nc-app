@@ -104,4 +104,8 @@ export const adjudicacionesService = {
   delete: async (id: number): Promise<void> => {
     await api.delete(`/adjudications/${id}`);
   },
+
+  updateAwardedQuantity: async (quotationItemId: number, quantity: number): Promise<void> => {
+    await api.patch(`/adjudications/quotation-item/${quotationItemId}/quantity`, { quantity });
+  },
 };

@@ -25,6 +25,13 @@ export interface UseAdjudicationActionsReturn {
   handleOpenAward: (item: QuotationItem, isTotal?: boolean) => void;
   handleConfirmAward: () => Promise<void>;
   
+  // Edit awarded quantity (for partial awards)
+  editingAwardedItem: QuotationItem | null;
+  isEditAwardedDialogOpen: boolean;
+  setIsEditAwardedDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  handleEditAwardedQuantity: (item: QuotationItem) => void;
+  handleConfirmEditAwardedQuantity: () => Promise<void>;
+  
   // Reject dialog
   rejectingItem: QuotationItem | null;
   isRejectDialogOpen: boolean;
@@ -64,6 +71,10 @@ export const useAdjudicationActions = (
   const [rejectingItem, setRejectingItem] = useState<QuotationItem | null>(null);
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
   const [competitorData, setCompetitorData] = useState<CompetitorData>(initialCompetitorData);
+
+  // Edit awarded quantity state
+  const [editingAwardedItem, setEditingAwardedItem] = useState<QuotationItem | null>(null);
+  const [isEditAwardedDialogOpen, setIsEditAwardedDialogOpen] = useState(false);
 
   const handleOpenAward = (item: QuotationItem, isTotal: boolean = false) => {
     setAwardingItem(item);
@@ -158,6 +169,30 @@ export const useAdjudicationActions = (
     }
   };
 
+  const handleEditAwardedQuantity = (item: QuotationItem) => {
+    setEditingAwardedItem(item);
+    setAwardQuantity(item.awardedQuantity || 0);
+    setIsEditAwardedDialogOpen(true);
+  };
+
+  const handleConfirmEditAwardedQuantity = async () => {
+    if (!editingAwardedItem || !editingAwardedItem.id) return;
+    
+    try {
+      setSubmitting(true);
+      await adjudicacionesService.updateAwardedQuantity(editingAwardedItem.id, awardQuantity);
+      await loadData();
+      
+      setIsEditAwardedDialogOpen(false);
+      setEditingAwardedItem(null);
+    } catch (err) {
+      console.error('Error updating awarded quantity:', err);
+      setError('Error al actualizar la cantidad adjudicada');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return {
     submitting,
     awardingItem,
@@ -168,6 +203,11 @@ export const useAdjudicationActions = (
     isFullAward,
     handleOpenAward,
     handleConfirmAward,
+    editingAwardedItem,
+    isEditAwardedDialogOpen,
+    setIsEditAwardedDialogOpen,
+    handleEditAwardedQuantity,
+    handleConfirmEditAwardedQuantity,
     rejectingItem,
     isRejectDialogOpen,
     setIsRejectDialogOpen,

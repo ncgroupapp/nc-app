@@ -122,6 +122,7 @@ export default function LicitacionDetailPage() {
             onStatusChange={adjudicationActions.handleStatusChange}
             onOpenAward={adjudicationActions.handleOpenAward}
             onOpenReject={adjudicationActions.handleOpenReject}
+            onEditAwardedQuantity={adjudicationActions.handleEditAwardedQuantity}
             onFinalize={quotationActions.handleFinalizeQuotation}
             onDownloadPdf={quotationActions.handleDownloadPdf}
           />
@@ -173,6 +174,18 @@ export default function LicitacionDetailPage() {
         competitorData={adjudicationActions.competitorData}
         setCompetitorData={adjudicationActions.setCompetitorData}
         onConfirm={adjudicationActions.handleConfirmReject}
+        submitting={adjudicationActions.submitting}
+      />
+
+      {/* Edit Awarded Quantity Dialog */}
+      <AwardDialog
+        open={adjudicationActions.isEditAwardedDialogOpen}
+        onOpenChange={adjudicationActions.setIsEditAwardedDialogOpen}
+        item={adjudicationActions.editingAwardedItem}
+        awardQuantity={adjudicationActions.awardQuantity}
+        setAwardQuantity={adjudicationActions.setAwardQuantity}
+        isFullAward={false}
+        onConfirm={adjudicationActions.handleConfirmEditAwardedQuantity}
         submitting={adjudicationActions.submitting}
       />
     </div>
