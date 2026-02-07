@@ -32,6 +32,22 @@ export const AwardDialog = ({
   onConfirm,
   submitting,
 }: AwardDialogProps) => {
+  const maxQuantity = item?.quantity || 0;
+  const isQuantityValid = awardQuantity >= 1 && awardQuantity <= maxQuantity;
+  const isPartialAndExceedsMax = !isFullAward && awardQuantity >= maxQuantity;
+
+  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value) || 0;
+    // Limitar el valor al máximo permitido
+    if (value > maxQuantity) {
+      setAwardQuantity(maxQuantity);
+    } else if (value < 1) {
+      setAwardQuantity(1);
+    } else {
+      setAwardQuantity(value);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -45,20 +61,25 @@ export const AwardDialog = ({
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label>Cantidad a Adjudicar (Máx: {item?.quantity})</Label>
+            <Label>Cantidad a Adjudicar (Máx: {maxQuantity})</Label>
             <Input 
               type="number" 
-              max={item?.quantity}
+              max={maxQuantity}
               min={1}
               value={awardQuantity}
               disabled={isFullAward}
-              onChange={(e) => setAwardQuantity(parseInt(e.target.value) || 0)}
+              onChange={handleQuantityChange}
             />
+            {!isFullAward && isPartialAndExceedsMax && (
+              <p className="text-xs text-amber-600">
+                Para adjudicar la cantidad total, use la opción &quot;Adjudicación Total&quot;.
+              </p>
+            )}
           </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={onConfirm} disabled={submitting}>
+          <Button onClick={onConfirm} disabled={submitting || !isQuantityValid}>
             {isFullAward ? "Confirmar Total" : "Confirmar Adjudicación"}
           </Button>
         </DialogFooter>
