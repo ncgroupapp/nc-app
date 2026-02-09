@@ -15,6 +15,7 @@ export const proveedorSchema = z.object({
   email: z.string().email('Email inválido').optional().or(z.literal('')),
   telefono: z.string().optional(),
   direccion: z.string().optional(),
+  brand_id: z.coerce.number().optional(),
   contactos: z.array(z.object({
     nombre: z.string().min(1, 'El nombre del contacto es obligatorio'),
     email: z.string().email('Email inválido').optional().or(z.literal('')),

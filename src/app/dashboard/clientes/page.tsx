@@ -1,8 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { DataTable, DataTableColumn } from '@/components/ui/data-table'
 import { ActionCell, ExpandableListCell } from '@/components/ui/data-table-cells'
@@ -14,14 +13,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { Plus, Search, Building2, Phone, Mail } from 'lucide-react'
-import { Cliente } from '@/types'
 import { useClientesStore } from '@/stores'
+import { Cliente } from '@/types'
+import { Building2, Mail, Phone, Plus } from 'lucide-react'
+import { useEffect, useState } from 'react'
 
 import { ClientForm } from '@/components/clientes/client-form'
 import { SearchInput } from '@/components/common/search-input'
-import { useDebounce } from '@/hooks/use-debounce'
 import { useConfirm } from '@/hooks/use-confirm'
+import { useDebounce } from '@/hooks/use-debounce'
+
 
 export default function ClientesPage() {
   const { 
@@ -39,6 +40,8 @@ export default function ClientesPage() {
   } = useClientesStore()
   
   const { confirm } = useConfirm()
+    const router = useRouter()
+
   
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [editingCliente, setEditingCliente] = useState<Cliente | null>(null)
@@ -54,6 +57,10 @@ export default function ClientesPage() {
   const handleSearchChange = (value: string) => {
     setFilters({ search: value })
   }
+
+  const handleView = (cliente: Cliente) => {
+    router.push(`/dashboard/clientes/${cliente.id}`);
+  };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleFormSubmit = async (clientData: any) => {
@@ -152,6 +159,7 @@ export default function ClientesPage() {
           row={cliente}
           onEdit={handleEdit}
           onDelete={(c) => handleDelete(c.id)}
+          onView={handleView}
         />
       )
     }

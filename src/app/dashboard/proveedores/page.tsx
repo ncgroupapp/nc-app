@@ -1,7 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { DataTable, DataTableColumn } from '@/components/ui/data-table'
@@ -35,6 +37,7 @@ export default function ProveedoresPage() {
   } = useProveedoresStore()
   
   const { confirm } = useConfirm()
+  const router = useRouter()
   
   const [searchTerm, setSearchTerm] = useState('')
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
@@ -81,6 +84,10 @@ export default function ProveedoresPage() {
     setIsCreateDialogOpen(true)
   }
 
+  const handleView = (proveedor: Proveedor) => {
+    router.push(`/dashboard/proveedores/${proveedor.id}`)
+  }
+
   const handleDelete = async (id: string) => {
     if (await confirm({ 
       title: 'Eliminar Proveedor', 
@@ -115,6 +122,13 @@ export default function ProveedoresPage() {
       accessorKey: 'country'
     },
     {
+      key: 'brand',
+      header: 'Marca',
+      render: (row) => (
+        row.brand ? <Badge variant="outline">{row.brand.name}</Badge> : <span className="text-muted-foreground text-sm">-</span>
+      )
+    },
+    {
       key: 'contacts',
       header: 'Contactos',
       render: (row) => (
@@ -137,6 +151,7 @@ export default function ProveedoresPage() {
       render: (row) => (
         <ActionCell 
           row={row} 
+          onView={handleView}
           onEdit={handleEdit}
           onDelete={(p) => handleDelete(p.id)}
         />
@@ -196,7 +211,7 @@ export default function ProveedoresPage() {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input 
-                  placeholder="Buscar por nombre o RUT..." 
+                  placeholder="Buscar por nombre, RUT, país o marca..." 
                   className="pl-10"
                   value={searchTerm}
                   onChange={handleSearchChange}
