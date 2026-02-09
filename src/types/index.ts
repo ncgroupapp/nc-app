@@ -20,9 +20,10 @@ export enum Currency {
 }
 
 export enum AdjudicationStatus {
-  PARTIAL = 'PARTIAL',
-  TOTAL = 'TOTAL',
+  PARTIAL = 'parcial',
+  TOTAL = 'total',
 }
+
 
 export interface Proveedor {
   id: string;
@@ -120,7 +121,7 @@ export interface Licitacion {
   cliente_id: string
   numero_llamado: string
   numero_interno: string
-  estado: 'En espera' | 'Adjudicación Parcial' | 'No Adjudicada' | 'Adjudicación Total'
+  estado: 'En espera' | 'Cotizada' | 'Adjudicación Parcial' | 'No Adjudicada' | 'Adjudicación Total'
   created_at: string
   updated_at: string
   cliente?: Cliente

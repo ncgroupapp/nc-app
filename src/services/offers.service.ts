@@ -14,6 +14,7 @@ export interface Offer {
   provider?: Proveedor;
   price: number;
   quantity: number;
+  origin?: string;
   deliveryDate?: string;
   createdAt: string;
   updatedAt: string;
@@ -33,10 +34,11 @@ export interface CreateOfferDto {
   providerId: number;
   price: number;
   quantity: number;
+  origin?: string;
   deliveryDate?: string;
 }
 
-export interface UpdateOfferDto extends Partial<CreateOfferDto> {}
+export type UpdateOfferDto = Partial<CreateOfferDto>;
 
 export const offersService = {
   getAll: async (filters: OfferFilters = {}): Promise<PaginatedResponse<Offer>> => {

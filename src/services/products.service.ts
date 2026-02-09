@@ -5,6 +5,7 @@ import { PaginatedResponse, ApiResponse } from '@/types';
 export interface Product {
   id: number;
   name: string;
+  origin?: string;
   image?: string;
   providers?: Array<{
     id: number;
@@ -71,6 +72,7 @@ export interface CreateProductForm {
 
 export interface ProductFilters {
   page?: number;
+  limit?: number;
   search?: string;
   providerId?: number;
 }
@@ -79,6 +81,7 @@ export const productsService = {
   getAll: async (filters: ProductFilters = {}): Promise<PaginatedResponse<Product>> => {
     const params = new URLSearchParams();
     if (filters.page) params.append('page', filters.page.toString());
+    if (filters.limit) params.append('limit', filters.limit.toString());
     if (filters.search) params.append('search', filters.search);
     if (filters.providerId) params.append('providerIds', filters.providerId.toString());
     const response = await api.get<PaginatedResponse<Product>>(`/products?${params.toString()}`);
