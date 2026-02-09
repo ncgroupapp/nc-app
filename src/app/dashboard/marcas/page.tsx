@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { Badge } from "@/components/ui/badge";
 import { useRouter } from 'next/navigation'
-import { Plus, Search } from 'lucide-react'
+import { Package, Plus, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { DataTable, DataTableColumn } from '@/components/ui/data-table'
@@ -13,6 +14,7 @@ import { MarcaForm } from '@/components/marcas/marca-form'
 import { useConfirm } from '@/hooks/use-confirm'
 import { Brand } from '@/types'
 import { useDebounce } from '@/hooks/use-debounce'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 export default function MarcasPage() {
   const router = useRouter()
@@ -45,12 +47,12 @@ export default function MarcasPage() {
 
   const handleDelete = async (brand: Brand) => {
     const confirmed = await confirm({
-      title: 'Eliminar Marca',
+      title: "Eliminar Marca",
       message: `¿Estás seguro de que deseas eliminar la marca "${brand.name}"?`,
-      confirmText: 'Eliminar',
-      cancelText: 'Cancelar',
-      type: 'danger'
-    })
+      confirmText: "Eliminar",
+      cancelText: "Cancelar",
+      variant: "destructive",
+    });
 
     if (confirmed) {
       await deleteBrand(brand.id)
@@ -81,40 +83,71 @@ export default function MarcasPage() {
     <div className="space-y-6 pt-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">Marcas</h1>
-        <Button onClick={() => { setEditingBrand(null); setIsDialogOpen(true); }}>
+        <Button
+          onClick={() => {
+            setEditingBrand(null);
+            setIsDialogOpen(true);
+          }}
+        >
           <Plus className="mr-2 h-4 w-4" /> Nueva Marca
         </Button>
       </div>
 
-      <div className="flex items-center space-x-2">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar marcas..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-8"
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Filtros y Búsqueda</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-4">
+            <div className="flex-1">
+              <div className='relative'>
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                placeholder="Buscar marcas..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Package className="h-5 w-5" />
+            <span>Listado de Marcas</span>
+            <Badge variant="outline">{brands.length} marcas</Badge>
+          </CardTitle>
+          <CardDescription>Gestione el inventario de marcas del sistema</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <DataTable
+            data={brands}
+            columns={columns}
+            isLoading={isLoading}
+            pagination={{
+              page: currentPage,
+              limit: 10,
+              total: total,
+              totalPages: Math.ceil(total / 10),
+              onPageChange: setCurrentPage,
+            }}
           />
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
-      <DataTable
-        data={brands}
-        columns={columns}
-        isLoading={isLoading}
-        pagination={{
-          page: currentPage,
-          limit: 10,
-          total: total,
-          totalPages: Math.ceil(total / 10),
-          onPageChange: setCurrentPage,
-        }}
-      />
-
-      <Dialog open={isDialogOpen} onOpenChange={(open) => !open && setIsDialogOpen(false)}>
+      <Dialog
+        open={isDialogOpen}
+        onOpenChange={(open) => !open && setIsDialogOpen(false)}
+      >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingBrand ? 'Editar Marca' : 'Nueva Marca'}</DialogTitle>
+            <DialogTitle>
+              {editingBrand ? "Editar Marca" : "Nueva Marca"}
+            </DialogTitle>
           </DialogHeader>
           <MarcaForm
             initialData={editingBrand}
@@ -125,5 +158,5 @@ export default function MarcasPage() {
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }

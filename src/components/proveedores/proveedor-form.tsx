@@ -7,6 +7,11 @@ import { Label } from '@/components/ui/label'
 import { DialogFooter } from '@/components/ui/dialog'
 import { Plus, Trash2 } from 'lucide-react'
 import { Proveedor } from '@/types'
+import { useConfirm } from "@/hooks/use-confirm";
+import { useBrandsStore } from '@/stores/brands/brandsStore'
+import { MultiSelectSearch } from '@/components/ui/multi-select-search'
+import { useDebounce } from '@/hooks/use-debounce'
+
 
 // Local interface to match the requirement before types are fully updated
 interface ContactoData {
@@ -20,6 +25,7 @@ interface ProveedorFormData {
   name: string
   rut: string
   country: string
+  brand_id?: number
   contacts: ContactoData[]
 }
 
@@ -32,6 +38,10 @@ interface ProveedorFormProps {
 }
 
 export function ProveedorForm({ initialData, onSubmit, onCancel, isLoading = false }: ProveedorFormProps) {
+  const { brands, fetchBrands } = useBrandsStore()
+  const [brandSearch, setBrandSearch] = useState('')
+  const debouncedBrandSearch = useDebounce(brandSearch, 500)
+
   const [formData, setFormData] = useState<ProveedorFormData>({
     name: '',
     rut: '',
@@ -39,12 +49,19 @@ export function ProveedorForm({ initialData, onSubmit, onCancel, isLoading = fal
     contacts: [{ name: '', email: '', phone: '', address: '' }]
   })
 
+  const { confirm } = useConfirm();
+
+  useEffect(() => {
+    fetchBrands(1, debouncedBrandSearch)
+  }, [debouncedBrandSearch, fetchBrands])
+
   useEffect(() => {
     if (initialData) {
       setFormData({
         name: initialData.name || '',
         rut: initialData.rut || '',
         country: initialData.country || '',
+        brand_id: initialData.brand_id || undefined,
         contacts: initialData.contacts && initialData.contacts.length > 0
           ? initialData.contacts.map((c) => ({
               name: c.name || '',
@@ -77,12 +94,19 @@ export function ProveedorForm({ initialData, onSubmit, onCancel, isLoading = fal
     }))
   }
 
-  const removeContact = (index: number) => {
+  const removeContact = async (index: number) => {
+    const confirmed = await confirm({ 
+      title: 'Eliminar Contacto', 
+      message: '¿Está seguro que desea eliminar este contacto?',
+      variant: 'destructive'
+    })
     if (formData.contacts.length > 1) {
-      setFormData(prev => ({
-        ...prev,
-        contacts: prev.contacts.filter((_, i) => i !== index)
-      }))
+      if (confirmed) {    
+        setFormData(prev => ({
+          ...prev,
+          contacts: prev.contacts.filter((_, i) => i !== index)
+        }))
+      }
     }
   }
 
@@ -94,6 +118,7 @@ export function ProveedorForm({ initialData, onSubmit, onCancel, isLoading = fal
       name: formData.name,
       rut: formData.rut,
       country: formData.country,
+      brand_id: formData.brand_id,
       contacts: formData.contacts.map(c => ({
         name: c.name,
         email: c.email,
@@ -148,6 +173,36 @@ export function ProveedorForm({ initialData, onSubmit, onCancel, isLoading = fal
             />
           </div>
         </div>
+
+        <div className="space-y-2">
+            <Label htmlFor="brand">Marca</Label>
+            <MultiSelectSearch
+                single={true}
+                searchValue={brandSearch}
+                onSearchValueChange={setBrandSearch}
+                options={brands.map((b) => ({
+                  id: b.id,
+                  label: b.name,
+                }))}
+                selectedValues={formData.brand_id ? [formData.brand_id] : []}
+                onSelect={(value) => {
+                   setFormData((prev) => ({
+                    ...prev,
+                    brand_id: Number(value),
+                  }));
+                }}
+                onRemove={() => {
+                   setFormData((prev) => {
+                       // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                       const { brand_id, ...rest } = prev;
+                       return { ...rest, brand_id: undefined };
+                   });
+                }}
+                placeholder="Seleccionar marca..."
+                searchPlaceholder="Buscar marca..."
+                emptyMessage="No se encontraron marcas."
+            />
+          </div>
 
         {/* Dynamic Contacts List */}
         <div className="space-y-4">

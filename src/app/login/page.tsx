@@ -9,6 +9,7 @@ import { signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth"
 import { auth } from "@/lib/firebase"
 import { loginSchema } from "@/lib/validations/schema"
 import api from "@/lib/axios"
+import { isTokenExpired } from "@/lib/utils"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -38,8 +39,9 @@ export default function LoginPage() {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      // Solo redirigir si hay usuario Y hay token del backend
-      if (user && localStorage.getItem('backend_token')) {
+      // Solo redirigir si hay usuario Y hay token del backend Y NO ha expirado
+      const backendToken = localStorage.getItem('backend_token')
+      if (user && backendToken && !isTokenExpired(backendToken)) {
         router.push("/dashboard")
       }
     })

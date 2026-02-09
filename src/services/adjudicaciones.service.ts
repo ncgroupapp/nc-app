@@ -2,6 +2,16 @@ import api from '@/lib/axios';
 import { PaginatedResponse, ApiResponse, AdjudicationStatus } from '@/types';
 
 // Types matching backend entities
+export interface ProviderAdjudicationHistory {
+  date: string;
+  licitationNumber?: string;
+  productName: string;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+  currency?: string;
+}
+
 export interface AdjudicationItem {
   id?: number;
   adjudicationId?: number;
@@ -58,7 +68,24 @@ export interface AdjudicationFilters {
   licitationId?: number;
 }
 
+
+export interface ProductAdjudicationHistory {
+  date: string;
+  entity: string;
+  status: string;
+  quantity: number;
+  unitPrice: number;
+  contractId?: string;
+  deadlineDate?: string;
+  internalNumber?: string;
+}
+
 export const adjudicacionesService = {
+  getByProductId: async (productId: number): Promise<ProductAdjudicationHistory[]> => {
+    const response = await api.get<ProductAdjudicationHistory[]>(`/adjudications/by-product/${productId}`);
+    return response.data;
+  },
+
   getAll: async (filters: AdjudicationFilters = {}): Promise<PaginatedResponse<Adjudication>> => {
     const params = new URLSearchParams();
     if (filters.page) params.append('page', filters.page.toString());
@@ -103,5 +130,25 @@ export const adjudicacionesService = {
 
   delete: async (id: number): Promise<void> => {
     await api.delete(`/adjudications/${id}`);
+  },
+
+  getByProviderId: async (providerId: string): Promise<ProviderAdjudicationHistory[]> => {
+    const response = await api.get<ProviderAdjudicationHistory[]>(`/adjudications/by-provider/${providerId}`);
+    return response.data;
+  },
+
+  getByClientId: async (clientId: string): Promise<Adjudication[]> => {
+    const response = await api.get<ApiResponse<Adjudication[]> | Adjudication[]>(`/adjudications/by-client/${clientId}`);
+    const responseData = response.data;
+
+    if (responseData && 'success' in responseData && responseData.success) {
+      return responseData.data || [];
+    }
+
+    if (Array.isArray(responseData)) {
+      return responseData;
+    }
+
+    return [];
   },
 };

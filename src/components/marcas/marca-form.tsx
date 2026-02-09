@@ -8,6 +8,8 @@ import { DialogFooter } from '@/components/ui/dialog'
 import { Brand } from '@/types'
 import { Plus, Trash2 } from 'lucide-react'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { useConfirm } from "@/hooks/use-confirm";
+
 
 interface MarcaFormProps {
   initialData?: Brand | null
@@ -20,6 +22,7 @@ export function MarcaForm({ initialData, onSubmit, onCancel, isLoading }: MarcaF
   const [name, setName] = useState('')
   const [models, setModels] = useState<{ name: string; id?: number }[]>([])
   const [newModelName, setNewModelName] = useState('')
+  const {confirm} = useConfirm()
 
   useEffect(() => {
     if (initialData) {
@@ -52,8 +55,17 @@ export function MarcaForm({ initialData, onSubmit, onCancel, isLoading }: MarcaF
     }
   }
 
-  const handleRemoveModel = (index: number) => {
-    setModels(models.filter((_, i) => i !== index))
+  const handleRemoveModel = async (index: number) => {
+    const confirmed = await confirm({
+      title: "Eliminar Modelo",
+      message: `¿Estás seguro de que deseas eliminar el modelo?`,
+      confirmText: "Eliminar",
+      cancelText: "Cancelar",
+      variant: "destructive",
+    });
+     if (confirmed) {
+       setModels(models.filter((_, i) => i !== index))
+     }
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

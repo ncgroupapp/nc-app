@@ -113,7 +113,7 @@ export function Navbar() {
                                     "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
                                     pathname === child.href &&
                                       "bg-accent text-accent-foreground"
-                                  )}
+                                  )} 
                                 >
                                   <div className="flex items-center space-x-2">
                                     <child.icon className="h-4 w-4" />
@@ -133,7 +133,7 @@ export function Navbar() {
                       <Link
                         href={item.href}
                         className={cn(
-                          "group inline-flex h-9 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50",
+                          "group inline-flex h-9 w-max items-center justify-center rounded-md px-4 py-8 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50",
                           pathname === item.href &&
                             "bg-accent text-accent-foreground"
                         )}
