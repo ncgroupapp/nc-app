@@ -166,7 +166,7 @@ export function MultiSelectSearch({
       </PopoverContent>
     </Popover>
 
-      {!hideTags && selectedValues.length > 0 && (
+      {!hideTags && !single && selectedValues.length > 0 && (
         <div className="flex flex-wrap gap-2 mt-3">
           {selectedValues.map((val) => {
             const option = options.find(o => o.id === val);

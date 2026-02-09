@@ -18,6 +18,7 @@ import {
   Settings,
   Tag,
 } from "lucide-react";
+import { featureFlags } from "@/lib/feature-flags";
 
 const sidebarNavItems = [
   {
@@ -55,7 +56,7 @@ const sidebarNavItems = [
       },
     ],
   },
-  {
+  ...(featureFlags.licitaciones ? [{
     title: "Licitaciones",
     items: [
       {
@@ -79,22 +80,22 @@ const sidebarNavItems = [
         icon: Truck,
       },
     ],
-  },
-  {
+  }] : []),
+  ...(featureFlags.importaciones ? [{
     title: "Importaciones",
     href: "/dashboard/importaciones",
     icon: Ship,
-  },
-  {
+  }] : []),
+  ...(featureFlags.pdfs ? [{
     title: "PDFs",
     href: "/dashboard/pdf",
     icon: BarChart3,
-  },
-  {
+  }] : []),
+  ...(featureFlags.configuracion ? [{
     title: "Configuración",
     href: "/dashboard/configuracion",
     icon: Settings,
-  },
+  }] : []),
 ];
 
 type SidebarProps = React.HTMLAttributes<HTMLDivElement>
