@@ -44,6 +44,11 @@ const sidebarNavItems = [
         icon: Users,
       },
       {
+        title: "Marcas",
+        href: "/dashboard/marcas",
+        icon: Tag,
+      },
+      {
         title: "Ofertas",
         href: "/dashboard/ofertas",
         icon: Tag,

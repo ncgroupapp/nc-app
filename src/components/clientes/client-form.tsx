@@ -7,6 +7,8 @@ import { Label } from '@/components/ui/label'
 import { DialogFooter } from '@/components/ui/dialog'
 import { Plus, Trash2 } from 'lucide-react'
 import { Cliente } from '@/types'
+import { useConfirm } from "@/hooks/use-confirm";
+
 
 interface ClientFormData {
   nombre: string
@@ -32,6 +34,7 @@ export function ClientForm({ initialData, onSubmit, onCancel, isLoading = false 
     identificador: '',
     contactos: [{ nombre: '', email: '', telefono: '', direccion: '' }]
   })
+  const {confirm} = useConfirm()
 
   useEffect(() => {
     if (initialData) {
@@ -140,11 +143,23 @@ export function ClientForm({ initialData, onSubmit, onCancel, isLoading = false 
                     variant="ghost"
                     size="sm"
                     className="absolute top-2 right-2 text-red-500 hover:text-red-700"
-                    onClick={() =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        contactos: prev.contactos.filter((_, i) => i !== index),
-                      }))
+                    onClick={async () => {
+                         const confirmed = await confirm({
+                           title: "Eliminar Contacto",
+                           message: `¿Estás seguro de que deseas eliminar el Contacto?`,
+                           confirmText: "Eliminar",
+                           cancelText: "Cancelar",
+                           variant: "destructive",
+                         });
+                         if (confirmed) {
+                           setFormData((prev) => ({
+                             ...prev,
+                             contactos: prev.contactos.filter(
+                               (_, i) => i !== index,
+                             ),
+                           }));
+                         }
+                    }
                     }
                   >
                     <Trash2 className="h-4 w-4" />

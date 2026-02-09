@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { onAuthStateChanged } from "firebase/auth"
 import { auth } from "@/lib/firebase"
 import { Loader2 } from "lucide-react"
+import { isTokenExpired } from "@/lib/utils"
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter()
@@ -14,12 +15,17 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       const backendToken = localStorage.getItem('backend_token')
-      if (user && backendToken) {
+      const tokenExpired = backendToken ? isTokenExpired(backendToken) : true
+
+      if (user && backendToken && !tokenExpired) {
         setAuthenticated(true)
         setLoading(false)
       } else {
         setAuthenticated(false)
         setLoading(false)
+        if (backendToken && tokenExpired) {
+           localStorage.removeItem('backend_token')
+        }
         router.push("/login")
       }
     })

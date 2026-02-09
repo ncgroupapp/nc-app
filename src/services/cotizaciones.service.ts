@@ -2,6 +2,15 @@ import api from '@/lib/axios';
 import { PaginatedResponse, ApiResponse, QuotationStatus, QuotationAwardStatus, Currency } from '@/types';
 
 // Types matching backend entities
+export interface ProviderQuotationHistory {
+  date: string;
+  quotationIdentifier: string;
+  status: string;
+  productName: string;
+  currency: string;
+  price: number;
+}
+
 export interface QuotationItem {
   id?: number;
   quotationId?: number;
@@ -114,7 +123,27 @@ export interface QuotationFilters {
   clientId?: number;
 }
 
+
+export interface ProductQuotationHistory {
+  date: string;
+  status: string;
+  currency: string;
+  provider: string;
+  validUntil?: string;
+  validity?: string;
+  quotationId?: string;
+  quotedPrice: number;
+  ivaPercentage?: number;
+  associatedPurchase?: string;
+  createdAt: string;
+}
+
 export const cotizacionesService = {
+  getByProductId: async (productId: number): Promise<Quotation[]> => {
+    const response = await api.get<ApiResponse<Quotation[]>>(`/quotation/by-product/${productId}`);
+    return response.data.data;
+  },
+  
   getAll: async (filters: QuotationFilters = {}): Promise<PaginatedResponse<Quotation>> => {
     const params = new URLSearchParams();
     if (filters.page) params.append('page', filters.page.toString());
@@ -191,5 +220,15 @@ export const cotizacionesService = {
       responseType: 'blob',
     });
     return response.data;
+  },
+
+  getByProviderId: async (providerId: string): Promise<ProviderQuotationHistory[]> => {
+    const response = await api.get<ApiResponse<ProviderQuotationHistory[]>>(`/quotation/by-provider/${providerId}`);
+    return response.data.data;
+  },
+
+  getByClientId: async (clientId: string): Promise<Quotation[]> => {
+    const response = await api.get<ApiResponse<Quotation[]>>(`/quotation/by-client/${clientId}`);
+    return response.data.data;
   },
 };
