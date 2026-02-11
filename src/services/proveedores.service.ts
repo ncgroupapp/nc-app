@@ -3,6 +3,7 @@ import { Proveedor, CreateProveedorForm, ApiResponse, PaginatedResponse } from '
 
 export interface ProviderFilters {
   page?: number;
+  limit?: number;
   search?: string;
 }
 
@@ -10,6 +11,7 @@ export const proveedoresService = {
   getAll: async (filters: ProviderFilters = {}): Promise<PaginatedResponse<Proveedor>> => {
     const params = new URLSearchParams();
     if (filters.page) params.append('page', filters.page.toString());
+    if (filters.limit) params.append('limit', filters.limit.toString());
     if (filters.search) params.append('search', filters.search);
     const response = await api.get<PaginatedResponse<Proveedor>>(`/providers?${params.toString()}`);
     return response.data;

@@ -4,9 +4,23 @@ import { PaginatedResponse, ApiResponse } from '@/types';
 // Types matching backend entity
 export enum LicitationStatus {
   PENDING = 'Pending',
+  QUOTED = 'Quoted',
   PARTIAL_ADJUDICATION = 'Partial Adjudication',
   NOT_ADJUDICATED = 'Not Adjudicated',
   TOTAL_ADJUDICATION = 'Total Adjudication',
+}
+
+export interface LicitationProduct {
+  id: number;
+  productId: number;
+  quantity: number;
+  product: {
+    id: number;
+    name: string;
+    stockQuantity?: number;
+    brand?: string;
+    model?: string;
+  };
 }
 
 export interface Licitation {
@@ -30,6 +44,7 @@ export interface Licitation {
       address?: string;
     }>;
   };
+  /** @deprecated Use licitationProducts instead */
   products?: Array<{
     id: number;
     name: string;
@@ -37,11 +52,17 @@ export interface Licitation {
     brand?: string;
     model?: string;
   }>;
+  licitationProducts?: LicitationProduct[];
   quotations?: Array<{
     id: number;
     quotationIdentifier: string;
     status: string;
   }>;
+}
+
+export interface ProductWithQuantityDto {
+  productId: number;
+  quantity: number;
 }
 
 export interface CreateLicitationDto {
@@ -50,7 +71,9 @@ export interface CreateLicitationDto {
   clientId: number;
   callNumber: string;
   internalNumber: string;
-  productIds: number[];
+  products?: ProductWithQuantityDto[];
+  /** @deprecated Use products instead */
+  productIds?: number[];
 }
 
 export interface UpdateLicitationDto {
@@ -59,24 +82,26 @@ export interface UpdateLicitationDto {
   clientId?: number;
   callNumber?: string;
   internalNumber?: string;
+  products?: ProductWithQuantityDto[];
+  /** @deprecated Use products instead */
   productIds?: number[];
   status?: LicitationStatus;
 }
 
 export interface LicitationFilters {
   page?: number;
-  limit?: number;
   search?: string;
   status?: LicitationStatus;
+  clientId?: number;
 }
 
 export const licitacionesService = {
   getAll: async (filters: LicitationFilters = {}): Promise<PaginatedResponse<Licitation>> => {
     const params = new URLSearchParams();
     if (filters.page) params.append('page', filters.page.toString());
-    if (filters.limit) params.append('limit', filters.limit.toString());
     if (filters.search) params.append('search', filters.search);
     if (filters.status) params.append('status', filters.status);
+    if (filters.clientId) params.append('clientId', filters.clientId.toString());
     
     const response = await api.get<PaginatedResponse<Licitation>>(`/licitations?${params.toString()}`);
     return response.data;

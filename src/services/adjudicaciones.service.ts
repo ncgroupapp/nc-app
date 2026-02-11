@@ -15,7 +15,7 @@ export interface ProviderAdjudicationHistory {
 export interface AdjudicationItem {
   id?: number;
   adjudicationId?: number;
-  productId: number;
+  productId?: number;
   productName?: string;
   quantity: number;
   unitPrice: number;
@@ -23,7 +23,7 @@ export interface AdjudicationItem {
 }
 
 export interface NonAwardedItem {
-  productId: number;
+  productId?: number;
   competitorName?: string;
   competitorRut?: string;
   competitorPrice?: number;
@@ -54,7 +54,7 @@ export interface CreateAdjudicationDto {
 }
 
 export interface AddAdjudicationItemDto {
-  productId: number;
+  productId?: number;
   productName?: string;
   quantity: number;
   unitPrice: number;
@@ -132,6 +132,10 @@ export const adjudicacionesService = {
     await api.delete(`/adjudications/${id}`);
   },
 
+  updateAwardedQuantity: async (quotationItemId: number, quantity: number): Promise<void> => {
+    await api.patch(`/adjudications/quotation-item/${quotationItemId}/quantity`, { quantity });
+  },
+  
   getByProviderId: async (providerId: string): Promise<ProviderAdjudicationHistory[]> => {
     const response = await api.get<ProviderAdjudicationHistory[]>(`/adjudications/by-provider/${providerId}`);
     return response.data;

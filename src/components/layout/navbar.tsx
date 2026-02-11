@@ -35,8 +35,9 @@ import {
   Settings,
   User
 } from 'lucide-react'
+import { featureFlags } from '@/lib/feature-flags'
 
-const navigation = [
+const allNavigation = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
   {
     name: 'Maestros',
@@ -48,7 +49,7 @@ const navigation = [
       { name: 'Clientes', href: '/dashboard/clientes', icon: Users },
     ]
   },
-  {
+  ...(featureFlags.licitaciones ? [{
     name: 'Licitaciones',
     href: '#',
     icon: Gavel,
@@ -58,12 +59,12 @@ const navigation = [
       { name: 'Adjudicaciones', href: '/dashboard/adjudicaciones', icon: Gavel },
       { name: 'Entregas', href: '/dashboard/entregas', icon: Truck },
     ]
-  },
-  {
+  }] : []),
+  ...(featureFlags.importaciones ? [{
     name: 'Importaciones',
     href: '/dashboard/importaciones',
     icon: Ship,
-  }
+  }] : []),
 ]
 
 export function Navbar() {
@@ -94,7 +95,7 @@ export function Navbar() {
           </Link>
           <NavigationMenu>
             <NavigationMenuList>
-              {navigation.map((item) => (
+              {allNavigation.map((item) => (
                 <NavigationMenuItem key={item.name}>
                   {item.children ? (
                     <>
@@ -133,7 +134,7 @@ export function Navbar() {
                       <Link
                         href={item.href}
                         className={cn(
-                          "group inline-flex h-9 w-max items-center justify-center rounded-md px-4 py-8 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50",
+                          "group inline-flex h-9 w-max items-center justify-center rounded-md px-4 py-8 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50 mb-1",
                           pathname === item.href &&
                             "bg-accent text-accent-foreground"
                         )}
@@ -184,49 +185,55 @@ export function Navbar() {
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link
-                href="/dashboard/licitaciones"
-                className="flex items-center"
-              >
-                <FileText className="mr-2 h-4 w-4" />
-                Licitaciones
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link
-                href="/dashboard/cotizaciones"
-                className="flex items-center"
-              >
-                <Calculator className="mr-2 h-4 w-4" />
-                Cotizaciones
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link
-                href="/dashboard/adjudicaciones"
-                className="flex items-center"
-              >
-                <Gavel className="mr-2 h-4 w-4" />
-                Adjudicaciones
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link href="/dashboard/entregas" className="flex items-center">
-                <Truck className="mr-2 h-4 w-4" />
-                Entregas
-              </Link>
-            </DropdownMenuItem>
+            {featureFlags.licitaciones && (
+              <>
+                <DropdownMenuItem asChild>
+                  <Link
+                    href="/dashboard/licitaciones"
+                    className="flex items-center"
+                  >
+                    <FileText className="mr-2 h-4 w-4" />
+                    Licitaciones
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link
+                    href="/dashboard/cotizaciones"
+                    className="flex items-center"
+                  >
+                    <Calculator className="mr-2 h-4 w-4" />
+                    Cotizaciones
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link
+                    href="/dashboard/adjudicaciones"
+                    className="flex items-center"
+                  >
+                    <Gavel className="mr-2 h-4 w-4" />
+                    Adjudicaciones
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/dashboard/entregas" className="flex items-center">
+                    <Truck className="mr-2 h-4 w-4" />
+                    Entregas
+                  </Link>
+                </DropdownMenuItem>
+              </>
+            )}
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link
-                href="/dashboard/importaciones"
-                className="flex items-center"
-              >
-                <Ship className="mr-2 h-4 w-4" />
-                Importaciones
-              </Link>
-            </DropdownMenuItem>
+            {featureFlags.importaciones && (
+              <DropdownMenuItem asChild>
+                <Link
+                  href="/dashboard/importaciones"
+                  className="flex items-center"
+                >
+                  <Ship className="mr-2 h-4 w-4" />
+                  Importaciones
+                </Link>
+              </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
 
