@@ -36,8 +36,8 @@ export const useBrandsStore = create<BrandsState>((set, get) => ({
   fetchBrandById: async (id) => {
     set({ isLoading: true });
     try {
-      const data = await brandsService.getById(id);
-      set({ selectedBrand: data });
+      const response = await brandsService.getById(id);
+      set({ selectedBrand: response.data });
     } catch (error) {
       console.error('Error fetching brand:', error);
     } finally {

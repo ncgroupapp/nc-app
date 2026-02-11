@@ -47,7 +47,7 @@ export default function MarcaDetallePage() {
 
       <div className="mt-6 border rounded-md">
         <DataTable
-          data={selectedBrand?.data.models || []}
+          data={selectedBrand?.models || []}
           columns={columns}
           isLoading={isLoading}
           emptyMessage="No hay modelos registrados para esta marca."

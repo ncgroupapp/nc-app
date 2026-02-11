@@ -1,5 +1,5 @@
 import api from '@/lib/axios';
-import { Brand, Model, PaginatedResponse } from '@/types';
+import { Brand, Model, PaginatedResponse, ResponseBrand } from '@/types';
 
 export const brandsService = {
   // Brand Endpoints
@@ -9,7 +9,7 @@ export const brandsService = {
   },
 
   getById: async (id: number) => {
-    const { data } = await api.get<Brand>(`/brands/${id}`);
+    const { data } = await api.get<ResponseBrand>(`/brands/${id}`);
     return data;
   },
 

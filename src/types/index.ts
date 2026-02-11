@@ -488,6 +488,10 @@ export interface Brand {
   updatedAt?: string
   models?: Model[]
 }
+export interface ResponseBrand {
+  success: boolean
+  data: Brand
+}
 
 export interface Model {
   id: number
