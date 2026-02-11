@@ -32,8 +32,6 @@ export default function ProveedoresPage() {
     createProveedor, 
     updateProveedor, 
     deleteProveedor,
-    setFilters,
-    filters 
   } = useProveedoresStore()
   
   const { confirm } = useConfirm()
@@ -61,7 +59,7 @@ export default function ProveedoresPage() {
     setSearchTerm(e.target.value)
   }
 
-  const handleFormSubmit = async (data: CreateProveedorForm | Partial<Proveedor>) => {
+  const handleFormSubmit = async (data: unknown) => {
     try {
       if (editingProveedor) {
         await updateProveedor(editingProveedor.id, data as Partial<Proveedor>)
@@ -125,7 +123,7 @@ export default function ProveedoresPage() {
       key: 'brand',
       header: 'Marca',
       render: (row) => (
-        row.brand ? <Badge variant="outline">{row.brand.name}</Badge> : <span className="text-muted-foreground text-sm">-</span>
+        row.brand ? <Badge variant="outline">{row.brand}</Badge> : <span className="text-muted-foreground text-sm">-</span>
       )
     },
     {
