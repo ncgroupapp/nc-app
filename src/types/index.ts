@@ -4,6 +4,9 @@ import { boolean, success } from "zod"
 export enum QuotationStatus {
   CREATED = 'creada',
   FINALIZED = 'finalizada',
+  DRAFT = 'borrador',
+  SENT = 'enviada',
+  REJECTED = 'rechazada',
 }
 
 export enum QuotationAwardStatus {
