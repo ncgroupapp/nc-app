@@ -35,8 +35,7 @@ export interface Proveedor {
   email?: string;
   telefono?: string;
   direccion?: string;
-  brand_id?: number | null;
-  brand?: Brand;
+  brand?: string;
   createdAt: string;
   updated_at: string;
   contacts?: Array<{
