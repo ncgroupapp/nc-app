@@ -335,7 +335,7 @@ export default function OfertasPage() {
                     <TableCell>
                       <div className="flex items-center text-sm text-gray-500">
                         <Calendar className="mr-2 h-3 w-3" />
-                        {new Date(oferta.deliveryDate).toLocaleDateString()}
+                        {oferta.deliveryDate ? new Date(oferta.deliveryDate).toLocaleDateString() : '-'}
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
