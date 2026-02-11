@@ -92,9 +92,9 @@ export const QuotationTab = ({
       <Card>
         <CardContent className="py-8">
           <div className="text-center">
-            <Calculator className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <Calculator className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-medium mb-2">No hay cotización creada</h3>
-            <p className="text-gray-500 mb-4">
+            <p className="text-muted-foreground mb-4">
               Cree una cotización para comenzar a agregar precios y condiciones
             </p>
             <Button onClick={onOpenCreateQuotation} disabled={submitting}>
@@ -162,7 +162,7 @@ export const QuotationTab = ({
             </CardHeader>
             <CardContent>
               {quotation.items.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-muted-foreground">
                   No hay productos en esta cotización
                 </div>
               ) : (
@@ -188,7 +188,7 @@ export const QuotationTab = ({
                           <TableCell>
                             <div>
                               <p className="font-medium">{item.productName}</p>
-                              <p className="text-sm text-gray-500">
+                              <p className="text-sm text-muted-foreground">
                                 {item.deliveryTime} días - {item.currency}
                               </p>
                             </div>

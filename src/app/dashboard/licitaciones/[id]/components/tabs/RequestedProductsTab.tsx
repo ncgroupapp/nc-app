@@ -71,7 +71,7 @@ export const RequestedProductsTab = ({ licitationProducts }: RequestedProductsTa
             </TableBody>
           </Table>
         ) : (
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8 text-muted-foreground">
             No hay productos registrados en esta licitación
           </div>
         )}

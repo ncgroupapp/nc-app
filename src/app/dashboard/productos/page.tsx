@@ -204,7 +204,7 @@ export default function ProductosPage() {
         <div className="flex items-center space-x-2">
           <span>{product.stockQuantity ?? 0}</span>
           {(product.stockQuantity ?? 0) <= 5 && (
-            <AlertTriangle className="h-4 w-4 text-yellow-500" />
+            <AlertTriangle className="h-4 w-4 text-warning" />
           )}
         </div>
       )
@@ -281,7 +281,7 @@ export default function ProductosPage() {
           <div className="flex gap-4 items-center">
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 <Input
                   placeholder="Buscar por nombre, código, marca o modelo..."
                   value={searchTerm}

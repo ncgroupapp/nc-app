@@ -6,6 +6,7 @@ import { signOut } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { SidebarTrigger } from '@/components/ui/sidebar'
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -82,8 +83,9 @@ export function Navbar() {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="flex h-16 items-center px-8">
+    <header className="sticky top-0 z-50 w-full border-b border-primary/80 bg-primary text-primary-foreground backdrop-blur">
+      <div className="flex h-16 items-center gap-2 px-4">
+        <SidebarTrigger className="text-primary-foreground hover:bg-primary-foreground/15 hover:text-primary-foreground" />
         <div className="mr-4 hidden md:flex">
           <Link className="mr-6 flex items-center space-x-2" href="/dashboard">
             <div className="flex items-center space-x-2">
@@ -99,7 +101,7 @@ export function Navbar() {
                 <NavigationMenuItem key={item.name}>
                   {item.children ? (
                     <>
-                      <NavigationMenuTrigger className="h-9 bg-transparent">
+                      <NavigationMenuTrigger className="h-9 bg-transparent text-primary-foreground hover:bg-primary-foreground/15 data-[state=open]:bg-primary-foreground/15">
                         <item.icon className="mr-2 h-4 w-4" />
                         {item.name}
                       </NavigationMenuTrigger>
@@ -134,9 +136,9 @@ export function Navbar() {
                       <Link
                         href={item.href}
                         className={cn(
-                          "group inline-flex h-9 w-max items-center justify-center rounded-md px-4 py-8 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50 mb-1",
+                          "group inline-flex h-9 w-max items-center bg-transparent px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-foreground/15 focus:bg-primary-foreground/15 focus:outline-none disabled:pointer-events-none disabled:opacity-50 mb-4",
                           pathname === item.href &&
-                            "bg-accent text-accent-foreground"
+                            "bg-primary-foreground/20"
                         )}
                       >
                         <item.icon className="mr-2 h-4 w-4" />
@@ -244,7 +246,7 @@ export function Navbar() {
           <nav className="flex items-center space-x-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="secondary" size="sm">
+                <Button variant="ghost" size="sm" className="text-primary-foreground hover:bg-primary-foreground/15 hover:text-primary-foreground">
                   <User className="mr-2 h-4 w-4" />
                   <span>Admin</span>
                 </Button>

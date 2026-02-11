@@ -206,7 +206,7 @@ export default function AdjudicacionesPage() {
                             {adj.items.map((item, idx) => (
                               <div key={idx} className="text-sm border-b last:border-0 pb-1 last:pb-0 border-dashed border-gray-200">
                                 <div className="font-medium text-gray-900">{item.productName || `Producto #${item.productId}`}</div>
-                                <div className="text-xs text-gray-500 flex justify-between">
+                                <div className="text-xs text-muted-foreground flex justify-between">
                                   <span>Cant: {item.quantity}</span>
                                   <span>{formatCurrency(Number(item.unitPrice))} un.</span>
                                 </div>
@@ -217,8 +217,8 @@ export default function AdjudicacionesPage() {
                         <TableCell>
                           <div className="flex flex-col text-sm">
                             <span className="font-medium text-gray-900">Total: {formatCurrency(Number(adj.totalPriceWithIVA))}</span>
-                            <span className="text-xs text-gray-500">Subtotal: {formatCurrency(Number(adj.totalPriceWithoutIVA))}</span>
-                            <span className="text-xs text-gray-500">Items: {adj.totalQuantity}</span>
+                            <span className="text-xs text-muted-foreground">Subtotal: {formatCurrency(Number(adj.totalPriceWithoutIVA))}</span>
+                            <span className="text-xs text-muted-foreground">Items: {adj.totalQuantity}</span>
                           </div>
                         </TableCell>
                         <TableCell>

@@ -33,23 +33,23 @@ export const LicitationInfoCard = ({ licitation }: LicitationInfoCardProps) => {
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div>
-            <Label className="text-sm font-medium text-gray-500">Cliente</Label>
+            <Label className="text-sm font-medium text-muted-foreground">Cliente</Label>
             <div className="mt-1">
               <p className="font-medium">{licitation.client?.name}</p>
-              <p className="text-sm text-gray-500">{licitation.client?.identifier}</p>
+              <p className="text-sm text-muted-foreground">{licitation.client?.identifier}</p>
             </div>
           </div>
           <div>
-            <Label className="text-sm font-medium text-gray-500">Fechas</Label>
+            <Label className="text-sm font-medium text-muted-foreground">Fechas</Label>
             <div className="mt-1 space-y-1">
               <div className="flex items-center space-x-2">
-                <Calendar className="h-4 w-4 text-gray-400" />
+                <Calendar className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm">
                   Inicio: {new Date(licitation.startDate).toLocaleDateString()}
                 </span>
               </div>
               <div className="flex items-center space-x-2">
-                <Clock className="h-4 w-4 text-gray-400" />
+                <Clock className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm">
                   Límite: {new Date(licitation.deadlineDate).toLocaleDateString()}
                 </span>
@@ -57,27 +57,27 @@ export const LicitationInfoCard = ({ licitation }: LicitationInfoCardProps) => {
             </div>
           </div>
           <div>
-            <Label className="text-sm font-medium text-gray-500">Contacto</Label>
+            <Label className="text-sm font-medium text-muted-foreground">Contacto</Label>
             <div className="mt-1 space-y-1">
               {contact?.email && (
                 <div className="flex items-center space-x-2">
-                  <Mail className="h-4 w-4 text-gray-400" />
+                  <Mail className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm">{contact.email}</span>
                 </div>
               )}
               {contact?.phone && (
                 <div className="flex items-center space-x-2">
-                  <Phone className="h-4 w-4 text-gray-400" />
+                  <Phone className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm">{contact.phone}</span>
                 </div>
               )}
             </div>
           </div>
           <div>
-            <Label className="text-sm font-medium text-gray-500">Dirección</Label>
+            <Label className="text-sm font-medium text-muted-foreground">Dirección</Label>
             <div className="mt-1">
               <div className="flex items-center space-x-2">
-                <MapPin className="h-4 w-4 text-gray-400" />
+                <MapPin className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm">{contact?.address || 'No especificada'}</span>
               </div>
             </div>

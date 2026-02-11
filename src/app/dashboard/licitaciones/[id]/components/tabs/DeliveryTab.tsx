@@ -181,7 +181,7 @@ export const DeliveryTab = ({ licitationId, licitationStatus }: DeliveryTabProps
         </CardHeader>
         <CardContent>
           {!delivery || (delivery.items?.length ?? 0) === 0 ? (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-muted-foreground">
               <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p>No hay productos para entregar.</p>
               {licitationStatus === LicitationStatus.PENDING && (
@@ -219,7 +219,7 @@ export const DeliveryTab = ({ licitationId, licitationStatus }: DeliveryTabProps
                       <TableCell>
                         {item.actualDate 
                           ? new Date(item.actualDate).toLocaleDateString("es-UY")
-                          : <span className="text-gray-400">-</span>
+                          : <span className="text-muted-foreground">-</span>
                         }
                       </TableCell>
                       <TableCell>
@@ -277,7 +277,7 @@ export const DeliveryTab = ({ licitationId, licitationStatus }: DeliveryTabProps
                       >
                         <div>
                           <span className="font-medium">{invoice.invoiceNumber}</span>
-                          <span className="text-sm text-gray-500 ml-2">
+                          <span className="text-sm text-muted-foreground ml-2">
                             {new Date(invoice.issueDate).toLocaleDateString("es-UY")}
                           </span>
                         </div>
@@ -292,7 +292,7 @@ export const DeliveryTab = ({ licitationId, licitationStatus }: DeliveryTabProps
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-gray-500">No hay facturas asociadas.</p>
+                  <p className="text-sm text-muted-foreground">No hay facturas asociadas.</p>
                 )}
               </div>
             </div>

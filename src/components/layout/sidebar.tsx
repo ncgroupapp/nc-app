@@ -26,9 +26,6 @@ const sidebarNavItems = [
     href: "/dashboard",
     icon: Home,
   },
-  {
-    title: "Maestros",
-    items: [
       {
         title: "Productos",
         href: "/dashboard/productos",
@@ -54,8 +51,6 @@ const sidebarNavItems = [
         href: "/dashboard/ofertas",
         icon: Tag,
       },
-    ],
-  },
   ...(featureFlags.licitaciones ? [{
     title: "Licitaciones",
     items: [
@@ -107,16 +102,13 @@ export function Sidebar({ className, ...props }: SidebarProps) {
     <div className={cn("pb-12", className)} {...props}>
       <div className="space-y-4 py-4">
         <div className="px-3 py-2">
-          <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight">
-            Sistema de Licitaciones
-          </h2>
           <div className="space-y-1">
             {sidebarNavItems.map((item) => (
               <div key={item.title}>
                 {item.href ? (
                   <Button
-                    variant={pathname === item.href ? "secondary" : "ghost"}
-                    className="w-full justify-start"
+                    variant="ghost"
+                    className={cn("w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground", pathname === item.href && "bg-sidebar-accent text-sidebar-accent-foreground")}
                     asChild
                   >
                     <Link href={item.href}>
@@ -126,7 +118,7 @@ export function Sidebar({ className, ...props }: SidebarProps) {
                   </Button>
                 ) : (
                   <div className="px-2 py-1">
-                    <h3 className="mb-1 px-2 text-sm font-semibold text-muted-foreground">
+                    <h3 className="mb-1 px-2 text-sm font-semibold text-sidebar-foreground/60 uppercase tracking-wider">
                       {item.title}
                     </h3>
                     {item.items && (
@@ -134,10 +126,11 @@ export function Sidebar({ className, ...props }: SidebarProps) {
                         {item.items.map((subItem) => (
                           <Button
                             key={subItem.href}
-                            variant={
-                              pathname === subItem.href ? "secondary" : "ghost"
-                            }
-                            className="w-full justify-start pl-6"
+                            variant="ghost"
+                            className={cn(
+                              "w-full justify-start pl-6 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                              pathname === subItem.href && "bg-sidebar-accent text-sidebar-accent-foreground"
+                            )}
                             asChild
                           >
                             <Link href={subItem.href}>
@@ -164,7 +157,7 @@ export function Sidebar({ className, ...props }: SidebarProps) {
 export function SidebarDesktop({ className, ...props }: SidebarProps) {
   return (
     <aside
-      className={cn("hidden border-r bg-muted/40 md:block", className)}
+      className={cn("hidden border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:block", className)}
       {...props}
     >
       <ScrollArea className="h-[calc(100vh-3.5rem)]">

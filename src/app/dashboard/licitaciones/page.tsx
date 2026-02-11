@@ -620,7 +620,7 @@ export default function LicitacionesPage() {
                   </div>
 
                   {formData.productsWithQuantity.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
+                    <div className="text-center py-8 text-muted-foreground">
                       No hay productos agregados. Busque y seleccione productos.
                     </div>
                   ) : (
@@ -637,7 +637,7 @@ export default function LicitacionesPage() {
                                 <span className="font-medium">
                                   {product.name}
                                 </span>
-                                <span className="text-sm text-gray-500 ml-2">
+                                <span className="text-sm text-muted-foreground ml-2">
                                   (Stock: {product.stockQuantity || 0})
                                 </span>
                               </div>
@@ -738,7 +738,7 @@ export default function LicitacionesPage() {
           <div className="flex gap-4 items-center">
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 <Input
                   placeholder="Buscar por número de llamado o cliente..."
                   value={searchTerm}
@@ -803,7 +803,7 @@ export default function LicitacionesPage() {
               <span className="ml-2 text-muted-foreground">Cargando...</span>
             </div>
           ) : licitaciones.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-muted-foreground">
               No hay licitaciones que coincidan con los filtros seleccionados.
             </div>
           ) : (
@@ -836,7 +836,7 @@ export default function LicitacionesPage() {
                             <div className="font-medium">
                               {licitacion.callNumber}
                             </div>
-                            <div className="text-sm text-gray-500">
+                            <div className="text-sm text-muted-foreground">
                               {licitacion.internalNumber}
                             </div>
                           </div>

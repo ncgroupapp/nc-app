@@ -165,35 +165,6 @@ export function MultiSelectSearch({
         </Command>
       </PopoverContent>
     </Popover>
-
-      {!hideTags && !single && selectedValues.length > 0 && (
-        <div className="flex flex-wrap gap-2 mt-3">
-          {selectedValues.map((val) => {
-            const option = options.find(o => o.id === val);
-            return (
-              <Badge key={val} variant="secondary" className="px-2 py-1 flex items-center gap-1">
-                {option ? option.label : val}
-                <button
-                  type="button"
-                  className="ml-1 ring-offset-background rounded-full outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      onRemove(val)
-                    }
-                  }}
-                  onMouseDown={(e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-                  }}
-                  onClick={() => onRemove(val)}
-                >
-                  <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
-                </button>
-              </Badge>
-            )
-          })}
-        </div>
-      )}
     </>
   )
 }

@@ -252,7 +252,7 @@ export default function OfertasPage() {
           <div className="flex gap-4 items-center flex-wrap">
             <div className="flex-1 min-w-[300px]">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 <Input
                   placeholder="Buscar por nombre, producto o proveedor..."
                   value={searchTerm}
@@ -304,7 +304,7 @@ export default function OfertasPage() {
         </CardHeader>
         <CardContent>
           {filteredOfertas.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-muted-foreground">
               No hay ofertas registradas que coincidan con los filtros.
             </div>
           ) : (
@@ -333,7 +333,7 @@ export default function OfertasPage() {
                       ${(Number(oferta.price) * Number(oferta.quantity)).toFixed(2)}
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center text-sm text-gray-500">
+                      <div className="flex items-center text-sm text-muted-foreground">
                         <Calendar className="mr-2 h-3 w-3" />
                         {new Date(oferta.deliveryDate).toLocaleDateString()}
                       </div>
@@ -442,7 +442,7 @@ export default function OfertasPage() {
                 <div className="space-y-2">
                   <Label htmlFor="price">Precio Unitario *</Label>
                   <div className="relative">
-                    <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                    <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                     <Input
                       id="price"
                       type="number"
