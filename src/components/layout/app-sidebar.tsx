@@ -86,59 +86,59 @@ const sidebarNavItems: NavItem[] = [
   },
   ...(featureFlags.licitaciones
     ? [
-        {
-          title: "Licitaciones",
-          items: [
-            {
-              title: "Licitaciones",
-              href: "/dashboard/licitaciones",
-              icon: FileText,
-            },
-            {
-              title: "Cotizaciones",
-              href: "/dashboard/cotizaciones",
-              icon: Calculator,
-            },
-            {
-              title: "Adjudicaciones",
-              href: "/dashboard/adjudicaciones",
-              icon: Gavel,
-            },
-            {
-              title: "Entregas",
-              href: "/dashboard/entregas",
-              icon: Truck,
-            },
-          ],
-        },
-      ]
+      {
+        title: "Licitaciones",
+        items: [
+          {
+            title: "Licitaciones",
+            href: "/dashboard/licitaciones",
+            icon: FileText,
+          },
+          {
+            title: "Cotizaciones",
+            href: "/dashboard/cotizaciones",
+            icon: Calculator,
+          },
+          {
+            title: "Adjudicaciones",
+            href: "/dashboard/adjudicaciones",
+            icon: Gavel,
+          },
+          {
+            title: "Entregas",
+            href: "/dashboard/entregas",
+            icon: Truck,
+          },
+        ],
+      },
+    ]
     : []),
   ...(featureFlags.importaciones
     ? [
-        {
-          title: "Importaciones",
-          href: "/dashboard/importaciones",
-          icon: Ship,
-        },
-      ]
+      {
+        title: "Importaciones",
+        href: "/dashboard/importaciones",
+        icon: Ship,
+      },
+    ]
     : []),
   ...(featureFlags.pdfs
     ? [
-        {
-          title: "PDFs",
-          href: "/dashboard/pdf",
-          icon: BarChart3,
-        },
-      ]
+      {
+        title: "PDFs",
+        href: "/dashboard/pdf",
+        icon: BarChart3,
+      },
+    ]
     : []),
   ...(featureFlags.configuracion
     ? [
-        {
-          title: "Configuración",
-          href: "/dashboard/configuracion",
-          icon: Settings,
-        },
-      ]
+      {
+        title: "Configuración",
+        href: "/dashboard/configuracion",
+        icon: Settings,
+      },
+    ]
     : []),
 ];
 
@@ -170,10 +170,10 @@ export function AppSidebar() {
             <SidebarMenuButton size="lg" asChild className="hover:bg-transparent">
               <Link href="/dashboard">
                 <div className="flex aspect-square size-10 items-center justify-center rounded-lg bg-transparent">
-                  <Image 
-                    src="/logo/logo.png" 
-                    alt="Logo" 
-                    width={40} 
+                  <Image
+                    src="/logo/logo.png"
+                    alt="Logo"
+                    width={40}
                     height={40}
                     className="object-contain"
                   />
@@ -261,7 +261,7 @@ export function AppSidebar() {
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton
                   size="lg"
-                  className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                  className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground cursor-pointer"
                 >
                   <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary/20">
                     <User className="size-4" />
