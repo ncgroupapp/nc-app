@@ -17,6 +17,7 @@ import { useClientesStore } from '@/stores'
 import { Cliente } from '@/types'
 import { Building2, Mail, Phone, Plus } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { toast } from 'sonner';
 
 import { ClientForm } from '@/components/clientes/client-form'
 import { SearchInput } from '@/components/common/search-input'
@@ -25,24 +26,24 @@ import { useDebounce } from '@/hooks/use-debounce'
 
 
 export default function ClientesPage() {
-  const { 
-    clientes, 
-    isLoading, 
+  const {
+    clientes,
+    isLoading,
     error,
     pagination,
-    fetchClientes, 
-    createCliente, 
-    updateCliente, 
+    fetchClientes,
+    createCliente,
+    updateCliente,
     deleteCliente,
     setFilters,
     setCurrentPage,
     filters
   } = useClientesStore()
-  
-  const { confirm } = useConfirm()
-    const router = useRouter()
 
-  
+  const { confirm } = useConfirm()
+  const router = useRouter()
+
+
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [editingCliente, setEditingCliente] = useState<Cliente | null>(null)
 
@@ -68,16 +69,21 @@ export default function ClientesPage() {
       if (editingCliente) {
         // Editar cliente existente
         await updateCliente(editingCliente.id, clientData)
+        toast.success("Cliente actualizado exitosamente")
       } else {
         // Crear nuevo cliente
         await createCliente(clientData)
+        toast.success("Cliente creado exitosamente")
       }
+
+      // Recargar la lista para asegurar que la paginación esté correcta
+      fetchClientes(pagination.page, debouncedSearch)
 
       setEditingCliente(null)
       setIsCreateDialogOpen(false)
     } catch (error) {
       console.error('Error saving client:', error)
-      alert('Error al guardar el cliente: ' + (error as Error).message)
+      toast.error('Error al guardar el cliente: ' + (error as Error).message)
     }
   }
 
@@ -94,9 +100,12 @@ export default function ClientesPage() {
     })) {
       try {
         await deleteCliente(id)
+        toast.success("Cliente eliminado exitosamente")
+        // Recargar la lista
+        fetchClientes(pagination.page, debouncedSearch)
       } catch (error) {
         console.error('Error deleting client:', error)
-        alert('Error al eliminar el cliente: ' + (error as Error).message)
+        toast.error('Error al eliminar el cliente: ' + (error as Error).message)
       }
     }
   }
