@@ -197,7 +197,7 @@ export default function AdjudicacionesPage() {
                               <FileText className="h-3 w-3" /> Lic. #{adj.licitationId}
                             </Link>
                             <Link href={`/dashboard/cotizaciones/${adj.quotationId}`} className="text-blue-600 hover:underline flex items-center gap-1">
-                              <g-emoji className="h-3 w-3">📄</g-emoji> Cot. #{adj.quotationId}
+                              <FileText className="h-3 w-3" /> Cot. #{adj.quotationId}
                             </Link>
                           </div>
                         </TableCell>

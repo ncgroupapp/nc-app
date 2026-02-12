@@ -25,7 +25,7 @@ interface ProveedorFormData {
   name: string
   rut: string
   country: string
-  brand_id?: number
+  brand?: string
   contacts: ContactoData[]
 }
 
@@ -41,6 +41,7 @@ export function ProveedorForm({ initialData, onSubmit, onCancel, isLoading = fal
   const { brands, fetchBrands } = useBrandsStore()
   const [brandSearch, setBrandSearch] = useState('')
   const debouncedBrandSearch = useDebounce(brandSearch, 500)
+  const [selectedBrand, setSelectedBrand] = useState<string>("")
 
   const [formData, setFormData] = useState<ProveedorFormData>({
     name: '',
@@ -57,11 +58,22 @@ export function ProveedorForm({ initialData, onSubmit, onCancel, isLoading = fal
 
   useEffect(() => {
     if (initialData) {
+      // Handle brand whether it's an object (Brand) or string (legacy/mapped)
+      const brandName = typeof initialData.brand === 'object' && initialData.brand !== null 
+        ? initialData.brand 
+        : (typeof initialData.brand === 'string' ? initialData.brand : undefined);
+      
+      if (brandName) {
+        setSelectedBrand(brandName)
+      } else {
+        setSelectedBrand("")
+      }
+      
       setFormData({
         name: initialData.name || '',
         rut: initialData.rut || '',
         country: initialData.country || '',
-        brand_id: initialData.brand_id || undefined,
+        brand: brandName || '',
         contacts: initialData.contacts && initialData.contacts.length > 0
           ? initialData.contacts.map((c) => ({
               name: c.name || '',
@@ -72,6 +84,7 @@ export function ProveedorForm({ initialData, onSubmit, onCancel, isLoading = fal
           : [{ name: '', email: '', phone: '', address: '' }]
       })
     } else {
+      setSelectedBrand('')
       setFormData({
         name: '',
         rut: '',
@@ -112,13 +125,11 @@ export function ProveedorForm({ initialData, onSubmit, onCancel, isLoading = fal
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
-    // Construct payload strictly as requested
     const payload = {
       name: formData.name,
       rut: formData.rut,
       country: formData.country,
-      brand_id: formData.brand_id,
+      brand: selectedBrand || formData.brand || '',
       contacts: formData.contacts.map(c => ({
         name: c.name,
         email: c.email,
@@ -180,22 +191,30 @@ export function ProveedorForm({ initialData, onSubmit, onCancel, isLoading = fal
                 single={true}
                 searchValue={brandSearch}
                 onSearchValueChange={setBrandSearch}
-                options={brands.map((b) => ({
-                  id: b.id,
-                  label: b.name,
-                }))}
-                selectedValues={formData.brand_id ? [formData.brand_id] : []}
+                options={[
+                  ...brands.map((b) => ({
+                    id: b.name, // Use name as ID since we want to store and display the name
+                    label: b.name,
+                  })),
+                  ...(selectedBrand && !brands.some((b) => b.name === selectedBrand)
+                    ? [{ id: selectedBrand, label: selectedBrand }]
+                    : []),
+                ]}
+                selectedValues={formData.brand ? [formData.brand] : []}
                 onSelect={(value) => {
+                   const brandName = String(value);
+                   setSelectedBrand(brandName)
                    setFormData((prev) => ({
                     ...prev,
-                    brand_id: Number(value),
+                    brand: brandName,
                   }));
                 }}
                 onRemove={() => {
+                   setSelectedBrand('')
                    setFormData((prev) => {
                        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                       const { brand_id, ...rest } = prev;
-                       return { ...rest, brand_id: undefined };
+                       const { brand, ...rest } = prev;
+                       return { ...rest, brand: undefined };
                    });
                 }}
                 placeholder="Seleccionar marca..."

@@ -4,6 +4,9 @@ import { boolean, success } from "zod"
 export enum QuotationStatus {
   CREATED = 'creada',
   FINALIZED = 'finalizada',
+  DRAFT = 'borrador',
+  SENT = 'enviada',
+  REJECTED = 'rechazada',
 }
 
 export enum QuotationAwardStatus {
@@ -35,8 +38,7 @@ export interface Proveedor {
   email?: string;
   telefono?: string;
   direccion?: string;
-  brand_id?: number | null;
-  brand?: Brand;
+  brand?: string;
   createdAt: string;
   updated_at: string;
   contacts?: Array<{
@@ -485,6 +487,10 @@ export interface Brand {
   createdAt?: string
   updatedAt?: string
   models?: Model[]
+}
+export interface ResponseBrand {
+  success: boolean
+  data: Brand
 }
 
 export interface Model {

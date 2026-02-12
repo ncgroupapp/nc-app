@@ -47,10 +47,12 @@ const formatCurrency = (amount: number, currency: string = 'UYU') => {
 }
 
 const statusConfig: Record<string, { label: string; color: string }> = {
+  [QuotationStatus.CREATED]: { label: 'Creada', color: 'bg-gray-100 text-gray-700' },
+  [QuotationStatus.FINALIZED]: { label: 'Finalizada', color: 'bg-green-100 text-green-700' },
   [QuotationStatus.DRAFT]: { label: 'Borrador', color: 'bg-gray-100 text-gray-700' },
   [QuotationStatus.SENT]: { label: 'Enviada', color: 'bg-blue-100 text-blue-700' },
-  [QuotationStatus.FINALIZED]: { label: 'Finalizada', color: 'bg-green-100 text-green-700' },
   [QuotationStatus.REJECTED]: { label: 'Rechazada', color: 'bg-red-100 text-red-700' },
+
 }
 
 export default function CotizacionesPage() {

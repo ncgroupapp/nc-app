@@ -40,8 +40,9 @@ export const clientesService = {
     return response.data;
   },
 
-  delete: async (id: string): Promise<void> => {
-    await api.delete<ApiResponse<void>>(`/clients/${id}`);
+  delete: async (id: string): Promise<ClienteResponse> => {
+    const response = await api.delete<ClienteResponse>(`/clients/${id}`);
+    return response.data;
   },
 
   hasLicitaciones: async (id: string): Promise<boolean> => {
