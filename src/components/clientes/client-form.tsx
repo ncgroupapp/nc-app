@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { DialogFooter } from '@/components/ui/dialog'
-import { Plus, Trash2 } from 'lucide-react'
+import { Plus, Trash2, Loader2 } from 'lucide-react'
 import { Cliente } from '@/types'
 import { useConfirm } from "@/hooks/use-confirm";
 
@@ -34,7 +34,7 @@ export function ClientForm({ initialData, onSubmit, onCancel, isLoading = false 
     identificador: '',
     contactos: [{ nombre: '', email: '', telefono: '', direccion: '' }]
   })
-  const {confirm} = useConfirm()
+  const { confirm } = useConfirm()
 
   useEffect(() => {
     if (initialData) {
@@ -43,11 +43,11 @@ export function ClientForm({ initialData, onSubmit, onCancel, isLoading = false 
         identificador: initialData.identifier,
         contactos: initialData.contacts && initialData.contacts.length > 0
           ? initialData.contacts.map(c => ({
-              nombre: c.name || '',
-              email: c.email || '',
-              telefono: c.phone || '',
-              direccion: c.address || ''
-            }))
+            nombre: c.name || '',
+            email: c.email || '',
+            telefono: c.phone || '',
+            direccion: c.address || ''
+          }))
           : [{ nombre: '', email: '', telefono: '', direccion: '' }]
       })
     } else {
@@ -61,7 +61,7 @@ export function ClientForm({ initialData, onSubmit, onCancel, isLoading = false 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     // Transform back to API format
     const clientData = {
       name: formData.nombre,
@@ -144,21 +144,21 @@ export function ClientForm({ initialData, onSubmit, onCancel, isLoading = false 
                     size="sm"
                     className="absolute top-2 right-2 text-red-500 hover:text-red-700"
                     onClick={async () => {
-                         const confirmed = await confirm({
-                           title: "Eliminar Contacto",
-                           message: `¿Estás seguro de que deseas eliminar el Contacto?`,
-                           confirmText: "Eliminar",
-                           cancelText: "Cancelar",
-                           variant: "destructive",
-                         });
-                         if (confirmed) {
-                           setFormData((prev) => ({
-                             ...prev,
-                             contactos: prev.contactos.filter(
-                               (_, i) => i !== index,
-                             ),
-                           }));
-                         }
+                      const confirmed = await confirm({
+                        title: "Eliminar Contacto",
+                        message: `¿Estás seguro de que deseas eliminar el Contacto?`,
+                        confirmText: "Eliminar",
+                        cancelText: "Cancelar",
+                        variant: "destructive",
+                      });
+                      if (confirmed) {
+                        setFormData((prev) => ({
+                          ...prev,
+                          contactos: prev.contactos.filter(
+                            (_, i) => i !== index,
+                          ),
+                        }));
+                      }
                     }
                     }
                   >
@@ -249,6 +249,7 @@ export function ClientForm({ initialData, onSubmit, onCancel, isLoading = false 
           Cancelar
         </Button>
         <Button type="submit" disabled={isLoading}>
+          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {isLoading
             ? "Guardando..."
             : (initialData ? "Actualizar" : "Crear") + " Cliente"}
