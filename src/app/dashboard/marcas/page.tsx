@@ -15,16 +15,17 @@ import { useConfirm } from '@/hooks/use-confirm'
 import { Brand } from '@/types'
 import { useDebounce } from '@/hooks/use-debounce'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { toast } from 'sonner'
 
 export default function MarcasPage() {
   const router = useRouter()
   const { brands, isLoading, total, fetchBrands, createBrand, updateBrand, deleteBrand } = useBrandsStore()
   const { confirm } = useConfirm()
-  
+
   const [searchTerm, setSearchTerm] = useState('')
   const debouncedSearch = useDebounce(searchTerm, 500)
   const [currentPage, setCurrentPage] = useState(1)
-  
+
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingBrand, setEditingBrand] = useState<Brand | null>(null)
 
@@ -33,15 +34,27 @@ export default function MarcasPage() {
   }, [currentPage, debouncedSearch, fetchBrands])
 
   const handleCreate = async (data: { name: string; models?: { name: string; id?: number }[] }) => {
-    await createBrand(data)
-    setIsDialogOpen(false)
+    try {
+      await createBrand(data)
+      toast.success("Marca creada exitosamente")
+      setIsDialogOpen(false)
+    } catch (error) {
+      console.error('Error creating brand:', error)
+      toast.error('Error al crear la marca')
+    }
   }
 
   const handleUpdate = async (data: { name: string; models?: { name: string; id?: number }[] }) => {
     if (editingBrand) {
-      await updateBrand(editingBrand.id, data)
-      setEditingBrand(null)
-      setIsDialogOpen(false)
+      try {
+        await updateBrand(editingBrand.id, data)
+        toast.success("Marca actualizada exitosamente")
+        setEditingBrand(null)
+        setIsDialogOpen(false)
+      } catch (error) {
+        console.error('Error updating brand:', error)
+        toast.error('Error al actualizar la marca')
+      }
     }
   }
 
@@ -55,7 +68,13 @@ export default function MarcasPage() {
     });
 
     if (confirmed) {
-      await deleteBrand(brand.id)
+      try {
+        await deleteBrand(brand.id)
+        toast.success("Marca eliminada exitosamente")
+      } catch (error) {
+        console.error('Error deleting brand:', error)
+        toast.error('Error al eliminar la marca')
+      }
     }
   }
 
@@ -101,13 +120,13 @@ export default function MarcasPage() {
           <div className="flex items-center gap-4">
             <div className="flex-1">
               <div className='relative'>
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                placeholder="Buscar marcas..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <Input
+                  placeholder="Buscar marcas..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
               </div>
             </div>
           </div>
