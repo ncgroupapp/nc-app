@@ -108,14 +108,14 @@ export function MultiSelectSearch({
                           handleUnselect(val)
                         }}
                       >
-                        <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+                        <X className="h-3 w-3 text-black hover:text-foreground" />
                       </button>
                     </Badge>
                   )
                 })
               )
             ) : (
-              <span className="text-muted-foreground">{placeholder}</span>
+              <span className="text-black">{placeholder}</span>
             )}
           </div>
           <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />

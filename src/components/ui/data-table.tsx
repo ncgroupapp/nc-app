@@ -30,7 +30,7 @@ function TablePagination({
 }: TablePaginationProps) {
   return (
     <div className="flex items-center justify-between pt-4 border-t">
-      <div className="text-sm text-muted-foreground">
+      <div className="text-sm text-blue-950">
         Mostrando {total > 0 ? (page - 1) * limit + 1 : 0} a{' '}
         {Math.min(page * limit, total)} de {total} resultados
       </div>

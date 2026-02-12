@@ -77,7 +77,7 @@ export function ExpandableListCell<T>({
   label = "Detalles"
 }: ExpandableListCellProps<T>) {
   if (!items || items.length === 0) {
-    return <span className="text-muted-foreground text-sm">{emptyMessage}</span>
+    return <span className="text-blue-950 text-sm">{emptyMessage}</span>
   }
 
   const visibleItems = items.slice(0, limit)

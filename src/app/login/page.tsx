@@ -161,9 +161,9 @@ export default function LoginPage() {
                           disabled={isLoading}
                         >
                           {showPassword ? (
-                            <EyeOff className="h-4 w-4 text-muted-foreground" />
+                            <EyeOff className="h-4 w-4 text-blue-950" />
                           ) : (
-                            <Eye className="h-4 w-4 text-muted-foreground" />
+                            <Eye className="h-4 w-4 text-blue-950" />
                           )}
                           <span className="sr-only">
                             {showPassword ? "Ocultar contraseña" : "Ver contraseña"}
@@ -183,7 +183,7 @@ export default function LoginPage() {
           </Form>
         </CardContent>
         <CardFooter className="flex justify-center">
-          <p className="text-sm text-muted-foreground text-center">
+          <p className="text-sm text-blue-950 text-center">
             Sistema de Licitaciones
           </p>
         </CardFooter>

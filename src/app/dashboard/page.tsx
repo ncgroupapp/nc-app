@@ -77,7 +77,7 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground">
+        <p className="text-blue-950">
           Resumen general del sistema de gestión de licitaciones
         </p>
       </div>
@@ -89,11 +89,11 @@ export default function DashboardPage() {
             <CardTitle className="text-sm font-medium">
               Total Licitaciones
             </CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
+            <FileText className="h-4 w-4 text-blue-950" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalLicitaciones}</div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-blue-950">
               +{stats.adjudicacionesMes} adjudicaciones este mes
             </p>
           </CardContent>
@@ -104,13 +104,13 @@ export default function DashboardPage() {
             <CardTitle className="text-sm font-medium">
               Licitaciones Activas
             </CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
+            <Clock className="h-4 w-4 text-blue-950" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
               {stats.licitacionesActivas}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-blue-950">
               En proceso actualmente
             </p>
           </CardContent>
@@ -121,11 +121,11 @@ export default function DashboardPage() {
             <CardTitle className="text-sm font-medium">
               Total Productos
             </CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground" />
+            <Package className="h-4 w-4 text-blue-950" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalProductos}</div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-blue-950">
               {stats.bajoStock} con bajo stock
             </p>
           </CardContent>
@@ -136,11 +136,11 @@ export default function DashboardPage() {
             <CardTitle className="text-sm font-medium">
               Entregas Pendientes
             </CardTitle>
-            <Truck className="h-4 w-4 text-muted-foreground" />
+            <Truck className="h-4 w-4 text-blue-950" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.entregasPendientes}</div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-blue-950">
               Por entregar esta semana
             </p>
           </CardContent>
@@ -163,13 +163,13 @@ export default function DashboardPage() {
                   <div className="flex items-center space-x-3">
                     <div>
                       <p className="font-medium">{licitacion.numero}</p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-sm text-blue-950">
                         {licitacion.cliente}
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <span className="text-sm text-muted-foreground">
+                    <span className="text-sm text-blue-950">
                       {licitacion.fecha}
                     </span>
                     <Badge className={getEstadoColor(licitacion.estado)}>
@@ -202,7 +202,7 @@ export default function DashboardPage() {
                 >
                   <div>
                     <p className="font-medium text-sm">{alert.nombre}</p>
-                    <p className="text-xs text-muted-foreground">{alert.sku}</p>
+                    <p className="text-xs text-blue-950">{alert.sku}</p>
                   </div>
                   <div className="text-right">
                     <Badge
@@ -210,7 +210,7 @@ export default function DashboardPage() {
                     >
                       {alert.stock} unidades
                     </Badge>
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <p className="text-xs text-blue-950 mt-1">
                       Mínimo: {alert.minimo}
                     </p>
                   </div>
@@ -225,7 +225,7 @@ export default function DashboardPage() {
       {/*<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="hover:shadow-md transition-shadow cursor-pointer">
           <CardHeader className="text-center">
-            <FileText className="h-8 w-8 mx-auto text-blue-600" />
+            <FileText className="h-8 w-8 mx-auto text-blue-950" />
             <CardTitle className="text-lg">Nueva Licitación</CardTitle>
             <CardDescription>Crear una nueva licitación</CardDescription>
           </CardHeader>

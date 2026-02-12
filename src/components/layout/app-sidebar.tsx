@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
@@ -166,14 +167,20 @@ export function AppSidebar() {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild>
+            <SidebarMenuButton size="lg" asChild className="hover:bg-transparent">
               <Link href="/dashboard">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                  <Package className="size-4" />
+                <div className="flex aspect-square size-10 items-center justify-center rounded-lg bg-transparent">
+                  <Image 
+                    src="/logo/logo.png" 
+                    alt="Logo" 
+                    width={40} 
+                    height={40}
+                    className="object-contain"
+                  />
                 </div>
                 <div className="flex flex-col gap-0.5 leading-none">
-                  <span className="font-semibold">Licitaciones</span>
-                  <span className="text-xs text-sidebar-foreground/60">
+                  <span className="font-semibold text-white">Licitaciones</span>
+                  <span className="text-xs text-white/60">
                     Sistema de Gestión
                   </span>
                 </div>

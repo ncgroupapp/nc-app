@@ -126,7 +126,7 @@ export function MarcaForm({ initialData, onSubmit, onCancel, isLoading }: MarcaF
               </ScrollArea>
             </div>
           )}
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-blue-950">
             Presiona Enter o el botón + para agregar un modelo a la lista.
           </p>
         </div>

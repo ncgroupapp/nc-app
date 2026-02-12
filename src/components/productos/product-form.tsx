@@ -266,7 +266,7 @@ export function ProductForm({ initialData, onSubmit, onCancel, isLoading }: Prod
                   }}
                   className="cursor-pointer"
                 />
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-xs text-blue-950 mt-1">
                   Formatos aceptados: JPG, PNG, GIF. Máx 5MB
                 </p>
               </div>

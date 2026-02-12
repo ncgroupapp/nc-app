@@ -114,7 +114,7 @@ export function OfferSearchCombobox({
             {selectedOffer ? (
               <span className="truncate">{formatOfferLabel(selectedOffer)}</span>
             ) : (
-              <span className="text-muted-foreground">{placeholder}</span>
+              <span className="text-blue-950">{placeholder}</span>
             )}
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
@@ -129,13 +129,13 @@ export function OfferSearchCombobox({
             <CommandList>
               {loading ? (
                 <div className="py-6 text-center">
-                  <Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground mt-2">Buscando ofertas...</p>
+                  <Loader2 className="h-6 w-6 animate-spin mx-auto text-blue-950" />
+                  <p className="text-sm text-blue-950 mt-2">Buscando ofertas...</p>
                 </div>
               ) : offers.length === 0 ? (
                 <CommandEmpty>
                   <div className="py-2">
-                    <p className="text-sm text-muted-foreground mb-3">
+                    <p className="text-sm text-blue-950 mb-3">
                       {search || productId
                         ? "No se encontraron ofertas"
                         : "No hay ofertas recientes"}
@@ -170,7 +170,7 @@ export function OfferSearchCombobox({
                         />
                         <div className="flex flex-col">
                           <span>{offer.name || offer.product?.name || `Oferta #${offer.id}`}</span>
-                          <span className="text-xs text-muted-foreground">
+                          <span className="text-xs text-blue-950">
                             ${offer.price} - {offer.provider?.name || offer.providerName} - Stock: {offer.quantity}
                           </span>
                         </div>
@@ -183,7 +183,7 @@ export function OfferSearchCombobox({
                         variant="ghost"
                         size="sm"
                         onClick={handleOpenCreateDialog}
-                        className="w-full justify-start text-muted-foreground hover:text-foreground"
+                        className="w-full justify-start text-blue-950 hover:text-foreground"
                       >
                         <Plus className="mr-2 h-4 w-4" />
                         Crear Nueva Oferta

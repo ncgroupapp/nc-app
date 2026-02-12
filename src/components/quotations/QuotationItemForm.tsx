@@ -69,7 +69,7 @@ export function QuotationItemForm({
             onSelectOffer={handleSelectOffer}
             placeholder="Seleccionar oferta para autocompletar..."
           />
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-blue-950">
             Seleccione una oferta para autocompletar los datos del producto
           </p>
         </div>

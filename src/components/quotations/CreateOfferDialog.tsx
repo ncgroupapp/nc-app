@@ -142,8 +142,8 @@ export function CreateOfferDialog({
 
         {loadingOptions ? (
           <div className="py-8 text-center">
-            <Loader2 className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
-            <p className="text-sm text-muted-foreground mt-2">Cargando opciones...</p>
+            <Loader2 className="h-8 w-8 animate-spin mx-auto text-blue-950" />
+            <p className="text-sm text-blue-950 mt-2">Cargando opciones...</p>
           </div>
         ) : (
           <div className="space-y-4">
