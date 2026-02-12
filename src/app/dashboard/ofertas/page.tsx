@@ -29,7 +29,7 @@ import {
 } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
 import {
-  Plus, Search, Edit, Trash, Tag, Loader2, Calendar, Users, DollarSign, Package
+  Plus, Search, Edit, Trash2, Tag, Loader2, Calendar, Users, DollarSign, Package
 } from 'lucide-react'
 import { offersService, Offer, CreateOfferDto } from '@/services/offers.service'
 import { productsService, Product } from '@/services/products.service'
@@ -48,11 +48,11 @@ export default function OfertasPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedProduct, setSelectedProduct] = useState<string>('all')
   const [selectedProvider, setSelectedProvider] = useState<string>('all')
-  
+
   // Dialog states
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingOffer, setEditingOffer] = useState<Offer | null>(null)
-  
+
   // Form states
   const [formData, setFormData] = useState<CreateOfferDto>({
     name: '',
@@ -66,13 +66,13 @@ export default function OfertasPage() {
   const loadData = useCallback(async () => {
     try {
       setLoading(true)
-      
+
       const [ofertasRes, productosRes, proveedoresRes] = await Promise.all([
         offersService.getAll(),
         productsService.getAll(),
         proveedoresService.getAll()
       ])
-      
+
       setOfertas(ofertasRes.data || [])
       setProductos(productosRes.data || [])
       setProveedores(proveedoresRes.data || [])
@@ -91,14 +91,14 @@ export default function OfertasPage() {
   }, [loadData])
 
   const filteredOfertas = ofertas.filter(oferta => {
-    const matchesSearch = 
+    const matchesSearch =
       (oferta.name?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
       (oferta.product?.name?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
       (oferta.provider?.name?.toLowerCase().includes(searchTerm.toLowerCase()) || false);
-      
+
     const matchesProduct = selectedProduct === 'all' || oferta.productId.toString() === selectedProduct
     const matchesProvider = selectedProvider === 'all' || oferta.providerId.toString() === selectedProvider
-    
+
     return matchesSearch && matchesProduct && matchesProvider
   })
 
@@ -151,7 +151,7 @@ export default function OfertasPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!formData.productId || !formData.providerId || !formData.price || !formData.deliveryDate || !formData.quantity) {
       toast.error("Error", {
         description: "Por favor complete todos los campos obligatorios",
@@ -173,7 +173,7 @@ export default function OfertasPage() {
           description: "Oferta creada correctamente",
         })
       }
-      
+
       setIsDialogOpen(false)
       loadData()
     } catch (err) {
@@ -344,7 +344,7 @@ export default function OfertasPage() {
                           <Edit className="h-4 w-4" />
                         </Button>
                         <Button variant="outline" size="icon" className="text-red-500 hover:text-red-600" onClick={() => handleDelete(oferta.id)}>
-                          <Trash className="h-4 w-4" />
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     </TableCell>
