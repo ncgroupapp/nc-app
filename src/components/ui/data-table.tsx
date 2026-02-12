@@ -30,9 +30,14 @@ function TablePagination({
 }: TablePaginationProps) {
   return (
     <div className="flex items-center justify-between pt-4 border-t">
-      <div className="text-sm text-blue-950">
-        Mostrando {total > 0 ? (page - 1) * limit + 1 : 0} a{' '}
-        {Math.min(page * limit, total)} de {total} resultados
+      <div className="text-sm text-muted-foreground">
+        {total === 0 ? (
+          "Sin resultados"
+        ) : (
+          <>
+            Mostrando del <span className="font-medium">{(page - 1) * limit + 1}</span> al <span className="font-medium">{Math.min(page * limit, total)}</span> de <span className="font-medium">{total}</span> resultados
+          </>
+        )}
       </div>
       <div className="flex items-center gap-2">
         <Button
@@ -43,7 +48,7 @@ function TablePagination({
         >
           Anterior
         </Button>
-        
+
         <div className="flex gap-1">
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
             <Button
@@ -58,7 +63,7 @@ function TablePagination({
             </Button>
           ))}
         </div>
-        
+
         <Button
           variant="outline"
           size="sm"
@@ -135,8 +140,8 @@ export function DataTable<T>({
                       {column.render
                         ? column.render(row)
                         : column.accessorKey
-                        ? (row[column.accessorKey] as React.ReactNode)
-                        : null}
+                          ? (row[column.accessorKey] as React.ReactNode)
+                          : null}
                     </TableCell>
                   ))}
                 </TableRow>
