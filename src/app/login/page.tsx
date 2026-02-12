@@ -79,11 +79,11 @@ export default function LoginPage() {
 
       router.push("/dashboard")
       router.refresh()
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error(err)
       let message = "Ocurrió un error al iniciar sesión."
-      
+
       if (err.response) {
         // Error de Axios/Backend
         message = err.response.data?.message || "Error al conectar con el servidor de autenticación."
@@ -94,7 +94,7 @@ export default function LoginPage() {
       } else if (err.message === "No se recibió el token de acceso del servidor") {
         message = "Error de comunicación con el backend."
       }
-      
+
       setError(message)
     } finally {
       setIsLoading(false)
@@ -102,10 +102,10 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen w-full items-center justify-center bg-muted/40 p-4">
-      <Card className="w-full max-w-sm">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold">Iniciar Sesión</CardTitle>
+    <div className="flex min-h-screen w-full items-center justify-center bg-zinc-50/50 p-4 dark:bg-zinc-900">
+      <Card className="w-full max-w-sm shadow-2xl border-0 sm:border">
+        <CardHeader className="space-y-2 text-center">
+          <CardTitle className="text-2xl font-bold tracking-tight">Iniciar Sesión</CardTitle>
           <CardDescription>
             Ingresa tus credenciales para acceder al sistema
           </CardDescription>
@@ -126,12 +126,12 @@ export default function LoginPage() {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="tu@email.com" 
-                        type="email" 
+                      <Input
+                        placeholder="tu@email.com"
+                        type="email"
                         autoComplete="email"
                         disabled={isLoading}
-                        {...field} 
+                        {...field}
                       />
                     </FormControl>
                     <FormMessage />
@@ -146,11 +146,11 @@ export default function LoginPage() {
                     <FormLabel>Contraseña</FormLabel>
                     <FormControl>
                       <div className="relative">
-                        <Input 
-                          type={showPassword ? "text" : "password"} 
+                        <Input
+                          type={showPassword ? "text" : "password"}
                           autoComplete="current-password"
                           disabled={isLoading}
-                          {...field} 
+                          {...field}
                         />
                         <Button
                           type="button"
