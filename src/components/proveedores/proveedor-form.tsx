@@ -11,6 +11,7 @@ import { useConfirm } from "@/hooks/use-confirm";
 import { useBrandsStore } from '@/stores/brands/brandsStore'
 import { MultiSelectSearch } from '@/components/ui/multi-select-search'
 import { useDebounce } from '@/hooks/use-debounce'
+import { toast } from "sonner"
 
 
 // Local interface to match the requirement before types are fully updated
@@ -125,6 +126,20 @@ export function ProveedorForm({ initialData, onSubmit, onCancel, isLoading = fal
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (!formData.name.trim()) {
+      toast.error('El nombre es obligatorio')
+      return
+    }
+    if (!formData.rut.trim()) {
+      toast.error('El RUT es obligatorio')
+      return
+    }
+    if (!formData.country.trim()) {
+      toast.error('El país es obligatorio')
+      return
+    }
+
     const payload = {
       name: formData.name,
       rut: formData.rut,
@@ -146,7 +161,7 @@ export function ProveedorForm({ initialData, onSubmit, onCancel, isLoading = fal
       <div className="grid gap-4 py-4">
         {/* Basic Information */}
         <div className="space-y-2">
-          <Label htmlFor="nombre">Nombre</Label>
+          <Label htmlFor="nombre">Nombre <span className="text-red-500">*</span></Label>
           <Input
             id="nombre"
             value={formData.name}
@@ -159,7 +174,7 @@ export function ProveedorForm({ initialData, onSubmit, onCancel, isLoading = fal
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="rut">RUT</Label>
+            <Label htmlFor="rut">RUT <span className="text-red-500">*</span></Label>
             <Input
               id="rut"
               value={formData.rut}
@@ -172,7 +187,7 @@ export function ProveedorForm({ initialData, onSubmit, onCancel, isLoading = fal
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="pais">País</Label>
+            <Label htmlFor="pais">País <span className="text-red-500">*</span></Label>
             <Input
               id="pais"
               value={formData.country}

@@ -143,6 +143,11 @@ export function ProductForm({ initialData, onSubmit, onCancel, isLoading }: Prod
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
+    if (!imageFile && !formData.image) {
+      showSnackbar('La imagen del producto es obligatoria', 'error')
+      return
+    }
+
     try {
       let imageUrl = formData.image
 
@@ -225,7 +230,7 @@ export function ProductForm({ initialData, onSubmit, onCancel, isLoading }: Prod
 
           {/* Image Upload */}
           <div className="space-y-2">
-            <Label htmlFor="image">Imagen del Producto</Label>
+            <Label htmlFor="image">Imagen del Producto <span className="text-red-500">*</span></Label>
             <div className="flex items-center gap-4">
               {imagePreview && (
                 <div className="relative w-24 h-24 border rounded-md overflow-hidden">
