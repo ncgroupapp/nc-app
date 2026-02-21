@@ -27,7 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Search, Loader2, Eye, Calculator, FileDown, Plus } from 'lucide-react'
+import { Search, Loader2, Eye, Calculator, FileDown, Plus, Hash, FileText } from 'lucide-react'
 import { cotizacionesService, Quotation, QuotationFilters } from '@/services/cotizaciones.service'
 import { QuotationStatus, Currency } from '@/types'
 import { showSnackbar } from '@/components/ui/snackbar'
@@ -47,12 +47,11 @@ const formatCurrency = (amount: number, currency: string = 'UYU') => {
 }
 
 const statusConfig: Record<string, { label: string; color: string }> = {
-  [QuotationStatus.CREATED]: { label: 'Creada', color: 'bg-gray-100 text-gray-700' },
-  [QuotationStatus.FINALIZED]: { label: 'Finalizada', color: 'bg-green-100 text-green-700' },
-  [QuotationStatus.DRAFT]: { label: 'Borrador', color: 'bg-gray-100 text-gray-700' },
-  [QuotationStatus.SENT]: { label: 'Enviada', color: 'bg-blue-100 text-blue-700' },
-  [QuotationStatus.REJECTED]: { label: 'Rechazada', color: 'bg-red-100 text-red-700' },
-
+  [QuotationStatus.CREATED]: { label: 'Creada', color: 'bg-muted/50 text-muted-foreground border-border' },
+  [QuotationStatus.FINALIZED]: { label: 'Finalizada', color: 'bg-green-500/10 text-green-500 border-green-500/20' },
+  [QuotationStatus.DRAFT]: { label: 'Borrador', color: 'bg-muted/50 text-muted-foreground border-border' },
+  [QuotationStatus.SENT]: { label: 'Enviada', color: 'bg-blue-500/10 text-blue-500 border-blue-500/20' },
+  [QuotationStatus.REJECTED]: { label: 'Rechazada', color: 'bg-red-500/10 text-red-500 border-red-500/20' },
 }
 
 export default function CotizacionesPage() {
@@ -211,35 +210,40 @@ export default function CotizacionesPage() {
                     const currency = quotation.items[0]?.currency || Currency.UYU
 
                     return (
-                      <TableRow key={quotation.id}>
+                      <TableRow key={quotation.id} className="hover:bg-muted/50 transition-colors">
                         <TableCell className="font-medium">
-                            {quotation.quotationIdentifier}
-                            <div className="text-xs text-muted-foreground">ID: #{quotation.id}</div>
+                            <span className="flex items-center gap-1">
+                                <Hash className="h-3 w-3 text-muted-foreground" />
+                                {quotation.quotationIdentifier}
+                            </span>
+                            <div className="text-xs text-muted-foreground mt-1">ID: #{quotation.id}</div>
                         </TableCell>
                         <TableCell>
-                          <Link href={`/dashboard/licitaciones/${quotation.licitationId}`} className="text-blue-600 hover:underline">
+                          <Link href={`/dashboard/licitaciones/${quotation.licitationId}`} className="text-primary hover:underline flex items-center gap-1 font-medium">
+                            <FileText className="h-4 w-4" />
                              Lic. #{quotation.licitationId}
                           </Link>
                         </TableCell>
-                        <TableCell>{quotation.clientName || '-'}</TableCell>
+                        <TableCell className="text-muted-foreground">{quotation.clientName || '-'}</TableCell>
                         <TableCell>{formatDate(quotation.quotationDate || quotation.createdAt)}</TableCell>
                         <TableCell>{formatDate(quotation.validUntil)}</TableCell>
-                        <TableCell className="text-right font-medium">
+                        <TableCell className="text-right font-semibold">
                             {formatCurrency(total, currency)}
                         </TableCell>
                         <TableCell>
-                          <Badge className={`${statusInfo.color} border-0`}>
+                          <Badge variant="outline" className={`${statusInfo.color} font-medium`}>
                             {statusInfo.label}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
+                          <div className="flex justify-end gap-1">
                              <Button 
                                 variant="ghost" 
                                 size="icon" 
                                 onClick={() => handleDownloadPdf(quotation.id, quotation.quotationIdentifier)}
                                 disabled={downloadingPdf === quotation.id}
                                 title="Descargar PDF"
+                                className="h-8 w-8 hover:bg-primary/10 hover:text-primary"
                              >
                                 {downloadingPdf === quotation.id ? (
                                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -247,7 +251,7 @@ export default function CotizacionesPage() {
                                     <FileDown className="h-4 w-4" />
                                 )}
                              </Button>
-                             <Button variant="ghost" size="icon" asChild title="Ver Detalle">
+                             <Button variant="ghost" size="icon" asChild title="Ver Detalle" className="h-8 w-8 hover:bg-primary/10 hover:text-primary">
                                 <Link href={`/dashboard/licitaciones/${quotation.licitationId}?tab=cotizaciones`}>
                                 <Eye className="h-4 w-4" />
                                 </Link>

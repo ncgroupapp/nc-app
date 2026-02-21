@@ -48,12 +48,12 @@ const formatCurrency = (amount: number) => {
 const statusConfig: Record<string, { label: string; color: string; icon: any }> = {
   [AdjudicationStatus.TOTAL]: { 
     label: 'Adjudicación Total', 
-    color: 'bg-green-100 text-green-700 hover:bg-green-100/80',
+    color: 'bg-green-500/10 text-green-500 border-green-500/20 hover:bg-green-500/20',
     icon: CheckCircle
   },
   [AdjudicationStatus.PARTIAL]: { 
     label: 'Adjudicación Parcial', 
-    color: 'bg-yellow-100 text-yellow-700 hover:bg-yellow-100/80',
+    color: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20 hover:bg-yellow-500/20',
     icon: AlertCircle
   },
 }
@@ -188,47 +188,52 @@ export default function AdjudicacionesPage() {
                     const StatusIcon = statusInfo.icon
 
                     return (
-                      <TableRow key={adj.id}>
-                        <TableCell className="font-medium">#{adj.id}</TableCell>
+                      <TableRow key={adj.id} className="hover:bg-muted/50 transition-colors">
+                        <TableCell className="font-medium text-muted-foreground">#{adj.id}</TableCell>
                         <TableCell>{formatDate(adj.adjudicationDate)}</TableCell>
                         <TableCell>
-                          <div className="flex flex-col gap-1 text-sm">
-                            <Link href={`/dashboard/licitaciones/${adj.licitationId}`} className="text-blue-600 hover:underline flex items-center gap-1">
-                              <FileText className="h-3 w-3" /> Lic. #{adj.licitationId}
+                          <div className="flex flex-col gap-2 text-sm">
+                            <Link href={`/dashboard/licitaciones/${adj.licitationId}`} className="text-primary font-medium hover:underline flex items-center gap-1.5">
+                              <FileText className="h-3.5 w-3.5" /> Lic. #{adj.licitationId}
                             </Link>
-                            <Link href={`/dashboard/cotizaciones/${adj.quotationId}`} className="text-blue-600 hover:underline flex items-center gap-1">
-                              <FileText className="h-3 w-3" /> Cot. #{adj.quotationId}
+                            <Link href={`/dashboard/cotizaciones/${adj.quotationId}`} className="text-primary font-medium hover:underline flex items-center gap-1.5">
+                              <FileText className="h-3.5 w-3.5" /> Cot. #{adj.quotationId}
                             </Link>
                           </div>
                         </TableCell>
                         <TableCell>
-                          <div className="max-h-[100px] overflow-y-auto pr-2 space-y-1">
-                            {adj.items.map((item, idx) => (
-                              <div key={idx} className="text-sm border-b last:border-0 pb-1 last:pb-0 border-dashed border-gray-200">
-                                <div className="font-medium text-gray-900">{item.productName || `Producto #${item.productId}`}</div>
-                                <div className="text-xs text-muted-foreground flex justify-between">
+                          <div className="pr-2 space-y-2">
+                            {adj.items.slice(0, 2).map((item, idx) => (
+                              <div key={idx} className="text-sm border-b last:border-0 pb-2 last:pb-0 border-dashed border-border">
+                                <div className="font-medium">{item.productName || `Producto #${item.productId}`}</div>
+                                <div className="text-xs text-muted-foreground flex justify-between mt-1">
                                   <span>Cant: {item.quantity}</span>
                                   <span>{formatCurrency(Number(item.unitPrice))} un.</span>
                                 </div>
                               </div>
                             ))}
+                            {adj.items.length > 2 && (
+                              <Badge variant="secondary" className="text-[10px] mt-1">
+                                + {adj.items.length - 2} productos más
+                              </Badge>
+                            )}
                           </div>
                         </TableCell>
                         <TableCell>
-                          <div className="flex flex-col text-sm">
-                            <span className="font-medium text-gray-900">Total: {formatCurrency(Number(adj.totalPriceWithIVA))}</span>
+                          <div className="flex flex-col text-sm gap-1">
+                            <span className="font-semibold text-primary">Total: {formatCurrency(Number(adj.totalPriceWithIVA))}</span>
                             <span className="text-xs text-muted-foreground">Subtotal: {formatCurrency(Number(adj.totalPriceWithoutIVA))}</span>
                             <span className="text-xs text-muted-foreground">Items: {adj.totalQuantity}</span>
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge className={`${statusInfo.color} border-0 flex w-fit gap-1`}>
-                            <StatusIcon className="h-3 w-3" />
+                          <Badge variant="outline" className={`${statusInfo.color} flex w-fit gap-1.5 items-center font-medium`}>
+                            <StatusIcon className="h-3.5 w-3.5" />
                             {statusInfo.label}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button variant="ghost" size="icon" asChild>
+                          <Button variant="ghost" size="icon" asChild className="h-8 w-8 hover:bg-primary/10 hover:text-primary">
                             <Link href={`/dashboard/licitaciones/${adj.licitationId}?tab=adjudicaciones`}>
                               <Eye className="h-4 w-4" />
                             </Link>
