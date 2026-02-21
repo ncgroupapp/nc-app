@@ -124,6 +124,7 @@ export interface QuotationTotals {
 export interface QuotationFilters {
   page?: number;
   limit?: number;
+  search?: string;
   status?: QuotationStatus;
   clientId?: number;
 }
@@ -153,6 +154,7 @@ export const cotizacionesService = {
     const params = new URLSearchParams();
     if (filters.page) params.append('page', filters.page.toString());
     if (filters.limit) params.append('limit', filters.limit.toString());
+    if (filters.search) params.append('search', filters.search);
     if (filters.status) params.append('status', filters.status);
     if (filters.clientId) params.append('clientId', filters.clientId.toString());
     

@@ -63,6 +63,7 @@ export interface AddAdjudicationItemDto {
 export interface AdjudicationFilters {
   page?: number;
   limit?: number;
+  search?: string;
   status?: AdjudicationStatus;
   quotationId?: number;
   licitationId?: number;
@@ -90,6 +91,7 @@ export const adjudicacionesService = {
     const params = new URLSearchParams();
     if (filters.page) params.append('page', filters.page.toString());
     if (filters.limit) params.append('limit', filters.limit.toString());
+    if (filters.search) params.append('search', filters.search);
     if (filters.status) params.append('status', filters.status);
     if (filters.quotationId) params.append('quotationId', filters.quotationId.toString());
     if (filters.licitationId) params.append('licitationId', filters.licitationId.toString());

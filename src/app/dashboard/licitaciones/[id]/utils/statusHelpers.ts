@@ -29,41 +29,41 @@ export interface StatusParams {
 export const getEstadoInfo = (status: LicitationStatus): EstadoInfo => {
   switch (status) {
     case LicitationStatus.PENDING:
-      return { icon: Clock, color: "text-yellow-600", bgColor: "bg-yellow-100", label: "En espera" };
+      return { icon: Clock, color: "text-yellow-500", bgColor: "bg-yellow-500/10 border border-yellow-500/20", label: "En espera" };
     case LicitationStatus.QUOTED:
-      return { icon: FileText, color: "text-blue-600", bgColor: "bg-blue-100", label: "Cotizada" };
+      return { icon: FileText, color: "text-blue-500", bgColor: "bg-blue-500/10 border border-blue-500/20", label: "Cotizada" };
     case LicitationStatus.PARTIAL_ADJUDICATION:
-      return { icon: AlertCircle, color: "text-orange-600", bgColor: "bg-orange-100", label: "Adjudicación Parcial" };
+      return { icon: AlertCircle, color: "text-orange-500", bgColor: "bg-orange-500/10 border border-orange-500/20", label: "Adjudicación Parcial" };
     case LicitationStatus.NOT_ADJUDICATED:
-      return { icon: XCircle, color: "text-red-600", bgColor: "bg-red-100", label: "No Adjudicada" };
+      return { icon: XCircle, color: "text-red-500", bgColor: "bg-red-500/10 border border-red-500/20", label: "No Adjudicada" };
     case LicitationStatus.TOTAL_ADJUDICATION:
-      return { icon: CheckCircle, color: "text-green-600", bgColor: "bg-green-100", label: "Adjudicación Total" };
+      return { icon: CheckCircle, color: "text-green-500", bgColor: "bg-green-500/10 border border-green-500/20", label: "Adjudicación Total" };
     default:
-      return { icon: Clock, color: "text-gray-600", bgColor: "bg-gray-100", label: status };
+      return { icon: Clock, color: "text-muted-foreground", bgColor: "bg-muted border border-border", label: status };
   }
 };
 
 export const getAwardStatusBadge = (status: QuotationAwardStatus): AwardStatusBadge => {
   switch (status) {
     case QuotationAwardStatus.AWARDED:
-      return { color: "bg-green-100 text-green-700", label: "Adjudicado" };
+      return { color: "bg-green-500/10 text-green-500 border-green-500/20", label: "Adjudicado" };
     case QuotationAwardStatus.NOT_AWARDED:
-      return { color: "bg-red-100 text-red-700", label: "No Adjudicado" };
+      return { color: "bg-red-500/10 text-red-500 border-red-500/20", label: "No Adjudicado" };
     case QuotationAwardStatus.PENDING:
     default:
-      return { color: "bg-yellow-100 text-yellow-700", label: "En Espera" };
+      return { color: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20", label: "En Espera" };
   }
 };
 
 export const getStatusParams = (status: string): StatusParams => {
   switch (status) {
     case QuotationAwardStatus.AWARDED:
-      return { label: 'Adjudicado', color: 'bg-green-100 text-green-800 hover:bg-green-100' };
+      return { label: 'Adjudicado', color: 'bg-green-500/10 text-green-500 hover:bg-green-500/20 border border-green-500/20' };
     case QuotationAwardStatus.PARTIALLY_AWARDED:
-      return { label: 'Parcial', color: 'bg-blue-100 text-blue-800 hover:bg-blue-100' };
+      return { label: 'Parcial', color: 'bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 border border-blue-500/20' };
     case QuotationAwardStatus.NOT_AWARDED:
-      return { label: 'No Adjudicada', color: 'bg-red-100 text-red-800 hover:bg-red-100' };
+      return { label: 'No Adjudicada', color: 'bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20' };
     default:
-      return { label: 'En Espera', color: 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100' };
+      return { label: 'En Espera', color: 'bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20 border border-yellow-500/20' };
   }
 };

@@ -34,6 +34,8 @@ import {
 import { offersService, Offer, CreateOfferDto } from '@/services/offers.service'
 import { productsService, Product } from '@/services/products.service'
 import { proveedoresService } from '@/services/proveedores.service'
+import { DatePicker } from '@/components/ui/date-picker'
+import { format } from 'date-fns'
 import { Proveedor } from '@/types'
 import { toast } from 'sonner'
 import { useConfirm } from '@/hooks/use-confirm'
@@ -378,12 +380,10 @@ export default function OfertasPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="deliveryDate">Fecha de Entrega *</Label>
-                  <Input
-                    id="deliveryDate"
-                    type="date"
-                    value={formData.deliveryDate ? new Date(formData.deliveryDate).toISOString().split('T')[0] : ''}
-                    onChange={(e) => setFormData(prev => ({ ...prev, deliveryDate: e.target.value }))}
-                    required
+                  <DatePicker
+                    date={formData.deliveryDate ? new Date(formData.deliveryDate + "T12:00:00") : undefined}
+                    setDate={(date) => setFormData(prev => ({ ...prev, deliveryDate: date ? format(date, "yyyy-MM-dd") : "" }))}
+                    disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                   />
                 </div>
               </div>

@@ -23,6 +23,8 @@ import {
 import { offersService, Offer, CreateOfferDto } from "@/services/offers.service";
 import { productsService, Product } from "@/services/products.service";
 import { proveedoresService } from "@/services/proveedores.service";
+import { DatePicker } from "@/components/ui/date-picker";
+import { format } from "date-fns";
 import { Proveedor } from "@/types";
 
 type CreateOfferDialogProps = {
@@ -167,10 +169,10 @@ export function CreateOfferDialog({
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Fecha de Entrega *</Label>
-                <Input
-                  type="date"
-                  value={formData.deliveryDate ? new Date(formData.deliveryDate).toISOString().split('T')[0] : ''}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, deliveryDate: e.target.value }))}
+                <DatePicker
+                  date={formData.deliveryDate ? new Date(formData.deliveryDate + "T12:00:00") : undefined}
+                  setDate={(date) => setFormData((prev) => ({ ...prev, deliveryDate: date ? format(date, "yyyy-MM-dd") : "" }))}
+                  disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                 />
               </div>
               <div className="space-y-2">
