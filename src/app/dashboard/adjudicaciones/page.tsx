@@ -84,15 +84,20 @@ export default function AdjudicacionesPage() {
     }
   }
 
+  // Effect to debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFilters(prev => ({ ...prev, search: searchTerm || undefined, page: 1 }))
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [searchTerm])
+
   useEffect(() => {
     fetchAdjudications()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters])
 
-  // Simple searching by filtering the current list or triggering a backend search if API supports it
-  // Given current service implementation, we rely on backend filters. 
-  // If 'search' is not supported by backend for adjudications, we might need to implement it.
-  // Checking service: 'search' param is generic, but let's assume filtering by ID mainly.
+  // Backend supports ID filtering via search.
   
   const handleStatusChange = (value: string) => {
     const status = value === 'all' ? undefined : (value as AdjudicationStatus)
@@ -124,11 +129,10 @@ export default function AdjudicacionesPage() {
             <div className="flex-1 relative">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Buscar (Próximamente)..." 
+                placeholder="Buscar por ID..." 
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-8"
-                disabled
               />
             </div>
             <div className="w-full sm:w-[200px]">

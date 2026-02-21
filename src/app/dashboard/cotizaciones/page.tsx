@@ -49,9 +49,6 @@ const formatCurrency = (amount: number, currency: string = 'UYU') => {
 const statusConfig: Record<string, { label: string; color: string }> = {
   [QuotationStatus.CREATED]: { label: 'Creada', color: 'bg-muted/50 text-muted-foreground border-border' },
   [QuotationStatus.FINALIZED]: { label: 'Finalizada', color: 'bg-green-500/10 text-green-500 border-green-500/20' },
-  [QuotationStatus.DRAFT]: { label: 'Borrador', color: 'bg-muted/50 text-muted-foreground border-border' },
-  [QuotationStatus.SENT]: { label: 'Enviada', color: 'bg-blue-500/10 text-blue-500 border-blue-500/20' },
-  [QuotationStatus.REJECTED]: { label: 'Rechazada', color: 'bg-red-500/10 text-red-500 border-red-500/20' },
 }
 
 export default function CotizacionesPage() {
@@ -80,6 +77,14 @@ export default function CotizacionesPage() {
       setLoading(false)
     }
   }
+
+  // Effect to debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFilters(prev => ({ ...prev, search: searchTerm || undefined, page: 1 }))
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [searchTerm])
 
   useEffect(() => {
     fetchQuotations()
@@ -136,11 +141,10 @@ export default function CotizacionesPage() {
             <div className="flex-1 relative">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Buscar (Próximamente)..." 
+                placeholder="Buscar por identificador o cliente..." 
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-8"
-                disabled
               />
             </div>
             <div className="w-full sm:w-[200px]">
@@ -150,10 +154,8 @@ export default function CotizacionesPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos los estados</SelectItem>
-                  <SelectItem value={QuotationStatus.DRAFT}>Borrador</SelectItem>
-                  <SelectItem value={QuotationStatus.SENT}>Enviada</SelectItem>
+                  <SelectItem value={QuotationStatus.CREATED}>Creada</SelectItem>
                   <SelectItem value={QuotationStatus.FINALIZED}>Finalizada</SelectItem>
-                  <SelectItem value={QuotationStatus.REJECTED}>Rechazada</SelectItem>
                 </SelectContent>
               </Select>
             </div>

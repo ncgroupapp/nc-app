@@ -541,13 +541,12 @@ export default function LicitacionesPage() {
                         setFormData((prev) => ({ ...prev, clientId: "" }));
                         setSelectedClientName("");
                       }}
-                      placeholder={
-                        selectedClientName || "Seleccionar cliente..."
-                      }
+                      placeholder="Seleccionar cliente..."
                       searchPlaceholder="Buscar cliente..."
                       emptyMessage="No se encontraron clientes."
                       hideTags={true}
                       shouldFilter={true}
+                      single={true}
                     />
                   </div>
 

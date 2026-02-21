@@ -114,11 +114,14 @@ export const QuotationTab = ({
       <div className="flex justify-between items-center">
         <div>
           <h3 className="text-lg font-medium">Cotización: {quotation.quotationIdentifier}</h3>
-          <p className="text-muted-foreground">
-            Estado: <Badge variant={quotation.status === QuotationStatus.FINALIZED ? "default" : "secondary"}>
+          <div className="text-muted-foreground flex items-center gap-2 mt-1">
+            Estado: 
+            <Badge variant="outline" className={quotation.status === QuotationStatus.FINALIZED 
+              ? "bg-green-500/10 text-green-500 border-green-500/20" 
+              : "bg-muted/50 text-muted-foreground border-border"}>
               {quotation.status === QuotationStatus.FINALIZED ? 'Finalizada' : 'En Creación'}
             </Badge>
-          </p>
+          </div>
         </div>
         {quotation.status !== QuotationStatus.FINALIZED && (
           <Dialog open={isQuotationDialogOpen} onOpenChange={setIsQuotationDialogOpen}>
@@ -184,7 +187,7 @@ export const QuotationTab = ({
                       const statusParams = getStatusParams(item.awardStatus);
                       
                       return (
-                        <TableRow key={item.id || index}>
+                        <TableRow key={item.id || index} className="hover:bg-muted/50 transition-colors">
                           <TableCell>
                             <div>
                               <p className="font-medium">{item.productName}</p>
@@ -211,7 +214,7 @@ export const QuotationTab = ({
                               >
                                 <SelectTrigger className="w-[180px] h-8">
                                   <div className="flex items-center gap-2">
-                                    <Badge className={`${statusParams.color} border-none`}>
+                                    <Badge variant="outline" className={`${statusParams.color}`}>
                                       {statusParams.label}
                                     </Badge>
                                   </div>
@@ -252,7 +255,7 @@ export const QuotationTab = ({
                                     <Button 
                                       variant="outline" 
                                       size="sm" 
-                                      className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                      className="text-green-500 hover:text-green-600 hover:bg-green-500/10 border-green-500/20"
                                       onClick={() => onOpenAward(item)}
                                     >
                                       <CheckCircle className="h-4 w-4" />
@@ -260,7 +263,7 @@ export const QuotationTab = ({
                                     <Button 
                                       variant="outline" 
                                       size="sm" 
-                                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                      className="text-red-500 hover:text-red-600 hover:bg-red-500/10 border-red-500/20"
                                       onClick={() => onOpenReject(item)}
                                     >
                                       <XCircle className="h-4 w-4" />
@@ -295,7 +298,7 @@ export const QuotationTab = ({
                 <span>${iva.toFixed(2)}</span>
               </div>
               <div className="border-t pt-4">
-                <div className="flex justify-between font-bold text-lg">
+                <div className="flex justify-between font-semibold text-lg text-primary">
                   <span>Total:</span>
                   <span>${total.toFixed(2)}</span>
                 </div>

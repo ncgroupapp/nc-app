@@ -46,6 +46,8 @@ import {
   DeliveryStatus,
   UpdateDeliveryItemDto,
 } from "@/services/entregas.service";
+import { DatePicker } from "@/components/ui/date-picker";
+import { format } from "date-fns";
 
 interface DeliveryTabProps {
   licitationId: number;
@@ -60,10 +62,10 @@ const statusLabels: Record<DeliveryItemStatus, string> = {
 };
 
 const statusColors: Record<DeliveryItemStatus, string> = {
-  [DeliveryItemStatus.PENDING]: "bg-yellow-100 text-yellow-800",
-  [DeliveryItemStatus.ON_WAY]: "bg-blue-100 text-blue-800",
-  [DeliveryItemStatus.DELIVERED]: "bg-green-100 text-green-800",
-  [DeliveryItemStatus.ISSUE]: "bg-red-100 text-red-800",
+  [DeliveryItemStatus.PENDING]: "bg-yellow-500/10 text-yellow-500 border border-yellow-500/20",
+  [DeliveryItemStatus.ON_WAY]: "bg-blue-500/10 text-blue-500 border border-blue-500/20",
+  [DeliveryItemStatus.DELIVERED]: "bg-green-500/10 text-green-500 border border-green-500/20",
+  [DeliveryItemStatus.ISSUE]: "bg-red-500/10 text-red-500 border border-red-500/20",
 };
 
 const deliveryStatusLabels: Record<DeliveryStatus, string> = {
@@ -74,10 +76,10 @@ const deliveryStatusLabels: Record<DeliveryStatus, string> = {
 };
 
 const deliveryStatusColors: Record<DeliveryStatus, string> = {
-  [DeliveryStatus.PENDING]: "bg-yellow-100 text-yellow-800",
-  [DeliveryStatus.PARTIAL]: "bg-blue-100 text-blue-800",
-  [DeliveryStatus.COMPLETED]: "bg-green-100 text-green-800",
-  [DeliveryStatus.ISSUE]: "bg-red-100 text-red-800",
+  [DeliveryStatus.PENDING]: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
+  [DeliveryStatus.PARTIAL]: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+  [DeliveryStatus.COMPLETED]: "bg-green-500/10 text-green-500 border-green-500/20",
+  [DeliveryStatus.ISSUE]: "bg-red-500/10 text-red-500 border-red-500/20",
 };
 
 export const DeliveryTab = ({ licitationId, licitationStatus }: DeliveryTabProps) => {
@@ -173,7 +175,7 @@ export const DeliveryTab = ({ licitationId, licitationStatus }: DeliveryTabProps
               </CardDescription>
             </div>
             {delivery && (
-              <Badge className={deliveryStatusColors[delivery.calculatedStatus]}>
+              <Badge variant="outline" className={deliveryStatusColors[delivery.calculatedStatus]}>
                 {deliveryStatusLabels[delivery.calculatedStatus]}
               </Badge>
             )}
@@ -207,7 +209,7 @@ export const DeliveryTab = ({ licitationId, licitationStatus }: DeliveryTabProps
                 </TableHeader>
                 <TableBody>
                   {delivery.items.map((item) => (
-                    <TableRow key={item.id}>
+                    <TableRow key={item.id} className="hover:bg-muted/50 transition-colors">
                       <TableCell className="font-mono text-sm">
                         {item.productCode}
                       </TableCell>
@@ -238,7 +240,7 @@ export const DeliveryTab = ({ licitationId, licitationStatus }: DeliveryTabProps
                             <SelectContent>
                               {Object.entries(statusLabels).map(([value, label]) => (
                                 <SelectItem key={value} value={value}>
-                                  <span className={`px-2 py-1 rounded text-xs ${statusColors[value as DeliveryItemStatus]}`}>
+                                  <span className={`px-2 py-1 rounded flex w-fit items-center font-semibold text-xs ${statusColors[value as DeliveryItemStatus]}`}>
                                     {label}
                                   </span>
                                 </SelectItem>
@@ -340,11 +342,9 @@ export const DeliveryTab = ({ licitationId, licitationStatus }: DeliveryTabProps
             </div>
             <div className="grid gap-2">
               <Label htmlFor="actualDate">Fecha Real de Entrega</Label>
-              <Input
-                id="actualDate"
-                type="date"
-                value={editForm.actualDate || ''}
-                onChange={(e) => setEditForm({ ...editForm, actualDate: e.target.value || undefined })}
+              <DatePicker
+                date={editForm.actualDate ? new Date(editForm.actualDate + "T12:00:00") : undefined}
+                setDate={(date) => setEditForm({ ...editForm, actualDate: date ? format(date, "yyyy-MM-dd") : undefined })}
               />
             </div>
             <div className="grid gap-2">
