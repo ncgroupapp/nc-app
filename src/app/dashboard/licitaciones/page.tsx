@@ -77,6 +77,8 @@ import {
   CommandList,
 } from "cmdk";
 import { cn } from "@/lib/utils";
+import { DatePicker } from "@/components/ui/date-picker";
+import { format } from "date-fns";
 
 // Map backend status to Spanish display labels
 const statusLabels: Record<LicitationStatus, string> = {
@@ -517,50 +519,44 @@ export default function LicitacionesPage() {
 
                   <div className="space-y-2">
                     <Label htmlFor="clientId">Cliente *</Label>
-                    <div className="space-y-2">
-                      <Label htmlFor="clientId">Cliente *</Label>
-                      <MultiSelectSearch
-                        options={clientes.map((c) => ({
-                          id: c.id,
-                          label: `${c.name} (${c.identifier})`,
-                        }))}
-                        selectedValues={
-                          formData.clientId ? [parseInt(formData.clientId)] : []
+                    <MultiSelectSearch
+                      options={clientes.map((c) => ({
+                        id: c.id,
+                        label: `${c.name} (${c.identifier})`,
+                      }))}
+                      selectedValues={
+                        formData.clientId ? [parseInt(formData.clientId)] : []
+                      }
+                      onSelect={(id) => {
+                        const client = clientes.find((c) => c.id === id);
+                        if (client) {
+                          setFormData((prev) => ({
+                            ...prev,
+                            clientId: client.id.toString(),
+                          }));
+                          setSelectedClientName(client.name);
                         }
-                        onSelect={(id) => {
-                          const client = clientes.find((c) => c.id === id);
-                          if (client) {
-                            setFormData((prev) => ({
-                              ...prev,
-                              clientId: client.id.toString(),
-                            }));
-                            setSelectedClientName(client.name);
-                          }
-                        }}
-                        onRemove={() => {
-                          setFormData((prev) => ({ ...prev, clientId: "" }));
-                          setSelectedClientName("");
-                        }}
-                        placeholder={
-                          selectedClientName || "Seleccionar cliente..."
-                        }
-                        searchPlaceholder="Buscar cliente..."
-                        emptyMessage="No se encontraron clientes."
-                        hideTags={true}
-                        shouldFilter={true}
-                      />
-                    </div>
+                      }}
+                      onRemove={() => {
+                        setFormData((prev) => ({ ...prev, clientId: "" }));
+                        setSelectedClientName("");
+                      }}
+                      placeholder={
+                        selectedClientName || "Seleccionar cliente..."
+                      }
+                      searchPlaceholder="Buscar cliente..."
+                      emptyMessage="No se encontraron clientes."
+                      hideTags={true}
+                      shouldFilter={true}
+                    />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="startDate">Fecha de Inicio *</Label>
-                      <Input
-                        id="startDate"
-                        type="date"
-                        value={formData.startDate}
-                        onChange={(e) => handleStartDateChange(e.target.value)}
-                        required
+                      <DatePicker
+                        date={formData.startDate ? new Date(formData.startDate + "T12:00:00") : undefined}
+                        setDate={(date) => handleStartDateChange(date ? format(date, "yyyy-MM-dd") : "")}
                       />
                       {formData.startDate && (
                         <span className="text-xs text-muted-foreground">
@@ -570,15 +566,10 @@ export default function LicitacionesPage() {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="deadlineDate">Fecha Límite *</Label>
-                      <Input
-                        id="deadlineDate"
-                        type="date"
-                        value={formData.deadlineDate}
-                        onChange={(e) =>
-                          handleDeadlineDateChange(e.target.value)
-                        }
-                        required
-                        min={formData.startDate}
+                      <DatePicker
+                        date={formData.deadlineDate ? new Date(formData.deadlineDate + "T12:00:00") : undefined}
+                        setDate={(date) => handleDeadlineDateChange(date ? format(date, "yyyy-MM-dd") : "")}
+                        disabled={(date) => formData.startDate ? date < new Date(formData.startDate + "T00:00:00") : false}
                         className={dateError ? "border-red-500" : ""}
                       />
                       {formData.deadlineDate && (
