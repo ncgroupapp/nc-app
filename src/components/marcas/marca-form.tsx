@@ -78,13 +78,15 @@ export function MarcaForm({ initialData, onSubmit, onCancel, isLoading }: MarcaF
   return (
     <form onSubmit={handleSubmit} className="space-y-4 py-4">
       <div className="space-y-2">
-        <Label htmlFor="name">Nombre de la Marca</Label>
-        <Input 
-          id="name" 
-          value={name} 
-          onChange={(e) => setName(e.target.value)} 
+        <Label htmlFor="name">
+          Nombre de la Marca <span className="text-red-500">*</span>
+        </Label>
+        <Input
+          id="name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
           placeholder="Ej: Toyota"
-          required 
+          required
         />
       </div>
 
@@ -93,52 +95,60 @@ export function MarcaForm({ initialData, onSubmit, onCancel, isLoading }: MarcaF
           Modelos
         </label>
         <div className="flex gap-2">
-            <Input 
-              value={newModelName} 
-              onChange={(e) => setNewModelName(e.target.value)} 
-              placeholder="Ej: Corolla"
-              onKeyDown={handleKeyDown}
-            />
-            <Button type="button" size="icon" variant="outline" onClick={handleAddModel}>
-              <Plus className="h-4 w-4" />
-            </Button>
-          </div>
-          
-          {models.length > 0 && (
-            <div className="mt-2 border rounded-md p-2 bg-muted/20">
-              <ScrollArea className="h-[120px]">
-                <div className="space-y-2">
-                  {models.map((model, index) => (
-                    <div key={index} className="flex items-center justify-between bg-background p-2 rounded border text-sm">
-                      <span>{model.name}</span>
-                      <Button 
-                        type="button" 
-                        size="icon" 
-                        variant="ghost" 
-                        className="h-6 w-6 text-destructive hover:text-destructive"
-                        onClick={() => handleRemoveModel(index)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              </ScrollArea>
-            </div>
-          )}
-          <p className="text-xs text-blue-950">
-            Presiona Enter o el botón + para agregar un modelo a la lista.
-          </p>
+          <Input
+            value={newModelName}
+            onChange={(e) => setNewModelName(e.target.value)}
+            placeholder="Ej: Corolla"
+            onKeyDown={handleKeyDown}
+          />
+          <Button
+            type="button"
+            size="icon"
+            variant="outline"
+            onClick={handleAddModel}
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
         </div>
+
+        {models.length > 0 && (
+          <div className="mt-2 border rounded-md p-2 bg-muted/20">
+            <ScrollArea className="h-[120px]">
+              <div className="space-y-2">
+                {models.map((model, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between bg-background p-2 rounded border text-sm"
+                  >
+                    <span>{model.name}</span>
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="ghost"
+                      className="h-6 w-6 text-destructive hover:text-destructive"
+                      onClick={() => handleRemoveModel(index)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+          </div>
+        )}
+        <p className="text-xs text-blue-950">
+          Presiona Enter o el botón + para agregar un modelo a la lista.
+        </p>
+      </div>
 
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onCancel}>
           Cancelar
         </Button>
-        <Button type="submit" disabled={isLoading}>
-          {initialData ? 'Actualizar' : 'Crear'}
+        <Button type="submit" disabled={isLoading || !name.trim()}>
+          {initialData ? "Actualizar" : "Crear"}
         </Button>
       </DialogFooter>
     </form>
-  )
+  );
 }

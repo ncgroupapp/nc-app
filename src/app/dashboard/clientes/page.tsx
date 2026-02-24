@@ -23,6 +23,7 @@ import { ClientForm } from '@/components/clientes/client-form'
 import { SearchInput } from '@/components/common/search-input'
 import { useConfirm } from '@/hooks/use-confirm'
 import { useDebounce } from '@/hooks/use-debounce'
+import { Badge } from '@/components/ui/badge';
 
 
 export default function ClientesPage() {
@@ -185,9 +186,11 @@ export default function ClientesPage() {
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => {
-              setEditingCliente(null)
-            }}>
+            <Button
+              onClick={() => {
+                setEditingCliente(null);
+              }}
+            >
               <Plus className="mr-2 h-4 w-4" />
               Nuevo Cliente
             </Button>
@@ -195,10 +198,11 @@ export default function ClientesPage() {
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
               <DialogTitle>
-                {editingCliente ? 'Editar Cliente' : 'Crear Nuevo Cliente'}
+                {editingCliente ? "Editar Cliente" : "Crear Nuevo Cliente"}
               </DialogTitle>
               <DialogDescription>
-                Complete los datos del cliente para {editingCliente ? 'actualizar' : 'crear'} el registro.
+                Complete los datos del cliente para{" "}
+                {editingCliente ? "actualizar" : "crear"} el registro.
               </DialogDescription>
             </DialogHeader>
             <ClientForm
@@ -210,7 +214,6 @@ export default function ClientesPage() {
           </DialogContent>
         </Dialog>
       </div>
-
 
       {/* Filters */}
       <Card>
@@ -236,6 +239,7 @@ export default function ClientesPage() {
           <CardTitle className="flex items-center space-x-2">
             <Building2 className="h-5 w-5" />
             <span>Listado de Clientes</span>
+            <Badge variant="outline">{clientes.length} clientes</Badge>
           </CardTitle>
           <CardDescription>
             Gestione la información de clientes del sistema
@@ -251,12 +255,12 @@ export default function ClientesPage() {
               limit: pagination.limit,
               total: pagination.total,
               totalPages: pagination.lastPage,
-              onPageChange: setCurrentPage
+              onPageChange: setCurrentPage,
             }}
             emptyMessage={error ? error : "No se encontraron clientes"}
           />
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

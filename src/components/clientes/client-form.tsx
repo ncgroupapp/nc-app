@@ -81,7 +81,9 @@ export function ClientForm({ initialData, onSubmit, onCancel, isLoading = false 
     <form onSubmit={handleSubmit}>
       <div className="grid gap-4 py-4">
         <div className="space-y-2">
-          <Label htmlFor="nombre">Nombre del Cliente *</Label>
+          <Label htmlFor="nombre">
+            Nombre del Cliente <span className="text-red-500">*</span>
+          </Label>
           <Input
             id="nombre"
             value={formData.nombre}
@@ -94,7 +96,9 @@ export function ClientForm({ initialData, onSubmit, onCancel, isLoading = false 
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="identificador">Identificador/RUT *</Label>
+          <Label htmlFor="identificador">
+            Identificador/RUT <span className="text-red-500">*</span>
+          </Label>
           <Input
             id="identificador"
             value={formData.identificador}
@@ -159,8 +163,7 @@ export function ClientForm({ initialData, onSubmit, onCancel, isLoading = false 
                           ),
                         }));
                       }
-                    }
-                    }
+                    }}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -168,7 +171,7 @@ export function ClientForm({ initialData, onSubmit, onCancel, isLoading = false 
 
                 <div className="space-y-2">
                   <Label htmlFor={`contact-name-${index}`}>
-                    Nombre del Contacto
+                    Nombre del Contacto <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id={`contact-name-${index}`}
@@ -182,6 +185,7 @@ export function ClientForm({ initialData, onSubmit, onCancel, isLoading = false 
                       }));
                     }}
                     placeholder="Ej: Juan Pérez"
+                    required
                   />
                 </div>
 
@@ -248,7 +252,10 @@ export function ClientForm({ initialData, onSubmit, onCancel, isLoading = false 
         <Button type="button" variant="outline" onClick={onCancel}>
           Cancelar
         </Button>
-        <Button type="submit" disabled={isLoading}>
+        <Button 
+          type="submit" 
+          disabled={isLoading || !formData.nombre.trim() || !formData.identificador.trim() || formData.contactos.some(c => !c.nombre.trim())}
+        >
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {isLoading
             ? "Guardando..."

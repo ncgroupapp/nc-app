@@ -149,11 +149,11 @@ export default function ProductosPage() {
       key: 'image',
       header: 'Imagen',
       render: (product) => (
-        product.image ? (
+        product.images && product.images.length > 0 ? (
           <div className="relative w-12 h-12 rounded-md overflow-hidden border bg-background">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img 
-              src={product.image} 
+              src={product.images[0]} 
               alt={product.name} 
               className="w-full h-full object-cover"
             />

@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { productsService, Product } from '@/services/products.service'
 import { cotizacionesService, Quotation } from '@/services/cotizaciones.service'
 import { adjudicacionesService, ProductAdjudicationHistory } from '@/services/adjudicaciones.service'
-import { ArrowLeft, Package, AlertTriangle, Building, Tag, Layers, Truck, DollarSign } from 'lucide-react'
+import { ArrowLeft, Package, AlertTriangle, Building, Tag, Layers, Truck, DollarSign, ChevronLeft, ChevronRight } from 'lucide-react'
 import {
   Table,
   TableBody,
@@ -30,6 +30,12 @@ export default function ProductDetailPage() {
   const [adjudicationHistory, setAdjudicationHistory] = useState<ProductAdjudicationHistory[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
+
+  // Derived state to get all images
+  const images = product?.images && product.images.length > 0 
+    ? product.images 
+    : (product?.image ? [product.image] : [])
 
   useEffect(() => {
     if (!id) return
@@ -88,14 +94,48 @@ export default function ProductDetailPage() {
         {/* Left Column: Image & Status */}
         <div className="lg:col-span-4 space-y-6">
           <Card className="overflow-hidden border-0 shadow-lg">
-            <div className="aspect-square relative bg-secondary/20 flex items-center justify-center">
-              {product.image ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="object-cover w-full h-full"
-                />
+            <div className="aspect-square relative bg-secondary/20 flex items-center justify-center p-4">
+              {images.length > 0 ? (
+                <div className="relative w-full h-full group flex items-center justify-center">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={images[currentImageIndex]}
+                    alt={`${product.name} - ${currentImageIndex + 1}`}
+                    className="max-h-full max-w-full object-contain"
+                  />
+                  
+                  {images.length > 1 && (
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/70 hover:bg-white/90 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
+                        onClick={() => setCurrentImageIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1))}
+                      >
+                        <ChevronLeft className="h-6 w-6" />
+                      </Button>
+                      
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/70 hover:bg-white/90 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
+                        onClick={() => setCurrentImageIndex((prev) => (prev + 1) % images.length)}
+                      >
+                        <ChevronRight className="h-6 w-6" />
+                      </Button>
+                      
+                      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1 bg-black/20 p-1 rounded-full backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                        {images.map((_, idx) => (
+                          <button
+                            key={idx}
+                            className={`w-2 h-2 rounded-full transition-colors ${idx === currentImageIndex ? 'bg-white' : 'bg-white/50 hover:bg-white/70'}`}
+                            onClick={() => setCurrentImageIndex(idx)}
+                          />
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
               ) : (
                 <div className="flex flex-col items-center gap-2 text-muted-foreground">
                   <Package className="h-16 w-16" />
@@ -103,6 +143,28 @@ export default function ProductDetailPage() {
                 </div>
               )}
             </div>
+            
+            {/* Thumbnail Strip */}
+            {images.length > 1 && (
+              <div className="flex gap-2 p-4 overflow-x-auto bg-slate-50 border-t">
+                {images.map((img, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setCurrentImageIndex(idx)}
+                    className={`relative w-16 h-16 rounded-md overflow-hidden flex-shrink-0 border-2 transition-colors ${
+                      idx === currentImageIndex ? 'border-primary' : 'border-transparent hover:border-slate-300'
+                    }`}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={img}
+                      alt={`Thumbnail ${idx + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
           </Card>
 
           <Card>
