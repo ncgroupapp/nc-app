@@ -125,8 +125,7 @@ export function MultiSelectSearch({
         <Command shouldFilter={shouldFilter}>
           <CommandInput
             placeholder={searchPlaceholder}
-            value={searchValue}
-            onValueChange={onSearchValueChange}
+            {...(searchValue !== undefined ? { value: searchValue, onValueChange: onSearchValueChange } : {})}
           />
           <CommandList>
             <CommandEmpty>{emptyMessage}</CommandEmpty>

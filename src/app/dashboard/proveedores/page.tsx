@@ -16,6 +16,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import { Plus, Search, Building2 } from 'lucide-react'
 import { Proveedor, CreateProveedorForm } from '@/types'
 import { useProveedoresStore } from '@/stores'
@@ -40,6 +41,11 @@ export default function ProveedoresPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [editingProveedor, setEditingProveedor] = useState<Proveedor | null>(null)
+
+  // States for viewing all brands
+  const [brandsDialogOpen, setBrandsDialogOpen] = useState(false)
+  const [selectedBrands, setSelectedBrands] = useState<string[]>([])
+  const [selectedProviderName, setSelectedProviderName] = useState('')
 
   useEffect(() => {
     fetchProveedores(1)
@@ -102,6 +108,12 @@ export default function ProveedoresPage() {
     }
   }
 
+  const handleShowAllBrands = (brands: string[], providerName: string) => {
+    setSelectedBrands(brands)
+    setSelectedProviderName(providerName)
+    setBrandsDialogOpen(true)
+  }
+
   const columns: DataTableColumn<Proveedor>[] = [
     {
       key: 'name',
@@ -121,9 +133,30 @@ export default function ProveedoresPage() {
     },
     {
       key: 'brand',
-      header: 'Marca',
+      header: 'Marcas',
       render: (row) => (
-        row.brand ? <Badge variant="outline">{row.brand}</Badge> : <span className="text-muted-foreground text-sm">-</span>
+        <div className="flex flex-wrap gap-1 max-w-[200px]">
+          {row.brands && row.brands.length > 0 ? (
+            <>
+              {row.brands.slice(0, 3).map((b, i) => (
+                <Badge key={i} variant="outline" className="text-xs whitespace-nowrap">
+                  {b}
+                </Badge>
+              ))}
+              {row.brands.length > 3 && (
+                <Badge 
+                  variant="secondary" 
+                  className="text-xs cursor-pointer hover:bg-secondary/80"
+                  onClick={() => handleShowAllBrands(row.brands || [], row.name)}
+                >
+                  +{row.brands.length - 3}
+                </Badge>
+              )}
+            </>
+          ) : (
+            <span className="text-muted-foreground text-sm">-</span>
+          )}
+        </div>
       )
     },
     {
@@ -181,14 +214,16 @@ export default function ProveedoresPage() {
           </DialogTrigger>
           <DialogContent className="sm:max-w-[600px]">
             <DialogHeader>
-              <DialogTitle>{editingProveedor ? 'Editar Proveedor' : 'Nuevo Proveedor'}</DialogTitle>
+              <DialogTitle>
+                {editingProveedor ? "Editar Proveedor" : "Nuevo Proveedor"}
+              </DialogTitle>
               <DialogDescription>
-                {editingProveedor 
-                  ? 'Modifique los datos del proveedor y sus contactos.' 
-                  : 'Complete la información para registrar un nuevo proveedor.'}
+                {editingProveedor
+                  ? "Modifique los datos del proveedor y sus contactos."
+                  : "Complete la información para registrar un nuevo proveedor."}
               </DialogDescription>
             </DialogHeader>
-            <ProveedorForm 
+            <ProveedorForm
               initialData={editingProveedor}
               onSubmit={handleFormSubmit}
               onCancel={() => setIsCreateDialogOpen(false)}
@@ -208,8 +243,8 @@ export default function ProveedoresPage() {
             <div className="flex-1">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input 
-                  placeholder="Buscar por nombre, RUT, país o marca..." 
+                <Input
+                  placeholder="Buscar por nombre, RUT, país o marca..."
                   className="pl-10"
                   value={searchTerm}
                   onChange={handleSearchChange}
@@ -226,27 +261,49 @@ export default function ProveedoresPage() {
           <CardTitle className="flex items-center space-x-2">
             <Building2 className="h-5 w-5" />
             <span>Listado de Proveedores</span>
+            <Badge variant="outline">{proveedores.length} proveedores</Badge>
           </CardTitle>
           <CardDescription>
             Gestione la información de proveedores del sistema
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <DataTable 
-            columns={columns} 
-            data={proveedores} 
+          <DataTable
+            columns={columns}
+            data={proveedores}
             isLoading={isLoading}
             pagination={{
-                page: pagination.page,
-                limit: pagination.limit,
-                total: pagination.total,
-                totalPages: pagination.lastPage,
-                onPageChange: (page) => fetchProveedores(page)
+              page: pagination.page,
+              limit: pagination.limit,
+              total: pagination.total,
+              totalPages: pagination.lastPage,
+              onPageChange: (page) => fetchProveedores(page),
             }}
-            emptyMessage={'No se encontraron proveedores'}
+            emptyMessage={"No se encontraron proveedores"}
           />
         </CardContent>
       </Card>
+
+      {/* Brands Dialog */}
+      <Dialog open={brandsDialogOpen} onOpenChange={setBrandsDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Marcas de {selectedProviderName}</DialogTitle>
+            <DialogDescription>
+              Listado completo de marcas asociadas a este proveedor.
+            </DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="h-[300px] w-full rounded-md border p-4">
+            <div className="flex flex-wrap gap-2">
+              {selectedBrands.map((brand, index) => (
+                <Badge key={index} variant="outline" className="text-sm">
+                  {brand}
+                </Badge>
+              ))}
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </div>
-  )
+  );
 }
