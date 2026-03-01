@@ -12,7 +12,7 @@ import { CreateProductForm, Product } from '@/services/products.service'
 import { useBrandsStore } from '@/stores/brands/brandsStore'
 import { useProveedoresStore } from '@/stores'
 import { Upload, X } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 
 interface ProductFormProps {
   initialData?: Product | null
@@ -50,6 +50,29 @@ export function ProductForm({ initialData, onSubmit, onCancel, isLoading }: Prod
   const [imageFiles, setImageFiles] = useState<File[]>([])
   const [imagePreviews, setImagePreviews] = useState<string[]>([])
   const [isUploadingImage, setIsUploadingImage] = useState(false)
+
+  // Memoize options to include initial selected providers
+  const providerOptions = useMemo(() => {
+    // Current options from store
+    const options = proveedores.map((p) => ({
+      id: parseInt(p.id),
+      label: p.name,
+    }));
+
+    // Add initial providers if they are not in the list (to show name instead of ID)
+    if (initialData?.providers) {
+      initialData.providers.forEach((provider) => {
+        if (!options.find((o) => o.id === provider.id)) {
+          options.push({
+            id: provider.id,
+            label: provider.name,
+          });
+        }
+      });
+    }
+
+    return options;
+  }, [proveedores, initialData]);
 
   // Initial load
   useEffect(() => {
@@ -239,14 +262,12 @@ export function ProductForm({ initialData, onSubmit, onCancel, isLoading }: Prod
             <div className="space-y-2">
               <Label htmlFor="proveedor_id">Proveedores</Label>
               <MultiSelectSearch
-                options={proveedores.map((p) => ({
-                  id: p.id,
-                  label: p.name,
-                }))}
+                options={providerOptions}
                 selectedValues={formData.providerIds || []}
                 onSelect={(value) => {
                   const id =
                     typeof value === "string" ? parseInt(value) : value;
+
                   setFormData((prev) => ({
                     ...prev,
                     providerIds: [...(prev.providerIds || []), id],
