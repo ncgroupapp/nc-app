@@ -62,6 +62,7 @@ import {
   Search,
   XCircle,
 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { showSnackbar } from "@/components/ui/snackbar";
 import {
   Popover,
@@ -425,15 +426,6 @@ export default function LicitacionesPage() {
     }));
   };
 
-  if (initialLoading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="ml-2">Cargando licitaciones...</span>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -712,7 +704,13 @@ export default function LicitacionesPage() {
                 <estadoInfo.icon className={`h-4 w-4 ${estadoInfo.color}`} />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{count}</div>
+                {initialLoading ? (
+                  <div className="h-8 w-12 pt-1">
+                    <Skeleton className="h-full w-full" />
+                  </div>
+                ) : (
+                  <div className="text-2xl font-bold">{count}</div>
+                )}
               </CardContent>
             </Card>
           );
@@ -787,30 +785,44 @@ export default function LicitacionesPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-6 w-6 animate-spin text-primary" />
-              <span className="ml-2 text-muted-foreground">Cargando...</span>
-            </div>
-          ) : licitaciones.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              No hay licitaciones que coincidan con los filtros seleccionados.
-            </div>
-          ) : (
-            <>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Número</TableHead>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Fecha Inicio</TableHead>
-                    <TableHead>Fecha Límite</TableHead>
-                    <TableHead>Estado</TableHead>
-                    <TableHead>Acciones</TableHead>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Número</TableHead>
+                <TableHead>Cliente</TableHead>
+                <TableHead>Fecha Inicio</TableHead>
+                <TableHead>Fecha Límite</TableHead>
+                <TableHead>Estado</TableHead>
+                <TableHead>Acciones</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading || initialLoading ? (
+                Array.from({ length: 5 }).map((_, index) => (
+                  <TableRow key={index}>
+                    <TableCell><Skeleton className="h-10 w-full" /></TableCell>
+                    <TableCell><Skeleton className="h-6 w-full" /></TableCell>
+                    <TableCell><Skeleton className="h-6 w-full" /></TableCell>
+                    <TableCell><Skeleton className="h-6 w-[120px]" /></TableCell>
+                    <TableCell><Skeleton className="h-6 w-[140px]" /></TableCell>
+                    <TableCell>
+                      <div className="flex space-x-2">
+                        <Skeleton className="h-8 w-9" />
+                        <Skeleton className="h-8 w-9" />
+                      </div>
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {licitaciones.map((licitacion) => {
+                ))
+              ) : licitaciones.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="h-24 text-center">
+                    <div className="py-8 text-muted-foreground">
+                      No hay licitaciones que coincidan con los filtros seleccionados.
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                licitaciones.map((licitacion) => {
                     const estadoInfo = getEstadoInfo(licitacion.status);
                     const vencida =
                       isVencida(licitacion.deadlineDate) &&
@@ -873,38 +885,39 @@ export default function LicitacionesPage() {
                         </TableCell>
                       </TableRow>
                     );
-                  })}
+                  })
+              )}
                 </TableBody>
-              </Table>
+          </Table>
 
-              {/* Paginación */}
-              <div className="flex items-center justify-between mt-4 pt-4 border-t">
-                <span className="text-sm text-muted-foreground">
-                  Mostrando {licitaciones.length} de {totalItems} resultados
+          {/* Paginación */}
+          {!loading && !initialLoading && licitaciones.length > 0 && (
+            <div className="flex items-center justify-between mt-4 pt-4 border-t">
+              <span className="text-sm text-muted-foreground">
+                Mostrando {licitaciones.length} de {totalItems} resultados
+              </span>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={currentPage === 1}
+                  onClick={() => handlePageChange(currentPage - 1)}
+                >
+                  Anterior
+                </Button>
+                <span className="px-3 py-2 text-sm">
+                  Página {currentPage} de {totalPages}
                 </span>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={currentPage === 1}
-                    onClick={() => handlePageChange(currentPage - 1)}
-                  >
-                    Anterior
-                  </Button>
-                  <span className="px-3 py-2 text-sm">
-                    Página {currentPage} de {totalPages}
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={currentPage === totalPages}
-                    onClick={() => handlePageChange(currentPage + 1)}
-                  >
-                    Siguiente
-                  </Button>
-                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={currentPage === totalPages}
+                  onClick={() => handlePageChange(currentPage + 1)}
+                >
+                  Siguiente
+                </Button>
               </div>
-            </>
+            </div>
           )}
         </CardContent>
       </Card>

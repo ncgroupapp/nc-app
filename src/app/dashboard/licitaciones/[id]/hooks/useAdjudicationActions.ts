@@ -55,7 +55,7 @@ const initialCompetitorData: CompetitorData = {
 export const useAdjudicationActions = (
   quotation: Quotation | null,
   licitationId: number,
-  loadData: () => Promise<void>,
+  loadData: (silent?: boolean) => Promise<void>,
   setError: React.Dispatch<React.SetStateAction<string | null>>,
   isQuotationFinalized: boolean
 ): UseAdjudicationActionsReturn => {
@@ -105,7 +105,7 @@ export const useAdjudicationActions = (
       };
       
       await adjudicacionesService.create(adjudicationData);
-      await loadData();
+      await loadData(true);
       
       setIsAwardDialogOpen(false);
       setAwardingItem(null);
@@ -145,7 +145,7 @@ export const useAdjudicationActions = (
       };
       
       await adjudicacionesService.create(adjudicationData);
-      await loadData();
+      await loadData(true);
       
       setIsRejectDialogOpen(false);
       setRejectingItem(null);
@@ -181,7 +181,7 @@ export const useAdjudicationActions = (
     try {
       setSubmitting(true);
       await adjudicacionesService.updateAwardedQuantity(editingAwardedItem.id, awardQuantity);
-      await loadData();
+      await loadData(true);
       
       setIsEditAwardedDialogOpen(false);
       setEditingAwardedItem(null);

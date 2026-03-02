@@ -138,6 +138,7 @@ export const adjudicacionesService = {
     await api.patch(`/adjudications/quotation-item/${quotationItemId}/quantity`, { quantity });
   },
   
+  
   getByProviderId: async (providerId: string): Promise<ProviderAdjudicationHistory[]> => {
     const response = await api.get<ProviderAdjudicationHistory[]>(`/adjudications/by-provider/${providerId}`);
     return response.data;

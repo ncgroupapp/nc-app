@@ -18,10 +18,10 @@ export type QuotationItemFormData = {
   productName: string;
   brand: string;
   origin: string;
-  quantity: number;
-  priceWithoutIVA: number;
-  ivaPercentage: number;
-  deliveryTime: number;
+  quantity: number | "";
+  priceWithoutIVA: number | "";
+  ivaPercentage: number | "";
+  deliveryTime: number | "";
   inStock: boolean;
   currency: Currency;
 };
@@ -112,7 +112,7 @@ export function QuotationItemForm({
             type="number"
             min="1"
             value={data.quantity}
-            onChange={(e) => handleChange("quantity", parseInt(e.target.value) || 1)}
+            onChange={(e) => handleChange("quantity", e.target.value === "" ? "" : Number(e.target.value))}
           />
         </div>
         <div className="space-y-2">
@@ -122,7 +122,7 @@ export function QuotationItemForm({
             min="0"
             step="0.01"
             value={data.priceWithoutIVA}
-            onChange={(e) => handleChange("priceWithoutIVA", parseFloat(e.target.value) || 0)}
+            onChange={(e) => handleChange("priceWithoutIVA", e.target.value === "" ? "" : Number(e.target.value))}
           />
         </div>
       </div>
@@ -134,7 +134,7 @@ export function QuotationItemForm({
           <Input
             type="number"
             value={data.ivaPercentage}
-            onChange={(e) => handleChange("ivaPercentage", parseFloat(e.target.value) || 0)}
+            onChange={(e) => handleChange("ivaPercentage", e.target.value === "" ? "" : Number(e.target.value))}
           />
         </div>
         <div className="space-y-2">
@@ -143,7 +143,7 @@ export function QuotationItemForm({
             type="number"
             min="0"
             value={data.deliveryTime}
-            onChange={(e) => handleChange("deliveryTime", parseInt(e.target.value) || 0)}
+            onChange={(e) => handleChange("deliveryTime", e.target.value === "" ? "" : Number(e.target.value))}
           />
         </div>
       </div>

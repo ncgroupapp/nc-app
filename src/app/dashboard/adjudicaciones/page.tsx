@@ -10,6 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { ExpandableListCell } from '@/components/ui/data-table-cells'
 import {
   Card,
   CardContent,
@@ -206,22 +207,20 @@ export default function AdjudicacionesPage() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <div className="pr-2 space-y-2">
-                            {adj.items.slice(0, 2).map((item, idx) => (
-                              <div key={idx} className="text-sm border-b last:border-0 pb-2 last:pb-0 border-dashed border-border">
+                          <ExpandableListCell
+                            items={adj.items}
+                            limit={2}
+                            label={`Productos - Adjudicación #${adj.id}`}
+                            renderItem={(item) => (
+                              <div className="text-sm py-1">
                                 <div className="font-medium">{item.productName || `Producto #${item.productId}`}</div>
                                 <div className="text-xs text-muted-foreground flex justify-between mt-1">
                                   <span>Cant: {item.quantity}</span>
                                   <span>{formatCurrency(Number(item.unitPrice))} un.</span>
                                 </div>
                               </div>
-                            ))}
-                            {adj.items.length > 2 && (
-                              <Badge variant="secondary" className="text-[10px] mt-1">
-                                + {adj.items.length - 2} productos más
-                              </Badge>
                             )}
-                          </div>
+                          />
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-col text-sm gap-1">
