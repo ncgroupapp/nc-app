@@ -39,6 +39,7 @@ import { format } from 'date-fns'
 import { Proveedor } from '@/types'
 import { toast } from 'sonner'
 import { useConfirm } from '@/hooks/use-confirm'
+import { Skeleton } from '@/components/ui/skeleton'
 
 export default function OfertasPage() {
   const { confirm } = useConfirm()
@@ -188,14 +189,7 @@ export default function OfertasPage() {
     }
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="ml-2">Cargando ofertas...</span>
-      </div>
-    )
-  }
+
 
   return (
     <div className="space-y-6">
@@ -219,7 +213,13 @@ export default function OfertasPage() {
             <Tag className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{ofertas.length}</div>
+            {loading ? (
+              <div className="h-8 w-12 pt-1">
+                <Skeleton className="h-full w-full" />
+              </div>
+            ) : (
+              <div className="text-2xl font-bold">{ofertas.length}</div>
+            )}
           </CardContent>
         </Card>
         <Card>
@@ -228,9 +228,15 @@ export default function OfertasPage() {
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {new Set(ofertas.map(o => o.productId)).size}
-            </div>
+            {loading ? (
+              <div className="h-8 w-12 pt-1">
+                <Skeleton className="h-full w-full" />
+              </div>
+            ) : (
+              <div className="text-2xl font-bold">
+                {new Set(ofertas.map(o => o.productId)).size}
+              </div>
+            )}
           </CardContent>
         </Card>
         <Card>
@@ -239,9 +245,15 @@ export default function OfertasPage() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {new Set(ofertas.map(o => o.providerId)).size}
-            </div>
+            {loading ? (
+              <div className="h-8 w-12 pt-1">
+                <Skeleton className="h-full w-full" />
+              </div>
+            ) : (
+              <div className="text-2xl font-bold">
+                {new Set(ofertas.map(o => o.providerId)).size}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -305,26 +317,46 @@ export default function OfertasPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {filteredOfertas.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              No hay ofertas registradas que coincidan con los filtros.
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nombre CD</TableHead>
+                <TableHead>Producto</TableHead>
+                <TableHead>Proveedor</TableHead>
+                <TableHead>Cantidad</TableHead>
+                <TableHead>Precio Unit.</TableHead>
+                <TableHead>Total</TableHead>
+                <TableHead>Entrega</TableHead>
+                <TableHead className="text-right">Acciones</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                Array.from({ length: 5 }).map((_, index) => (
+                  <TableRow key={index}>
+                    <TableCell><Skeleton className="h-6 w-[100px]" /></TableCell>
+                    <TableCell><Skeleton className="h-6 w-[150px]" /></TableCell>
+                    <TableCell><Skeleton className="h-6 w-[150px]" /></TableCell>
+                    <TableCell><Skeleton className="h-6 w-[60px]" /></TableCell>
+                    <TableCell><Skeleton className="h-6 w-[80px]" /></TableCell>
+                    <TableCell><Skeleton className="h-6 w-[90px]" /></TableCell>
+                    <TableCell><Skeleton className="h-6 w-[100px]" /></TableCell>
+                    <TableCell>
+                      <div className="flex justify-end space-x-2">
+                        <Skeleton className="h-8 w-9" />
+                        <Skeleton className="h-8 w-9" />
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : filteredOfertas.length === 0 ? (
                 <TableRow>
-                  <TableHead>Nombre CD</TableHead>
-                  <TableHead>Producto</TableHead>
-                  <TableHead>Proveedor</TableHead>
-                  <TableHead>Cantidad</TableHead>
-                  <TableHead>Precio Unit.</TableHead>
-                  <TableHead>Total</TableHead>
-                  <TableHead>Entrega</TableHead>
-                  <TableHead className="text-right">Acciones</TableHead>
+                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                    No hay ofertas registradas que coincidan con los filtros.
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredOfertas.map((oferta) => (
+              ) : (
+                filteredOfertas.map((oferta) => (
                   <TableRow key={oferta.id}>
                     <TableCell className="font-medium">{oferta.name || '-'}</TableCell>
                     <TableCell>{oferta.product?.name}</TableCell>
@@ -351,10 +383,10 @@ export default function OfertasPage() {
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
+                ))
+              )}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
 
