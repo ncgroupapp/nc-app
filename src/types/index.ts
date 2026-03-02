@@ -37,8 +37,10 @@ export interface Proveedor {
   contacto?: string;
   email?: string;
   telefono?: string;
+  website?: string;
   direccion?: string;
   brand?: string;
+  brands?: string[];
   createdAt: string;
   updated_at: string;
   contacts?: Array<{
@@ -338,9 +340,11 @@ export interface CreateProveedorForm {
   rut: string
   pais: string
   brand_id?: number
+  brands?: string[]
   contacto?: string
   email?: string
   telefono?: string
+  website?: string
   direccion?: string
   contacts?: Array<{
     name: string

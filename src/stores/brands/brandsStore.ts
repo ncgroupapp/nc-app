@@ -1,11 +1,13 @@
 import { create } from 'zustand';
-import { Brand } from '@/types';
+import { Brand, Model } from '@/types';
 import { brandsService } from '@/services/brands.service';
 
 interface BrandsState {
   brands: Brand[];
+  models: Model[];
   selectedBrand: Brand | null;
   isLoading: boolean;
+  isModelsLoading: boolean;
   total: number;
 
   fetchBrands: (page?: number, search?: string) => Promise<void>;
@@ -17,8 +19,10 @@ interface BrandsState {
 
 export const useBrandsStore = create<BrandsState>((set, get) => ({
   brands: [],
+  models: [],
   selectedBrand: null,
   isLoading: false,
+  isModelsLoading: false,
   total: 0,
 
   fetchBrands: async (page = 1, search = '') => {
@@ -33,13 +37,14 @@ export const useBrandsStore = create<BrandsState>((set, get) => ({
     }
   },
 
-  fetchBrandById: async (id) => {
+  fetchBrandById: async (id: number) => {
     set({ isLoading: true });
     try {
       const response = await brandsService.getById(id);
-      set({ selectedBrand: response.data });
+      set({ selectedBrand: response.data, models: response.data.models || [] });
     } catch (error) {
       console.error('Error fetching brand:', error);
+      set({ selectedBrand: null, models: [] });
     } finally {
       set({ isLoading: false });
     }

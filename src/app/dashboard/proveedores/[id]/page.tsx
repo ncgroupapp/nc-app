@@ -158,12 +158,27 @@ export default function ProveedorDetailPage() {
                   </div>
                 )}
 
-                {proveedor.brand && (
-                  <div className="flex items-center gap-3">
-                    <Tag className="h-4 w-4 text-muted-foreground" />
-                    <span>Marca: {proveedor.brand}</span>
+                {(proveedor.brands && proveedor.brands.length > 0) || proveedor.brand ? (
+                  <div className="flex items-start gap-3">
+                    <Tag className="h-4 w-4 text-muted-foreground mt-1" />
+                    <div className="flex-1">
+                      <span className="text-sm font-medium mb-2 block">Marcas:</span>
+                      <div className="flex flex-wrap gap-2">
+                        {proveedor.brands && proveedor.brands.length > 0 ? (
+                          proveedor.brands.map((brand, index) => (
+                            <Badge key={index} variant="secondary" className="font-normal">
+                              {brand}
+                            </Badge>
+                          ))
+                        ) : (
+                          <Badge variant="secondary" className="font-normal">
+                            {proveedor.brand}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                )}
+                ) : null}
 
                 <div className="flex items-center gap-3 text-muted-foreground">
                   <Calendar className="h-4 w-4" />

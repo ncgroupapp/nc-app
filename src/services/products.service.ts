@@ -7,6 +7,7 @@ export interface Product {
   name: string;
   origin?: string;
   image?: string;
+  images?: string[];
   providers?: Array<{
     id: number;
     name: string;
@@ -54,6 +55,7 @@ export interface Product {
 export interface CreateProductForm {
   name: string;
   image?: string;
+  images?: string[];
   providerIds?: number[];
   brand?: string;
   model?: string;
