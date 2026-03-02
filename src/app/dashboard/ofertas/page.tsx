@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 import {
   Table,
   TableBody,
@@ -311,7 +312,12 @@ export default function OfertasPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Listado de Ofertas</CardTitle>
+          <CardTitle className="flex items-center space-x-2">
+            <span>Listado de Ofertas</span>
+            <Badge variant="outline">
+              {filteredOfertas.length} {filteredOfertas.length === 1 ? 'oferta' : 'ofertas'}
+            </Badge>
+          </CardTitle>
           <CardDescription>
             Historial de ofertas recibidas
           </CardDescription>

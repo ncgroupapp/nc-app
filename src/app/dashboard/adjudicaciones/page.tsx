@@ -155,10 +155,12 @@ export default function AdjudicacionesPage() {
       {/* Table */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2">
-            <Gavel className="h-5 w-5" />
-            Listado de Adjudicaciones
-            <Badge variant="secondary" className="ml-2">{totalItems}</Badge>
+          <CardTitle className="flex items-center space-x-2">
+            <div className="flex items-center gap-2">
+              <Gavel className="h-5 w-5" />
+              <span>Listado de Adjudicaciones</span>
+            </div>
+            <Badge variant="outline">{totalItems} adjudicaciones</Badge>
           </CardTitle>
           <CardDescription>
             Detalle de productos adjudicados por cotización y licitación

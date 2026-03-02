@@ -166,10 +166,12 @@ export default function CotizacionesPage() {
       {/* Table */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2">
-            <Calculator className="h-5 w-5" />
-            Listado de Cotizaciones
-            <Badge variant="secondary" className="ml-2">{totalItems}</Badge>
+          <CardTitle className="flex items-center space-x-2">
+            <div className="flex items-center gap-2">
+              <Calculator className="h-5 w-5" />
+              <span>Listado de Cotizaciones</span>
+            </div>
+            <Badge variant="outline">{totalItems} cotizaciones</Badge>
           </CardTitle>
           <CardDescription>
             Historial completo de cotizaciones realizadas
