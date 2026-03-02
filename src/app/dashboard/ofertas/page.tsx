@@ -41,6 +41,8 @@ import { Proveedor } from '@/types'
 import { toast } from 'sonner'
 import { useConfirm } from '@/hooks/use-confirm'
 import { Skeleton } from '@/components/ui/skeleton'
+import { MultiSelectSearch } from '@/components/ui/multi-select-search'
+import { useDebounce } from '@/hooks/use-debounce'
 
 export default function OfertasPage() {
   const { confirm } = useConfirm()
@@ -50,8 +52,14 @@ export default function OfertasPage() {
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
-  const [selectedProduct, setSelectedProduct] = useState<string>('all')
-  const [selectedProvider, setSelectedProvider] = useState<string>('all')
+  const [selectedProducts, setSelectedProducts] = useState<number[]>([])
+  const [selectedProviders, setSelectedProviders] = useState<number[]>([])
+
+  const [productSearch, setProductSearch] = useState('')
+  const debouncedProductSearch = useDebounce(productSearch, 300)
+
+  const [providerSearch, setProviderSearch] = useState('')
+  const debouncedProviderSearch = useDebounce(providerSearch, 300)
 
   // Dialog states
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -71,15 +79,9 @@ export default function OfertasPage() {
     try {
       setLoading(true)
 
-      const [ofertasRes, productosRes, proveedoresRes] = await Promise.all([
-        offersService.getAll(),
-        productsService.getAll(),
-        proveedoresService.getAll()
-      ])
+      const ofertasRes = await offersService.getAll()
 
       setOfertas(ofertasRes.data || [])
-      setProductos(productosRes.data || [])
-      setProveedores(proveedoresRes.data || [])
     } catch (err) {
       console.error('Error loading data:', err)
       toast.error("Error", {
@@ -94,14 +96,48 @@ export default function OfertasPage() {
     loadData()
   }, [loadData])
 
+  // Dynamically load products for filters
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const isSearching = debouncedProductSearch.trim().length > 0;
+        const productsRes = await productsService.getAll({ 
+          search: isSearching ? debouncedProductSearch : undefined, 
+          limit: isSearching ? 20 : 5 
+        });
+        setProductos(productsRes.data || []);
+      } catch (err) {
+        console.error("Error loading products:", err);
+      }
+    };
+    fetchProducts();
+  }, [debouncedProductSearch]);
+
+  // Dynamically load providers for filters
+  useEffect(() => {
+    const fetchProviders = async () => {
+      try {
+        const isSearching = debouncedProviderSearch.trim().length > 0;
+        const providersRes = await proveedoresService.getAll({ 
+          search: isSearching ? debouncedProviderSearch : undefined, 
+          limit: isSearching ? 20 : 5 
+        });
+        setProveedores(providersRes.data || []);
+      } catch (err) {
+        console.error("Error loading providers:", err);
+      }
+    };
+    fetchProviders();
+  }, [debouncedProviderSearch]);
+
   const filteredOfertas = ofertas.filter(oferta => {
     const matchesSearch =
       (oferta.name?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
       (oferta.product?.name?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
       (oferta.provider?.name?.toLowerCase().includes(searchTerm.toLowerCase()) || false);
 
-    const matchesProduct = selectedProduct === 'all' || oferta.productId.toString() === selectedProduct
-    const matchesProvider = selectedProvider === 'all' || oferta.providerId.toString() === selectedProvider
+    const matchesProduct = selectedProducts.length === 0 || selectedProducts.includes(oferta.productId)
+    const matchesProvider = selectedProviders.length === 0 || selectedProviders.includes(oferta.providerId)
 
     return matchesSearch && matchesProduct && matchesProvider
   })
@@ -276,35 +312,45 @@ export default function OfertasPage() {
                 />
               </div>
             </div>
-            <div className="w-[200px]">
-              <Select value={selectedProduct} onValueChange={setSelectedProduct}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Filtrar por Producto" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos los productos</SelectItem>
-                  {productos.map((prod) => (
-                    <SelectItem key={prod.id} value={prod.id.toString()}>
-                      {prod.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="w-[250px] max-w-full">
+              <MultiSelectSearch
+                options={productos.map((prod) => ({
+                  id: prod.id,
+                  label: prod.name,
+                }))}
+                selectedValues={selectedProducts}
+                onSelect={(id) => setSelectedProducts(prev => {
+                  const numId = Number(id);
+                  return prev.includes(numId) ? prev : [...prev, numId];
+                })}
+                onRemove={(id) => setSelectedProducts(prev => prev.filter(p => p !== Number(id)))}
+                placeholder="Filtrar por Producto/s"
+                searchPlaceholder="Buscar producto..."
+                searchValue={productSearch}
+                onSearchValueChange={setProductSearch}
+                shouldFilter={false}
+                single={false}
+              />
             </div>
-            <div className="w-[200px]">
-              <Select value={selectedProvider} onValueChange={setSelectedProvider}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Filtrar por Proveedor" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos los proveedores</SelectItem>
-                  {proveedores.map((prov) => (
-                    <SelectItem key={prov.id} value={prov.id.toString()}>
-                      {prov.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="w-[250px] max-w-full">
+              <MultiSelectSearch
+                options={proveedores.map((prov) => ({
+                  id: prov.id,
+                  label: prov.name,
+                }))}
+                selectedValues={selectedProviders}
+                onSelect={(id) => setSelectedProviders(prev => {
+                  const numId = Number(id);
+                  return prev.includes(numId) ? prev : [...prev, numId];
+                })}
+                onRemove={(id) => setSelectedProviders(prev => prev.filter(p => p !== Number(id)))}
+                placeholder="Filtrar por Proveedor/es"
+                searchPlaceholder="Buscar proveedor..."
+                searchValue={providerSearch}
+                onSearchValueChange={setProviderSearch}
+                shouldFilter={false}
+                single={false}
+              />
             </div>
           </div>
         </CardContent>

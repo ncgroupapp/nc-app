@@ -1,6 +1,7 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -24,7 +25,19 @@ import {
 
 export default function LicitacionDetailPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const licitationId = parseInt(params.id as string);
+
+  const [activeTab, setActiveTab] = useState(() => {
+    return searchParams.get("tab") || "productos";
+  });
+
+  useEffect(() => {
+    const tabParam = searchParams.get("tab");
+    if (tabParam) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
 
   // Load data using custom hook
   const {
@@ -95,11 +108,11 @@ export default function LicitacionDetailPage() {
       <LicitationInfoCard licitation={licitation} />
 
       {/* Tabs */}
-      <Tabs defaultValue="productos" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="productos">Productos Solicitados</TabsTrigger>
-          <TabsTrigger value="cotizacion">Cotización</TabsTrigger>
-          <TabsTrigger value="entrega">Entrega de Productos</TabsTrigger>
+          <TabsTrigger value="cotizaciones">Cotización</TabsTrigger>
+          <TabsTrigger value="entregas">Entrega de Productos</TabsTrigger>
         </TabsList>
 
         {/* Tab: Productos Solicitados */}
@@ -108,7 +121,7 @@ export default function LicitacionDetailPage() {
         </TabsContent>
 
         {/* Tab: Cotización */}
-        <TabsContent value="cotizacion" className="space-y-4">
+        <TabsContent value="cotizaciones" className="space-y-4">
           <QuotationTab
             quotation={quotation}
             submitting={quotationActions.submitting || adjudicationActions.submitting}
@@ -129,7 +142,7 @@ export default function LicitacionDetailPage() {
         </TabsContent>
 
         {/* Tab: Entrega */}
-        <TabsContent value="entrega" className="space-y-4">
+        <TabsContent value="entregas" className="space-y-4">
           <DeliveryTab 
             licitationId={licitationId}
             licitationStatus={licitation.status as LicitationStatus} 

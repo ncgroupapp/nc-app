@@ -78,9 +78,33 @@ export function MultiSelectSearch({
           <div className="flex flex-wrap gap-1 items-center">
             {selectedValues.length > 0 ? (
               single ? (
-                <span className="truncate w-32">
-                  {options.find((option) => option.id === selectedValues[0])?.label || selectedValues[0]}
-                </span>
+                <Badge
+                  variant="secondary"
+                  className="mr-1 mb-1 px-2 py-0.5 font-normal flex items-center gap-1"
+                >
+                  <span className="truncate max-w-32">
+                    {options.find((option) => option.id === selectedValues[0])?.label || selectedValues[0]}
+                  </span>
+                  <button
+                    className="ml-1 ring-offset-background rounded-full outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        handleUnselect(selectedValues[0])
+                      }
+                    }}
+                    onMouseDown={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                    }}
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      handleUnselect(selectedValues[0])
+                    }}
+                  >
+                    <X className="h-3 w-3 text-black hover:text-foreground" />
+                  </button>
+                </Badge>
               ) : (
                 selectedValues.map((val) => {
                   const option = options.find((o) => o.id === val)
