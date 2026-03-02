@@ -92,15 +92,15 @@ export const DeliveryTab = ({ licitationId, licitationStatus }: DeliveryTabProps
   const [editingItem, setEditingItem] = useState<DeliveryItem | null>(null);
   const [editForm, setEditForm] = useState<UpdateDeliveryItemDto>({});
 
-  const loadDelivery = useCallback(async () => {
+  const loadDelivery = useCallback(async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const data = await entregasService.getByLicitation(licitationId);
       setDelivery(data);
     } catch (error) {
       console.error("Error loading delivery:", error);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [licitationId]);
 
@@ -114,7 +114,7 @@ export const DeliveryTab = ({ licitationId, licitationStatus }: DeliveryTabProps
     try {
       setUpdatingItemId(item.id);
       await entregasService.updateItemStatus(delivery.id, item.id, { status: newStatus });
-      await loadDelivery();
+      await loadDelivery(true);
     } catch (error) {
       console.error("Error updating item status:", error);
     } finally {
@@ -139,7 +139,7 @@ export const DeliveryTab = ({ licitationId, licitationStatus }: DeliveryTabProps
     try {
       setUpdatingItemId(editingItem.id);
       await entregasService.updateItemStatus(delivery.id, editingItem.id, editForm);
-      await loadDelivery();
+      await loadDelivery(true);
       setEditDialogOpen(false);
       setEditingItem(null);
     } catch (error) {

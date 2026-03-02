@@ -85,9 +85,10 @@ export function CreateOfferDialog({
     if (!open) return;
     const fetchProducts = async () => {
       try {
+        const isSearching = debouncedProductSearch.trim().length > 0;
         const productsRes = await productsService.getAll({ 
-          search: debouncedProductSearch || undefined, 
-          limit: 20 
+          search: isSearching ? debouncedProductSearch : undefined, 
+          limit: isSearching ? 20 : 5 
         });
         setProducts(productsRes.data || []);
       } catch (err) {
@@ -102,9 +103,10 @@ export function CreateOfferDialog({
     if (!open) return;
     const fetchProviders = async () => {
       try {
+        const isSearching = debouncedProviderSearch.trim().length > 0;
         const providersRes = await proveedoresService.getAll({ 
-          search: debouncedProviderSearch || undefined, 
-          limit: 20 
+          search: isSearching ? debouncedProviderSearch : undefined, 
+          limit: isSearching ? 20 : 5 
         });
         setProviders(providersRes.data || []);
       } catch (err) {
