@@ -3,6 +3,7 @@ import { Cliente, CreateClienteForm, ApiResponse, PaginatedResponse, Licitacion,
 
 export interface ClientFilters { 
   page?: number;
+  limit?: number;
   search?: string;
 }
 
@@ -13,6 +14,7 @@ export const clientesService = {
     const params = new URLSearchParams();
 
     if (filters.page) params.append('page', filters.page.toString());
+    if (filters.limit) params.append('limit', filters.limit.toString());
     if (filters.search) params.append('search', filters.search);
 
     const response = await api.get<PaginatedResponse<Cliente>>(`/clients?${params.toString()}`);

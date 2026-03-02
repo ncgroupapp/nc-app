@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { clientesService } from "@/services/clientes.service";
+import { useDebounce } from "@/hooks/use-debounce";
 import {
   CreateLicitationDto,
   licitacionesService,
@@ -190,7 +191,7 @@ export default function LicitacionesPage() {
       }
     };
     loadInitialData();
-    fetchLicitaciones(1, "", "all", "all").finally(() =>
+    fetchLicitaciones(1, "", "all", []).finally(() =>
       setInitialLoading(false),
     );
   }, []);
@@ -238,6 +239,23 @@ export default function LicitacionesPage() {
     const timeoutId = setTimeout(fetchProducts, 300);
     return () => clearTimeout(timeoutId);
   }, [productSearch]);
+
+  // Fetch dinámico de clientes al usar el buscador (limitando a 5/20 resultados dependiendo si escribe)
+  useEffect(() => {
+    const fetchClients = async () => {
+      try {
+        const isSearching = debouncedClientSearch.trim().length > 0;
+        const response = await clientesService.getAll({
+          search: isSearching ? debouncedClientSearch : undefined,
+          limit: isSearching ? 20 : 5,
+        });
+        setClientes(response.data || []);
+      } catch (error) {
+        console.error("Error searching clients:", error);
+      }
+    };
+    fetchClients();
+  }, [debouncedClientSearch]);
 
   const getEstadoInfo = (status: LicitationStatus) => {
     switch (status) {
@@ -405,7 +423,7 @@ export default function LicitacionesPage() {
       setIsCreateDialogOpen(false);
 
       // Reload data
-      await fetchLicitaciones(1, searchTerm, selectedEstado, selectedCliente);
+      await fetchLicitaciones(1, searchTerm, selectedEstado, selectedClients);
 
       showSnackbar("Licitación creada correctamente", "success");
     } catch (err) {
@@ -751,23 +769,22 @@ export default function LicitacionesPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="w-48">
-              <Select
-                value={selectedCliente}
-                onValueChange={handleClienteChange}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Todos los clientes" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos los clientes</SelectItem>
-                  {clientes.map((cliente) => (
-                    <SelectItem key={cliente.id} value={cliente.id.toString()}>
-                      {cliente.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="w-[250px] max-w-full">
+              <MultiSelectSearch
+                options={clientes.map((c) => ({
+                  id: c.id,
+                  label: c.name,
+                }))}
+                selectedValues={selectedClients}
+                onSelect={(id) => handleClienteChange(selectedClients.includes(Number(id)) ? selectedClients : [...selectedClients, Number(id)])}
+                onRemove={(id) => handleClienteChange(selectedClients.filter(c => c !== Number(id)))}
+                placeholder="Filtrar por Cliente/s"
+                searchPlaceholder="Buscar cliente..."
+                searchValue={clientSearch}
+                onSearchValueChange={setClientSearch}
+                shouldFilter={true}
+                single={false}
+              />
             </div>
           </div>
         </CardContent>
