@@ -117,7 +117,9 @@ export default function LicitacionesPage() {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedEstado, setSelectedEstado] = useState<string>("all");
-  const [selectedCliente, setSelectedCliente] = useState<string>("all");
+  const [selectedClients, setSelectedClients] = useState<number[]>([]);
+  const [clientSearch, setClientSearch] = useState("");
+  const debouncedClientSearch = useDebounce(clientSearch, 300);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
   // Paginación
@@ -147,7 +149,7 @@ export default function LicitacionesPage() {
     page: number,
     search?: string,
     status?: string,
-    clientId?: string,
+    clients?: number[],
   ) => {
     try {
       setLoading(true);
@@ -157,8 +159,7 @@ export default function LicitacionesPage() {
         page,
         search: search || undefined,
         status: status !== "all" ? (status as LicitationStatus) : undefined,
-        clientId:
-          clientId !== "all" && clientId ? parseInt(clientId) : undefined,
+        clientIds: clients && clients.length > 0 ? clients.join(',') : undefined,
       };
 
       const licitacionesRes = await licitacionesService.getAll(filters);
@@ -198,7 +199,7 @@ export default function LicitacionesPage() {
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       setCurrentPage(1);
-      fetchLicitaciones(1, searchTerm, selectedEstado, selectedCliente);
+      fetchLicitaciones(1, searchTerm, selectedEstado, selectedClients);
     }, 300);
     return () => clearTimeout(timeoutId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -208,18 +209,18 @@ export default function LicitacionesPage() {
   const handleEstadoChange = (value: string) => {
     setSelectedEstado(value);
     setCurrentPage(1);
-    fetchLicitaciones(1, searchTerm, value, selectedCliente);
+    fetchLicitaciones(1, searchTerm, value, selectedClients);
   };
 
-  const handleClienteChange = (value: string) => {
-    setSelectedCliente(value);
+  const handleClienteChange = (newClients: number[]) => {
+    setSelectedClients(newClients);
     setCurrentPage(1);
-    fetchLicitaciones(1, searchTerm, selectedEstado, value);
+    fetchLicitaciones(1, searchTerm, selectedEstado, newClients);
   };
 
   const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage);
-    fetchLicitaciones(newPage, searchTerm, selectedEstado, selectedCliente);
+    fetchLicitaciones(newPage, searchTerm, selectedEstado, selectedClients);
   };
 
   useEffect(() => {
