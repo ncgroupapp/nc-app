@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { productsService, Product } from '@/services/products.service'
 import { cotizacionesService, Quotation } from '@/services/cotizaciones.service'
 import { adjudicacionesService, ProductAdjudicationHistory } from '@/services/adjudicaciones.service'
-import { ArrowLeft, Package, AlertTriangle, Building, Tag, Layers, Truck, DollarSign, ChevronLeft, ChevronRight } from 'lucide-react'
+import { AlertTriangle, ArrowLeft, Building, ChevronLeft, ChevronRight, DollarSign, Layers, Package, Tag, Truck } from "lucide-react";
 import {
   Table,
   TableBody,

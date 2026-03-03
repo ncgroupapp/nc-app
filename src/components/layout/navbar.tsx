@@ -22,20 +22,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import {
-  Home,
-  Package,
-  Users,
-  FileText,
-  Calculator,
-  Gavel,
-  Truck,
-  Ship,
-  Menu,
-  LogOut,
-  Settings,
-  User
-} from 'lucide-react'
+import { Calculator, FileText, Gavel, Home, LogOut, Menu, Package, Settings, Ship, Truck, User, Users } from "lucide-react";
 import { featureFlags } from '@/lib/feature-flags'
 
 const allNavigation = [

@@ -49,20 +49,7 @@ import {
 } from "@/services/licitaciones.service";
 import { Product, productsService } from "@/services/products.service";
 import { Cliente } from "@/types";
-import {
-  AlertCircle,
-  Check,
-  CheckCircle,
-  ChevronsUpDown,
-  Clock,
-  Edit,
-  Eye,
-  FileText,
-  Loader2,
-  Plus,
-  Search,
-  XCircle,
-} from "lucide-react";
+import { AlertCircle, Check, CheckCircle, ChevronsUpDown, Clock, Edit, Eye, FileText, Loader2, Plus, Search, XCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { showSnackbar } from "@/components/ui/snackbar";
 import {
@@ -568,11 +555,6 @@ export default function LicitacionesPage() {
                         date={formData.startDate ? new Date(formData.startDate + "T12:00:00") : undefined}
                         setDate={(date) => handleStartDateChange(date ? format(date, "yyyy-MM-dd") : "")}
                       />
-                      {formData.startDate && (
-                        <span className="text-xs text-muted-foreground">
-                          {formatDateDisplay(formData.startDate)}
-                        </span>
-                      )}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="deadlineDate">Fecha Límite *</Label>
@@ -582,11 +564,6 @@ export default function LicitacionesPage() {
                         disabled={(date) => formData.startDate ? date < new Date(formData.startDate + "T00:00:00") : false}
                         className={dateError ? "border-red-500" : ""}
                       />
-                      {formData.deadlineDate && (
-                        <span className="text-xs text-muted-foreground">
-                          {formatDateDisplay(formData.deadlineDate)}
-                        </span>
-                      )}
                     </div>
                   </div>
                   {dateError && (
@@ -739,7 +716,10 @@ export default function LicitacionesPage() {
       {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Filtros y Búsqueda</CardTitle>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Search className="h-5 w-5" />
+            Filtros y Búsqueda
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex gap-4 items-center">

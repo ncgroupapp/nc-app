@@ -28,9 +28,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Search, Loader2, Eye, Gavel, FileText, CheckCircle, AlertCircle } from 'lucide-react'
+import { AlertCircle, CheckCircle, Eye, FileText, Gavel, Loader2, Search } from "lucide-react";
 import { adjudicacionesService, Adjudication, AdjudicationFilters } from '@/services/adjudicaciones.service'
 import { AdjudicationStatus } from '@/types'
+
+import { Skeleton } from '@/components/ui/skeleton'
 
 // Helper to format date
 const formatDate = (dateString: string) => {
@@ -123,7 +125,10 @@ export default function AdjudicacionesPage() {
       {/* Filters */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-lg font-medium">Filtros</CardTitle>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Search className="h-5 w-5" />
+            Filtros y Búsqueda
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col sm:flex-row gap-4">
@@ -167,30 +172,42 @@ export default function AdjudicacionesPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <div className="flex justify-center items-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : adjudications.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              No se encontraron adjudicaciones
-            </div>
-          ) : (
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[80px]">ID</TableHead>
+                  <TableHead>Fecha</TableHead>
+                  <TableHead>Referencias</TableHead>
+                  <TableHead>Productos Adjudicados</TableHead>
+                  <TableHead>Totales</TableHead>
+                  <TableHead>Estado</TableHead>
+                  <TableHead className="text-right">Acciones</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  Array.from({ length: 5 }).map((_, index) => (
+                    <TableRow key={index}>
+                      <TableCell><Skeleton className="h-6 w-full" /></TableCell>
+                      <TableCell><Skeleton className="h-6 w-full" /></TableCell>
+                      <TableCell><Skeleton className="h-10 w-full" /></TableCell>
+                      <TableCell><Skeleton className="h-12 w-full" /></TableCell>
+                      <TableCell><Skeleton className="h-12 w-full" /></TableCell>
+                      <TableCell><Skeleton className="h-6 w-[120px]" /></TableCell>
+                      <TableCell className="text-right">
+                        <Skeleton className="h-8 w-8 ml-auto rounded-md" />
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : adjudications.length === 0 ? (
                   <TableRow>
-                    <TableHead className="w-[80px]">ID</TableHead>
-                    <TableHead>Fecha</TableHead>
-                    <TableHead>Referencias</TableHead>
-                    <TableHead>Productos Adjudicados</TableHead>
-                    <TableHead>Totales</TableHead>
-                    <TableHead>Estado</TableHead>
-                    <TableHead className="text-right">Acciones</TableHead>
+                    <TableCell colSpan={7} className="h-24 text-center">
+                      No se encontraron adjudicaciones
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {adjudications.map((adj) => {
+                ) : (
+                  adjudications.map((adj) => {
                     const statusInfo = statusConfig[adj.status] || { label: adj.status, color: 'bg-gray-100 text-gray-700', icon: AlertCircle }
                     const StatusIcon = statusInfo.icon
 
@@ -239,20 +256,19 @@ export default function AdjudicacionesPage() {
                         </TableCell>
                         <TableCell className="text-right">
                           <Button variant="ghost" size="icon" asChild className="h-8 w-8 hover:bg-primary/10 hover:text-primary">
-                            <Link href={`/dashboard/licitaciones/${adj.licitationId}?tab=adjudicaciones`}>
+                            <Link href={`/dashboard/licitaciones/${adj.licitationId}?tab=cotizaciones`}>
                               <Eye className="h-4 w-4" />
                             </Link>
                           </Button>
                         </TableCell>
                       </TableRow>
                     )
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          )}
+                  })
+                )}
+              </TableBody>
+            </Table>
+          </div>
           
-          {/* Pagination Controls could go here */}
           <div className="flex items-center justify-end space-x-2 py-4">
             <Button
               variant="outline"
@@ -263,7 +279,11 @@ export default function AdjudicacionesPage() {
               Anterior
             </Button>
             <div className="text-sm text-muted-foreground">
-              Página {filters.page} de {totalPages}
+              {loading ? (
+                <Skeleton className="h-4 w-[100px]" />
+              ) : (
+                `Página ${filters.page} de ${totalPages}`
+              )}
             </div>
             <Button
               variant="outline"

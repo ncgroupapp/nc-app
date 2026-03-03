@@ -1,0 +1,5 @@
+User-agent: *
+Disallow: /dashboard/
+Disallow: /login/
+
+Sitemap: https://nc-app-kappa.vercel.app/sitemap.xml

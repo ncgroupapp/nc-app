@@ -22,7 +22,7 @@ import { CreateProductForm, Product } from '@/services/products.service'
 import { proveedoresService } from '@/services/proveedores.service'
 import { useProductsStore } from '@/stores'
 import { Proveedor } from '@/types'
-import { AlertTriangle, Package, Plus, Search } from 'lucide-react'
+import { AlertTriangle, Package, Plus, Search } from "lucide-react";
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ProductForm } from '@/components/productos/product-form'
@@ -275,7 +275,10 @@ export default function ProductosPage() {
       {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Filtros y Búsqueda</CardTitle>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Search className="h-5 w-5" />
+            Filtros y Búsqueda
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex gap-4 items-center">

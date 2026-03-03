@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { Badge } from "@/components/ui/badge";
 import { useRouter } from 'next/navigation'
-import { Package, Plus, Search } from 'lucide-react'
+import { Package, Plus, Search } from "lucide-react";
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { DataTable, DataTableColumn } from '@/components/ui/data-table'
@@ -114,7 +114,10 @@ export default function MarcasPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Filtros y Búsqueda</CardTitle>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Search className="h-5 w-5" />
+            Filtros y Búsqueda
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-4">

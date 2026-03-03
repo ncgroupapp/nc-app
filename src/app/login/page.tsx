@@ -29,7 +29,7 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { AlertCircle, Loader2, Eye, EyeOff } from "lucide-react"
+import { AlertCircle, Eye, EyeOff, Loader2 } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter()
@@ -102,7 +102,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen w-full items-center justify-center bg-zinc-50/50 p-4 dark:bg-zinc-900">
+    <main id="main-content" className="flex min-h-screen w-full items-center justify-center bg-zinc-50/50 p-4 dark:bg-zinc-900" tabIndex={-1}>
       <Card className="w-full max-w-sm shadow-2xl border-0 sm:border">
         <CardHeader className="space-y-2 text-center">
           <CardTitle className="text-2xl font-bold tracking-tight">Iniciar Sesión</CardTitle>
@@ -188,6 +188,6 @@ export default function LoginPage() {
           </p>
         </CardFooter>
       </Card>
-    </div>
+    </main>
   )
 }

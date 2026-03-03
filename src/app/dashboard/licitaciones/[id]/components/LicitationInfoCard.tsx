@@ -5,14 +5,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import {
-  Calendar,
-  Clock,
-  FileText,
-  Mail,
-  Phone,
-  MapPin,
-} from "lucide-react";
+import { Calendar, Clock, FileText, Mail, MapPin, Phone } from "lucide-react";
 import { Licitation } from "@/services/licitaciones.service";
 
 interface LicitationInfoCardProps {

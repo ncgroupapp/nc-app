@@ -6,14 +6,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Package,
-  FileText,
-  Calculator,
-  Truck,
-  AlertTriangle,
-  Clock,
-} from "lucide-react";
+import { AlertTriangle, Calculator, Clock, FileText, Package, Truck } from "lucide-react";
 
 export default function DashboardPage() {
   // Mock data - en producción vendría de la base de datos

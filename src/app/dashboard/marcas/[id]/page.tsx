@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft } from "lucide-react";
 import { Button } from '@/components/ui/button'
 import { DataTable, DataTableColumn } from '@/components/ui/data-table'
 import { useBrandsStore } from '@/stores/brands/brandsStore'

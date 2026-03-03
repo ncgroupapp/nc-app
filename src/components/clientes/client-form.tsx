@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { DialogFooter } from '@/components/ui/dialog'
-import { Plus, Trash2, Loader2 } from 'lucide-react'
+import { Loader2, Plus, Trash2 } from "lucide-react";
 import { Cliente } from '@/types'
 import { useConfirm } from "@/hooks/use-confirm";
 

@@ -11,7 +11,7 @@ import { uploadProductImage } from '@/lib/firebase'
 import { CreateProductForm, Product } from '@/services/products.service'
 import { useBrandsStore } from '@/stores/brands/brandsStore'
 import { useProveedoresStore } from '@/stores'
-import { Upload, X } from 'lucide-react'
+import { Upload, X } from "lucide-react";
 import { useEffect, useState, useMemo } from 'react'
 
 interface ProductFormProps {

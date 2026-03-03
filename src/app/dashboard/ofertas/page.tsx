@@ -21,17 +21,19 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
 import {
-  Plus, Search, Edit, Trash2, Tag, Loader2, Calendar, Users, DollarSign, Package
-} from 'lucide-react'
+  Calendar,
+  DollarSign,
+  Edit,
+  Loader2,
+  Package,
+  Plus,
+  Search,
+  Tag,
+  Trash2,
+  Users
+} from "lucide-react";
 import { offersService, Offer, CreateOfferDto } from '@/services/offers.service'
 import { productsService, Product } from '@/services/products.service'
 import { proveedoresService } from '@/services/proveedores.service'
@@ -75,12 +77,19 @@ export default function OfertasPage() {
     quantity: 1
   })
 
+  // State for autocompletes in dialog
+  const [dialogProductSearch, setDialogProductSearch] = useState('')
+  const debouncedDialogProductSearch = useDebounce(dialogProductSearch, 300)
+  const [dialogProviderSearch, setDialogProviderSearch] = useState('')
+  const debouncedDialogProviderSearch = useDebounce(dialogProviderSearch, 300)
+  
+  const [dialogProducts, setDialogProducts] = useState<Product[]>([])
+  const [dialogProviders, setDialogProviders] = useState<Proveedor[]>([])
+
   const loadData = useCallback(async () => {
     try {
       setLoading(true)
-
       const ofertasRes = await offersService.getAll()
-
       setOfertas(ofertasRes.data || [])
     } catch (err) {
       console.error('Error loading data:', err)
@@ -130,6 +139,40 @@ export default function OfertasPage() {
     fetchProviders();
   }, [debouncedProviderSearch]);
 
+  // Load products for DIALOG autocomplete
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const isSearching = debouncedDialogProductSearch.trim().length > 0;
+        const productsRes = await productsService.getAll({ 
+          search: isSearching ? debouncedDialogProductSearch : undefined, 
+          limit: 20
+        });
+        setDialogProducts(productsRes.data || []);
+      } catch (err) {
+        console.error("Error loading dialog products:", err);
+      }
+    };
+    fetchProducts();
+  }, [debouncedDialogProductSearch]);
+
+  // Load providers for DIALOG autocomplete
+  useEffect(() => {
+    const fetchProviders = async () => {
+      try {
+        const isSearching = debouncedDialogProviderSearch.trim().length > 0;
+        const providersRes = await proveedoresService.getAll({ 
+          search: isSearching ? debouncedDialogProviderSearch : undefined, 
+          limit: 20
+        });
+        setDialogProviders(providersRes.data || []);
+      } catch (err) {
+        console.error("Error loading dialog providers:", err);
+      }
+    };
+    fetchProviders();
+  }, [debouncedDialogProviderSearch]);
+
   const filteredOfertas = ofertas.filter(oferta => {
     const matchesSearch =
       (oferta.name?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
@@ -152,6 +195,8 @@ export default function OfertasPage() {
       deliveryDate: '',
       quantity: 1
     })
+    setDialogProductSearch('')
+    setDialogProviderSearch('')
     setIsDialogOpen(true)
   }
 
@@ -165,6 +210,8 @@ export default function OfertasPage() {
       deliveryDate: offer.deliveryDate,
       quantity: offer.quantity
     })
+    setDialogProductSearch(offer.product?.name || '')
+    setDialogProviderSearch(offer.provider?.name || '')
     setIsDialogOpen(true)
   }
 
@@ -201,7 +248,6 @@ export default function OfertasPage() {
 
     try {
       setSubmitting(true)
-
       if (editingOffer) {
         await offersService.update(editingOffer.id, formData)
         toast.success("Éxito", {
@@ -213,7 +259,6 @@ export default function OfertasPage() {
           description: "Oferta creada correctamente",
         })
       }
-
       setIsDialogOpen(false)
       loadData()
     } catch (err) {
@@ -225,8 +270,6 @@ export default function OfertasPage() {
       setSubmitting(false)
     }
   }
-
-
 
   return (
     <div className="space-y-6">
@@ -297,7 +340,10 @@ export default function OfertasPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Filtros</CardTitle>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Search className="h-5 w-5" />
+            Filtros y Búsqueda
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex gap-4 items-center flex-wrap">
@@ -474,40 +520,40 @@ export default function OfertasPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="productId">Producto *</Label>
-                  <Select
-                    value={formData.productId.toString()}
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, productId: parseInt(value) }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleccionar producto" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {productos.map((prod) => (
-                        <SelectItem key={prod.id} value={prod.id.toString()}>
-                          {prod.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Label>Producto *</Label>
+                  <MultiSelectSearch
+                    options={dialogProducts.map((prod) => ({
+                      id: prod.id,
+                      label: prod.name,
+                    }))}
+                    selectedValues={formData.productId ? [formData.productId] : []}
+                    onSelect={(id) => setFormData(prev => ({ ...prev, productId: Number(id) }))}
+                    onRemove={() => setFormData(prev => ({ ...prev, productId: 0 }))}
+                    placeholder="Seleccionar producto"
+                    searchPlaceholder="Buscar producto..."
+                    searchValue={dialogProductSearch}
+                    onSearchValueChange={setDialogProductSearch}
+                    shouldFilter={false}
+                    single={true}
+                  />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="providerId">Proveedor *</Label>
-                  <Select
-                    value={formData.providerId.toString()}
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, providerId: parseInt(value) }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleccionar proveedor" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {proveedores.map((prov) => (
-                        <SelectItem key={prov.id} value={prov.id.toString()}>
-                          {prov.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Label>Proveedor *</Label>
+                  <MultiSelectSearch
+                    options={dialogProviders.map((prov) => ({
+                      id: prov.id,
+                      label: prov.name,
+                    }))}
+                    selectedValues={formData.providerId ? [formData.providerId] : []}
+                    onSelect={(id) => setFormData(prev => ({ ...prev, providerId: Number(id) }))}
+                    onRemove={() => setFormData(prev => ({ ...prev, providerId: 0 }))}
+                    placeholder="Seleccionar proveedor"
+                    searchPlaceholder="Buscar proveedor..."
+                    searchValue={dialogProviderSearch}
+                    onSearchValueChange={setDialogProviderSearch}
+                    shouldFilter={false}
+                    single={true}
+                  />
                 </div>
               </div>
 

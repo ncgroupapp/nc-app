@@ -10,19 +10,7 @@ import { proveedoresService } from '@/services/proveedores.service'
 import { Proveedor } from '@/types'
 import { cotizacionesService, ProviderQuotationHistory } from '@/services/cotizaciones.service'
 import { adjudicacionesService, ProviderAdjudicationHistory } from '@/services/adjudicaciones.service'
-import { 
-  ArrowLeft, 
-  Building, 
-  MapPin, 
-  Phone, 
-  Mail, 
-  Calendar, 
-  FileText, 
-  Award,
-  AlertCircle,
-  Users,
-  Tag
-} from 'lucide-react'
+import { AlertCircle, ArrowLeft, Award, Building, Calendar, FileText, Mail, MapPin, Phone, Tag, Users } from "lucide-react";
 import {
   Table,
   TableBody,

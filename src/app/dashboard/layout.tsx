@@ -20,7 +20,7 @@ export default function DashboardLayout({
               Sistema de Gestión de Licitaciones
             </span>
           </header>
-          <main className="flex-1 p-6">
+          <main id="main-content" className="flex-1 p-6" tabIndex={-1}>
             {children}
           </main>
         </SidebarInset>

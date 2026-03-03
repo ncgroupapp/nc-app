@@ -5,19 +5,7 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
-import { ChevronDown, ChevronUp, Package, User, LogOut } from "lucide-react";
-import {
-  Home,
-  Users,
-  FileText,
-  Calculator,
-  Gavel,
-  Truck,
-  Ship,
-  BarChart3,
-  Settings,
-  Tag,
-} from "lucide-react";
+import { BarChart3, Calculator, ChevronDown, ChevronUp, FileText, Gavel, Home, LogOut, Package, Settings, Ship, Tag, Truck, User, Users } from "lucide-react";
 import { featureFlags } from "@/lib/feature-flags";
 import {
   Sidebar,

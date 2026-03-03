@@ -28,4 +28,16 @@ export const uploadProductImage = async (file: File): Promise<string> => {
   return downloadURL;
 };
 
+// Helper function to upload invoices
+export const uploadInvoiceFile = async (file: File): Promise<string> => {
+  const timestamp = Date.now();
+  const filename = `${timestamp}_${file.name}`;
+  const storageRef = ref(storage, `invoices/${filename}`);
+  
+  await uploadBytes(storageRef, file);
+  const downloadURL = await getDownloadURL(storageRef);
+  
+  return downloadURL;
+};
+
 export { app, auth, storage };

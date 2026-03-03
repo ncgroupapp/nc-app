@@ -17,7 +17,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Plus, Search, Building2 } from 'lucide-react'
+import { Building2, Plus, Search } from "lucide-react";
 import { Proveedor, CreateProveedorForm } from '@/types'
 import { useProveedoresStore } from '@/stores'
 import { ProveedorForm } from '@/components/proveedores/proveedor-form'
@@ -236,7 +236,10 @@ export default function ProveedoresPage() {
       {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Búsqueda</CardTitle>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Search className="h-5 w-5" />
+            Filtros y Búsqueda
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex gap-4 items-center">

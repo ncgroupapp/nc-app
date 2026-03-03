@@ -5,19 +5,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Home,
-  Package,
-  Users,
-  FileText,
-  Calculator,
-  Gavel,
-  Truck,
-  Ship,
-  BarChart3,
-  Settings,
-  Tag,
-} from "lucide-react";
+import { BarChart3, Calculator, FileText, Gavel, Home, Package, Settings, Ship, Tag, Truck, Users } from "lucide-react";
 import { featureFlags } from "@/lib/feature-flags";
 
 const sidebarNavItems = [

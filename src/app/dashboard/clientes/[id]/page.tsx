@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Mail, Phone, MapPin, Building2, FileText, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Building2, CheckCircle2, FileText, Mail, MapPin, Phone } from "lucide-react";
 import { Cliente } from "@/types";
 import { clientesService } from "@/services/clientes.service";
 import { cotizacionesService, Quotation } from "@/services/cotizaciones.service";

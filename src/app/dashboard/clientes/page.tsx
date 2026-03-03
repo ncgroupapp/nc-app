@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/dialog'
 import { useClientesStore } from '@/stores'
 import { Cliente } from '@/types'
-import { Building2, Mail, Phone, Plus } from 'lucide-react'
+import { Building2, Mail, Phone, Plus, Search } from "lucide-react";
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner';
 
@@ -218,7 +218,10 @@ export default function ClientesPage() {
       {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Búsqueda</CardTitle>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Search className="h-5 w-5" />
+            Filtros y Búsqueda
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex gap-4 items-center">

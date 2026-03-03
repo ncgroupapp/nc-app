@@ -27,10 +27,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Search, Loader2, Eye, Calculator, FileDown, Plus, Hash, FileText } from 'lucide-react'
+import { Calculator, Eye, FileDown, FileText, Hash, Loader2, Plus, Search } from "lucide-react";
 import { cotizacionesService, Quotation, QuotationFilters } from '@/services/cotizaciones.service'
 import { QuotationStatus, Currency } from '@/types'
 import { showSnackbar } from '@/components/ui/snackbar'
+
+import { Skeleton } from '@/components/ui/skeleton'
 
 // Helper to format date
 const formatDate = (dateString?: string) => {
@@ -134,7 +136,10 @@ export default function CotizacionesPage() {
       {/* Filters */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-lg font-medium">Filtros</CardTitle>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Search className="h-5 w-5" />
+            Filtros y Búsqueda
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col sm:flex-row gap-4">
@@ -178,31 +183,47 @@ export default function CotizacionesPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <div className="flex justify-center items-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : quotations.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              No se encontraron cotizaciones
-            </div>
-          ) : (
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Identificador</TableHead>
+                  <TableHead>Licitación</TableHead>
+                  <TableHead>Cliente</TableHead>
+                  <TableHead>Fecha</TableHead>
+                  <TableHead>Vencimiento</TableHead>
+                  <TableHead className="text-right">Monto Total (c/IVA)</TableHead>
+                  <TableHead>Estado</TableHead>
+                  <TableHead className="text-right">Acciones</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  Array.from({ length: 5 }).map((_, index) => (
+                    <TableRow key={index}>
+                      <TableCell><Skeleton className="h-10 w-full" /></TableCell>
+                      <TableCell><Skeleton className="h-6 w-full" /></TableCell>
+                      <TableCell><Skeleton className="h-6 w-full" /></TableCell>
+                      <TableCell><Skeleton className="h-6 w-full" /></TableCell>
+                      <TableCell><Skeleton className="h-6 w-full" /></TableCell>
+                      <TableCell><Skeleton className="h-6 w-full" /></TableCell>
+                      <TableCell><Skeleton className="h-6 w-[100px]" /></TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end space-x-2">
+                          <Skeleton className="h-8 w-8 rounded-md" />
+                          <Skeleton className="h-8 w-8 rounded-md" />
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : quotations.length === 0 ? (
                   <TableRow>
-                    <TableHead>Identificador</TableHead>
-                    <TableHead>Licitación</TableHead>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Fecha</TableHead>
-                    <TableHead>Vencimiento</TableHead>
-                    <TableHead className="text-right">Monto Total (c/IVA)</TableHead>
-                    <TableHead>Estado</TableHead>
-                    <TableHead className="text-right">Acciones</TableHead>
+                    <TableCell colSpan={8} className="h-24 text-center">
+                      No se encontraron cotizaciones
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {quotations.map((quotation) => {
+                ) : (
+                  quotations.map((quotation) => {
                     const statusInfo = statusConfig[quotation.status] || { label: quotation.status, color: 'bg-gray-100 text-gray-700' }
                     
                     // Frontend-side simple calculation of total if backend doesn't provide it directly in the list
@@ -264,11 +285,11 @@ export default function CotizacionesPage() {
                         </TableCell>
                       </TableRow>
                     )
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          )}
+                  })
+                )}
+              </TableBody>
+            </Table>
+          </div>
           
           <div className="flex items-center justify-end space-x-2 py-4">
             <Button
@@ -280,7 +301,11 @@ export default function CotizacionesPage() {
               Anterior
             </Button>
             <div className="text-sm text-muted-foreground">
-              Página {filters.page} de {totalPages}
+              {loading ? (
+                <Skeleton className="h-4 w-[100px]" />
+              ) : (
+                `Página ${filters.page} de ${totalPages}`
+              )}
             </div>
             <Button
               variant="outline"
