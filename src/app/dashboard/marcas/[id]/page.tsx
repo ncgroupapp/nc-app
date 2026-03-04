@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { ArrowLeft } from "lucide-react";
 import { Button } from '@/components/ui/button'
 import { DataTable, DataTableColumn } from '@/components/ui/data-table'
-import { useBrandsStore } from '@/stores/brands/brandsStore'
+import { useMarcasStore } from '@/stores'
 import { Model } from '@/types'
 
 export default function MarcaDetallePage() {
@@ -14,7 +14,7 @@ export default function MarcaDetallePage() {
   // As 'id' comes from the route segment [id], it's a string, so we cast it.
   const brandId = Number(params.id)
   
-  const { selectedBrand, isLoading, fetchBrandById } = useBrandsStore()
+  const { selectedBrand, isLoading, fetchBrandById } = useMarcasStore()
   useEffect(() => {
     if (brandId) {
       fetchBrandById(brandId)

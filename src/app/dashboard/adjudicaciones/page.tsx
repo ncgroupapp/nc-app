@@ -28,7 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { AlertCircle, Eye, Gavel, Search } from "lucide-react";
+import { AlertCircle, Eye, Gavel, Search, CheckCircle, Clock } from "lucide-react";
 import { adjudicacionesService, Adjudication } from '@/services/adjudicaciones.service'
 import { AdjudicationStatus } from '@/types'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -57,6 +57,8 @@ export default function AdjudicacionesPage() {
         search: search || undefined,
         status: status !== 'all' ? status as AdjudicationStatus : undefined
       })
+      
+      // Data is in res.data array
       setAdjudicaciones(res.data || [])
       setPagination({
         page: res.meta?.page || 1,
@@ -87,16 +89,28 @@ export default function AdjudicacionesPage() {
     setStatusFilter(value)
   }
 
-  const getStatusBadge = (status: AdjudicationStatus) => {
+  const getStatusInfo = (status: AdjudicationStatus) => {
     switch (status) {
       case AdjudicationStatus.TOTAL:
-        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Total</Badge>
+        return { icon: CheckCircle, color: "text-green-600", bgColor: "bg-green-100", label: "Total" };
       case AdjudicationStatus.PARTIAL:
-        return <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">Parcial</Badge>
+        return { icon: AlertCircle, color: "text-orange-600", bgColor: "bg-orange-100", label: "Parcial" };
       default:
-        return <Badge variant="outline">{status}</Badge>
+        return { icon: Clock, color: "text-gray-600", bgColor: "bg-gray-100", label: status };
     }
-  }
+  };
+
+  const formatCurrency = (amount: number | string) => {
+    const numericAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+    if (isNaN(numericAmount)) return "-";
+    
+    return new Intl.NumberFormat('es-UY', { 
+      style: 'currency', 
+      currency: 'UYU',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(numericAmount);
+  };
 
   return (
     <div className="space-y-6">
@@ -129,7 +143,7 @@ export default function AdjudicacionesPage() {
                 />
               </div>
               <div className="w-full sm:w-[200px]">
-                <Select onValueChange={handleStatusChange} defaultValue="all">
+                <Select onValueChange={handleStatusChange} value={statusFilter}>
                   <SelectTrigger aria-label="Filtrar por estado">
                     <SelectValue placeholder="Estado" />
                   </SelectTrigger>
@@ -161,59 +175,83 @@ export default function AdjudicacionesPage() {
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Identificador</TableHead>
-                  <TableHead>Licitación</TableHead>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead>Fecha</TableHead>
-                  <TableHead>Estado</TableHead>
-                  <TableHead className="text-right">Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  Array.from({ length: 5 }).map((_, i) => (
-                    <TableRow key={i}>
-                      <TableCell><Skeleton className="h-6 w-24" /></TableCell>
-                      <TableCell><Skeleton className="h-6 w-32" /></TableCell>
-                      <TableCell><Skeleton className="h-6 w-40" /></TableCell>
-                      <TableCell><Skeleton className="h-6 w-24" /></TableCell>
-                      <TableCell><Skeleton className="h-6 w-20" /></TableCell>
-                      <TableCell className="text-right"><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
-                    </TableRow>
-                  ))
-                ) : adjudicaciones.length === 0 ? (
+            <div className="rounded-md border overflow-hidden bg-background">
+              <Table>
+                <TableHeader className="bg-muted/50">
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">
-                      No se encontraron adjudicaciones
-                    </TableCell>
+                    <TableHead>Identificador</TableHead>
+                    <TableHead>Licitación</TableHead>
+                    <TableHead>Cliente</TableHead>
+                    <TableHead>Fecha</TableHead>
+                    <TableHead>Monto Total</TableHead>
+                    <TableHead>Estado</TableHead>
+                    <TableHead className="text-right">Acciones</TableHead>
                   </TableRow>
-                ) : (
-                  adjudicaciones.map((adj) => (
-                    <TableRow key={adj.id} className="hover:bg-muted/30 transition-colors">
-                      <TableCell className="font-mono text-xs text-muted-foreground">{adj.identifier}</TableCell>
-                      <TableCell className="font-medium">{adj.licitation?.callNumber || '-'}</TableCell>
-                      <TableCell>{adj.licitation?.client?.name || '-'}</TableCell>
-                      <TableCell>{new Date(adj.createdAt).toLocaleDateString('es-CL')}</TableCell>
-                      <TableCell>{getStatusBadge(adj.status)}</TableCell>
-                      <TableCell className="text-right">
-                        <Link href={`/dashboard/licitaciones/${adj.licitationId}`}>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            aria-label={`Ver licitación ${adj.licitation?.callNumber ?? adj.licitationId}`}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                        </Link>
+                </TableHeader>
+                <TableBody>
+                  {loading ? (
+                    Array.from({ length: 5 }).map((_, i) => (
+                      <TableRow key={i}>
+                        <TableCell><Skeleton className="h-6 w-24" /></TableCell>
+                        <TableCell><Skeleton className="h-6 w-32" /></TableCell>
+                        <TableCell><Skeleton className="h-6 w-40" /></TableCell>
+                        <TableCell><Skeleton className="h-6 w-24" /></TableCell>
+                        <TableCell><Skeleton className="h-6 w-24" /></TableCell>
+                        <TableCell><Skeleton className="h-6 w-20" /></TableCell>
+                        <TableCell className="text-right"><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
+                      </TableRow>
+                    ))
+                  ) : adjudicaciones.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
+                        No se encontraron adjudicaciones
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                  ) : (
+                    adjudicaciones.map((adj) => {
+                      const statusInfo = getStatusInfo(adj.status);
+                      return (
+                        <TableRow key={adj.id} className="hover:bg-muted/30 transition-colors group">
+                          <TableCell className="font-mono text-xs font-bold text-muted-foreground">
+                            #{adj.identifier || adj.id}
+                          </TableCell>
+                          <TableCell className="font-bold tracking-tight">
+                            {adj.licitation?.callNumber || `ID: ${adj.licitationId}`}
+                          </TableCell>
+                          <TableCell className="font-medium text-muted-foreground">
+                            {adj.licitation?.client?.name || '-'}
+                          </TableCell>
+                          <TableCell className="text-sm">
+                            {new Date(adj.adjudicationDate || adj.createdAt).toLocaleDateString('es-CL')}
+                          </TableCell>
+                          <TableCell className="font-bold text-green-700">
+                            {formatCurrency(adj.totalPriceWithIVA)}
+                          </TableCell>
+                          <TableCell>
+                            <Badge className={`${statusInfo.bgColor} ${statusInfo.color} border-none font-medium`}>
+                              <statusInfo.icon className="mr-1 h-3 w-3" />
+                              {statusInfo.label}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Link href={`/dashboard/licitaciones/${adj.licitationId}?tab=cotizaciones`}>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="group-hover:bg-primary/10 transition-colors"
+                                aria-label={`Ver licitación ${adj.licitation?.callNumber ?? adj.licitationId}`}
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </Link>
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })
+                  )}
+                </TableBody>
+              </Table>
+            </div>
             <div className="flex items-center justify-between mt-4">
               <p className="text-sm text-muted-foreground">Página {pagination.page} de {pagination.lastPage}</p>
               <div className="flex gap-2">

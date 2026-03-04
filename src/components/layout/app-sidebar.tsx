@@ -92,11 +92,6 @@ const sidebarNavItems: NavItem[] = [
             href: "/dashboard/adjudicaciones",
             icon: Gavel,
           },
-          {
-            title: "Entregas",
-            href: "/dashboard/entregas",
-            icon: Truck,
-          },
         ],
       },
     ]

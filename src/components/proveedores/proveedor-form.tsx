@@ -8,7 +8,7 @@ import { DialogFooter } from '@/components/ui/dialog'
 import { Plus, Trash2 } from "lucide-react";
 import { Proveedor } from '@/types'
 import { useConfirm } from "@/hooks/use-confirm";
-import { useBrandsStore } from '@/stores/brands/brandsStore'
+import { useMarcasStore } from '@/stores'
 import { MultiSelectSearch } from '@/components/ui/multi-select-search'
 import { useDebounce } from '@/hooks/use-debounce'
 import { toast } from "sonner"
@@ -40,7 +40,7 @@ interface ProveedorFormProps {
 }
 
 export function ProveedorForm({ initialData, onSubmit, onCancel, isLoading = false }: ProveedorFormProps) {
-  const { brands, fetchBrands } = useBrandsStore()
+  const { brands, fetchBrands } = useMarcasStore()
   const [brandSearch, setBrandSearch] = useState('')
   const debouncedBrandSearch = useDebounce(brandSearch, 500)
   const [selectedBrands, setSelectedBrands] = useState<string[]>([])

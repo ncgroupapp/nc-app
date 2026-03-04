@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { Badge } from "@/components/ui/badge";
-import { useRouter } from 'next/navigation'
 import { Package, Plus, Search } from "lucide-react";
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -18,14 +17,13 @@ import {
 } from '@/components/ui/dialog'
 import { useMarcasStore } from '@/stores'
 import { Brand, CreateBrandDto } from '@/services/brands.service'
-import { BrandForm } from '@/components/marcas/brand-form'
+import { MarcaForm } from '@/components/marcas/marca-form'
 import { showSnackbar } from '@/components/ui/snackbar'
 import { useConfirm } from '@/hooks/use-confirm'
 import { useDebounce } from '@/hooks/use-debounce'
 import { FadeIn } from '@/components/common/fade-in'
 
 export default function MarcasPage() {
-  const router = useRouter()
   const { 
     brands, 
     isLoading, 
@@ -158,7 +156,7 @@ export default function MarcasPage() {
             <DialogTitle>{editingBrand ? 'Editar Marca' : 'Nueva Marca'}</DialogTitle>
             <DialogDescription>{editingBrand ? 'Modifique los datos de la marca.' : 'Complete la información para registrar una nueva marca.'}</DialogDescription>
           </DialogHeader>
-          <BrandForm initialData={editingBrand} onSubmit={editingBrand ? handleUpdate : handleCreate} onCancel={() => setIsDialogOpen(false)} isLoading={isLoading} />
+          <MarcaForm initialData={editingBrand} onSubmit={editingBrand ? handleUpdate : handleCreate} onCancel={() => setIsDialogOpen(false)} isLoading={isLoading} />
         </DialogContent>
       </Dialog>
     </div>

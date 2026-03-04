@@ -57,11 +57,6 @@ const sidebarNavItems = [
         href: "/dashboard/adjudicaciones",
         icon: Gavel,
       },
-      {
-        title: "Entregas",
-        href: "/dashboard/entregas",
-        icon: Truck,
-      },
     ],
   }] : []),
   ...(featureFlags.importaciones ? [{

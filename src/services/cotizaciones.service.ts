@@ -1,6 +1,10 @@
 import api from '@/lib/axios';
 import { PaginatedResponse, ApiResponse, QuotationStatus, QuotationAwardStatus, Currency } from '@/types';
 
+// Re-export enums so consumers can import them from this module
+export { QuotationStatus, QuotationAwardStatus, Currency } from '@/types';
+
+
 // Types matching backend entities
 export interface ProviderQuotationHistory {
   date: string;

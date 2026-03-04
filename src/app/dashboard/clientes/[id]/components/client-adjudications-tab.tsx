@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, Calendar, ExternalLink, DollarSign, CheckCircle, AlertCircle } from "lucide-react";
+import { CheckCircle2, Calendar, ExternalLink, CheckCircle, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { useRouter } from "next/navigation";
@@ -35,17 +35,20 @@ export function ClientAdjudicationsTab({ adjudications }: ClientAdjudicationsTab
     }
   };
 
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount: number | string) => {
+    const numericAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+    if (isNaN(numericAmount)) return "-";
+    
     return new Intl.NumberFormat('es-UY', { 
       style: 'currency', 
       currency: 'UYU',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
-    }).format(amount);
+    }).format(numericAmount);
   };
 
   return (
-    <Card className="border shadow-sm bg-card">
+    <Card className="border shadow-sm bg-card overflow-hidden">
       <CardHeader className="px-6 pt-6 pb-4">
         <CardTitle className="text-xl">Historial de Adjudicaciones</CardTitle>
         <CardDescription>
@@ -53,7 +56,7 @@ export function ClientAdjudicationsTab({ adjudications }: ClientAdjudicationsTab
         </CardDescription>
       </CardHeader>
       <CardContent className="px-6 pb-6">
-        <div className="rounded-md border overflow-hidden">
+        <div className="rounded-md border overflow-hidden bg-background">
           {adjudications.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <CheckCircle2 className="h-12 w-12 mx-auto mb-4 opacity-20" aria-hidden="true" />
@@ -77,14 +80,14 @@ export function ClientAdjudicationsTab({ adjudications }: ClientAdjudicationsTab
                     <TableRow 
                       key={adj.id} 
                       className="cursor-pointer hover:bg-muted/30 transition-colors group"
-                      onClick={() => router.push(`/dashboard/licitaciones/${adj.licitationId}?tab=entregas`)}
+                      onClick={() => router.push(`/dashboard/licitaciones/${adj.licitationId}?tab=adjudicaciones`)}
                       role="link"
                       aria-label={`Ver adjudicación ${adj.id}`}
                     >
                       <TableCell className="font-medium text-xs">
                         <div className="flex items-center gap-2">
                           <CheckCircle2 className="h-3.5 w-3.5 text-green-600" aria-hidden="true" />
-                          #{adj.id}
+                          #{adj.identifier || adj.id}
                         </div>
                       </TableCell>
                       <TableCell>

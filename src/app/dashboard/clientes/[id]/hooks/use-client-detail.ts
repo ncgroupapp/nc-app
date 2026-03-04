@@ -32,11 +32,22 @@ export function useClientDetail(id: string) {
         setError(clientData.message || "Error al cargar el cliente");
       }
 
+      // Robust data handling
       setQuotations(Array.isArray(quotationsData) ? quotationsData : []);
-      setAdjudications(Array.isArray(adjudicationsData) ? adjudicationsData : []);
+      
+      if (Array.isArray(adjudicationsData)) {
+        setAdjudications(adjudicationsData);
+      } else if (adjudicationsData && typeof adjudicationsData === 'object' && 'data' in adjudicationsData && Array.isArray((adjudicationsData as any).data)) {
+        setAdjudications((adjudicationsData as any).data);
+      } else {
+        setAdjudications([]);
+      }
+
     } catch (err) {
       console.error("Error fetching client detail:", err);
       setError("Ocurrió un error al cargar los datos del cliente");
+      setQuotations([]);
+      setAdjudications([]);
     } finally {
       setLoading(false);
     }

@@ -45,7 +45,6 @@ const allNavigation = [
       { name: 'Todas', href: '/dashboard/licitaciones', icon: FileText },
       { name: 'Cotizaciones', href: '/dashboard/cotizaciones', icon: Calculator },
       { name: 'Adjudicaciones', href: '/dashboard/adjudicaciones', icon: Gavel },
-      { name: 'Entregas', href: '/dashboard/entregas', icon: Truck },
     ]
   }] : []),
   ...(featureFlags.importaciones ? [{
@@ -201,12 +200,6 @@ export function Navbar() {
                   >
                     <Gavel className="mr-2 h-4 w-4" />
                     Adjudicaciones
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/dashboard/entregas" className="flex items-center">
-                    <Truck className="mr-2 h-4 w-4" />
-                    Entregas
                   </Link>
                 </DropdownMenuItem>
               </>

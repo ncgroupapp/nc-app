@@ -1,252 +1,152 @@
-'use client'
+"use client";
 
-import { useEffect, useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { productsService, Product } from '@/services/products.service'
-import { cotizacionesService, Quotation } from '@/services/cotizaciones.service'
-import { adjudicacionesService, ProductAdjudicationHistory } from '@/services/adjudicaciones.service'
-import { AlertTriangle, ArrowLeft, Building, ChevronLeft, ChevronRight, DollarSign, Layers, Package, Tag, Truck } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Skeleton } from "@/components/ui/skeleton";
+import { FadeIn } from "@/components/common/fade-in";
+
+// Local imports
+import { useProductDetail } from "./hooks";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { FadeIn } from '@/components/common/fade-in'
+  ProductHeader,
+  ProductImageCard,
+  ProductInventoryCard,
+  ProductInfoCard,
+  ProductProvidersCard,
+  ProductQuotationsTab,
+  ProductAdjudicationsTab,
+} from "./components";
 
 export default function ProductDetailPage() {
-  const params = useParams()
-  const router = useRouter()
-  const idParam = Array.isArray(params.id) ? params.id[0] : params.id
-  const id = parseInt(idParam as string)
+  const params = useParams();
+  const router = useRouter();
+  const idParam = Array.isArray(params.id) ? params.id[0] : params.id;
+  const id = parseInt(idParam as string);
 
-  const [product, setProduct] = useState<Product | null>(null)
-  const [quotationHistory, setQuotationHistory] = useState<Quotation[]>([])
-  const [adjudicationHistory, setAdjudicationHistory] = useState<ProductAdjudicationHistory[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [currentImageIndex, setCurrentImageIndex] = useState(0)
-
-  const images = product?.images && product.images.length > 0 
-    ? product.images 
-    : (product?.image ? [product.image] : [])
-
-  useEffect(() => {
-    if (!id) return
-    const loadData = async () => {
-      try {
-        setLoading(true)
-        const [productData, quotesData, adjData] = await Promise.all([
-          productsService.getById(id),
-          cotizacionesService.getByProductId(id),
-          adjudicacionesService.getByProductId(id)
-        ])
-        setProduct(productData)
-        setQuotationHistory(quotesData || [])
-        setAdjudicationHistory(adjData || [])
-      } catch (err) {
-        console.error('Error loading product data:', err)
-        setError('No se pudo cargar la información del producto.')
-      } finally {
-        setLoading(false)
-      }
-    }
-    loadData()
-  }, [id])
+  const {
+    product,
+    quotationHistory,
+    adjudicationHistory,
+    loading,
+    error,
+  } = useProductDetail(id);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    )
+    return <ProductDetailSkeleton />;
   }
 
   if (error || !product) {
     return (
-      <div className="flex flex-col items-center justify-center h-96 space-y-4">
-        <div className="text-red-500 font-medium">{error || 'Producto no encontrado'}</div>
-        <Button onClick={() => router.back()}>Volver</Button>
+      <div className="flex flex-col items-center justify-center p-8 h-[60vh] text-center">
+        <div className="bg-red-50 p-4 rounded-full mb-4">
+          <AlertCircle className="h-12 w-12 text-red-500" />
+        </div>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Error</h2>
+        <p className="text-muted-foreground mb-6 max-w-md">
+          {error || "No pudimos encontrar el producto que estás buscando. Puede que haya sido eliminado o el ID sea incorrecto."}
+        </p>
+        <div className="flex gap-3">
+          <Button variant="outline" onClick={() => router.back()}>
+            Volver
+          </Button>
+          <Button onClick={() => window.location.reload()}>
+            Reintentar
+          </Button>
+        </div>
       </div>
-    )
+    );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 pb-8">
+      {/* Header */}
       <FadeIn direction="none">
-        <div className="flex items-center space-x-4 mb-6">
-          <Button variant="outline" size="icon" onClick={() => router.back()}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <h1 className="text-2xl font-bold tracking-tight">Detalle de Producto</h1>
-        </div>
+        <ProductHeader product={product} />
       </FadeIn>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* Left Column: Image, Inventory & Providers */}
         <div className="lg:col-span-4 space-y-6">
           <FadeIn delay={100}>
-            <Card className="overflow-hidden border-0 shadow-lg">
-              <div className="aspect-square relative bg-secondary/20 flex items-center justify-center p-4">
-                {images.length > 0 ? (
-                  <div className="relative w-full h-full group flex items-center justify-center">
-                    <img src={images[currentImageIndex]} alt={`${product.name}`} className="max-h-full max-w-full object-contain" />
-                    {images.length > 1 && (
-                      <>
-                        <Button variant="ghost" size="icon" className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/70 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-sm" onClick={() => setCurrentImageIndex((p) => (p === 0 ? images.length - 1 : p - 1))}><ChevronLeft className="h-6 w-6" /></Button>
-                        <Button variant="ghost" size="icon" className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/70 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-sm" onClick={() => setCurrentImageIndex((p) => (p + 1) % images.length)}><ChevronRight className="h-6 w-6" /></Button>
-                      </>
-                    )}
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center gap-2 text-muted-foreground"><Package className="h-16 w-16" /><span className="text-sm">Sin imagen</span></div>
-                )}
-              </div>
-              {images.length > 1 && (
-                <div className="flex gap-2 p-4 overflow-x-auto bg-slate-50 border-t">
-                  {images.map((img, idx) => (
-                    <button key={idx} onClick={() => setCurrentImageIndex(idx)} className={`relative w-16 h-16 rounded-md overflow-hidden border-2 transition-colors ${idx === currentImageIndex ? 'border-primary' : 'border-transparent hover:border-slate-300'}`}><img src={img} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-cover" /></button>
-                  ))}
-                </div>
-              )}
-            </Card>
+            <ProductImageCard product={product} />
           </FadeIn>
 
           <FadeIn delay={200}>
-            <Card>
-              <CardHeader className="pb-3"><CardTitle className="text-base">Inventario</CardTitle></CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between p-3 bg-secondary/10 rounded-lg">
-                  <div className="flex items-center text-muted-foreground"><Package className="mr-2 h-4 w-4" /><span className="text-sm font-medium">Stock Disponible</span></div>
-                  <div className="flex items-center"><span className="text-2xl font-bold mr-2">{product.stockQuantity ?? 0}</span>{(product.stockQuantity ?? 0) <= 5 && (<AlertTriangle className="h-5 w-5 text-yellow-500" />)}</div>
-                </div>
-              </CardContent>
-            </Card>
+            <ProductInventoryCard product={product} />
           </FadeIn>
 
           <FadeIn delay={300}>
-            <Card>
-              <CardHeader className="pb-3"><CardTitle className="text-base">Proveedores</CardTitle></CardHeader>
-              <CardContent>
-                {product.providers && product.providers.length > 0 ? (
-                  <ul className="space-y-3">
-                    {product.providers.map((provider) => (
-                      <li key={provider.id} className="flex items-center justify-between p-2 rounded-md hover:bg-secondary/10 transition-colors">
-                        <div className="flex items-center space-x-3">
-                          <div className="p-2 bg-primary/10 rounded-full"><Building className="h-4 w-4 text-primary" /></div>
-                          <div><p className="font-medium text-sm">{provider.name}</p><p className="text-xs text-muted-foreground">{provider.country}</p></div>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (<p className="text-sm text-muted-foreground text-center py-4">No hay proveedores asignados</p>)}
-              </CardContent>
-            </Card>
+            <ProductProvidersCard providers={product.providers} />
           </FadeIn>
         </div>
 
-        <div className="lg:col-span-8 space-y-6">
+        {/* Right Column: Info & History Tabs */}
+        <div className="lg:col-span-8 space-y-8">
           <FadeIn delay={400}>
-            <Card>
-              <CardHeader>
-                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-                  <div>
-                    <h2 className="text-3xl font-bold text-foreground mb-2">{product.name}</h2>
-                    <div className="flex flex-wrap items-center gap-2">
-                      {product.brand && (<Badge variant="outline" className="text-base px-3 py-1">{product.brand} {product.model}</Badge>)}
-                      <Badge variant="secondary" className="text-sm"><Tag className="mr-1 h-3 w-3" />{product.code || "Sin código"}</Badge>
-                    </div>
-                  </div>
-                  {product.price && (<div className="text-right"><p className="text-sm text-muted-foreground">Precio Referencia</p><p className="text-2xl font-bold flex items-center justify-end"><DollarSign className="h-5 w-5 mr-1" />{product.price}</p></div>)}
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div><h3 className="text-sm font-semibold text-muted-foreground mb-2">Descripción</h3><p className="text-sm leading-relaxed text-foreground/90">{product.description || "No hay descripción disponible para este producto."}</p></div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4 border-t">
-                  <div><h3 className="text-sm font-semibold text-muted-foreground mb-2">Detalles Adicionales</h3><p className="text-sm">{product.details || "-"}</p></div>
-                  <div><h3 className="text-sm font-semibold text-muted-foreground mb-2">Observaciones</h3><p className="text-sm">{product.observations || "-"}</p></div>
-                </div>
-              </CardContent>
-            </Card>
+            <ProductInfoCard product={product} />
           </FadeIn>
 
           <FadeIn delay={500}>
-            <Card>
-              <CardHeader><CardTitle className="flex items-center text-lg"><Layers className="mr-2 h-5 w-5 text-primary" />Especificaciones Técnicas</CardTitle></CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="p-4 rounded-lg bg-secondary/5 border"><div className="flex items-center text-muted-foreground mb-2"><Truck className="mr-2 h-4 w-4" /><span className="text-sm font-medium">Chasis</span></div><p className="font-medium">{product.chassis || "-"}</p></div>
-                  <div className="p-4 rounded-lg bg-secondary/5 border"><div className="flex items-center text-muted-foreground mb-2"><Layers className="mr-2 h-4 w-4" /><span className="text-sm font-medium">Motor</span></div><p className="font-medium">{product.motor || "-"}</p></div>
-                  <div className="p-4 rounded-lg bg-secondary/5 border"><div className="flex items-center text-muted-foreground mb-2"><Package className="mr-2 h-4 w-4" /><span className="text-sm font-medium">Equipamiento</span></div><p className="font-medium">{product.equipment || "-"}</p></div>
-                </div>
-              </CardContent>
-            </Card>
-          </FadeIn>
+            <Tabs defaultValue="quotations" className="w-full">
+              <TabsList className="w-full grid grid-cols-2 bg-muted/50 p-1 h-auto mb-6 border">
+                <TabsTrigger 
+                  value="quotations" 
+                  className="data-[state=active]:bg-background py-2 transition-all font-bold"
+                >
+                  Cotizaciones ({quotationHistory.length})
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="adjudications"
+                  className="data-[state=active]:bg-background py-2 transition-all font-bold"
+                >
+                  Adjudicaciones ({adjudicationHistory.length})
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="quotations" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
+                <ProductQuotationsTab quotations={quotationHistory} productId={id} />
+              </TabsContent>
 
-          <FadeIn delay={600}>
-            <div className="space-y-6">
-              <Card>
-                <CardHeader><CardTitle className="text-lg">Historial de Cotizaciones</CardTitle></CardHeader>
-                <CardContent>
-                  {quotationHistory && quotationHistory.length > 0 ? (
-                    <Table>
-                      <TableHeader>
-                        <TableRow><TableHead>Fecha</TableHead><TableHead>ID / Estado</TableHead><TableHead>Proveedor</TableHead><TableHead>Referencia</TableHead><TableHead className="text-right">Cantidad</TableHead><TableHead className="text-right">Precio Cotizado</TableHead></TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {quotationHistory.map((item, index) => {
-                          const productItem = item.items.find((i) => i.productId === id);
-                          return (
-                            <TableRow key={index}>
-                              <TableCell className="whitespace-nowrap"><div className="flex flex-col"><span>{new Date(item.createdAt).toLocaleDateString()}</span>{item.validity && (<span className="text-xs text-muted-foreground">Vence: {item.validity}</span>)}</div></TableCell>
-                              <TableCell><div className="flex flex-col gap-1 items-start"><span className="text-sm font-medium">{item.quotationIdentifier || "-"}</span><Badge variant="secondary" className="text-xs font-normal">{item.status}</Badge></div></TableCell>
-                              <TableCell>{productItem?.providerName || "-"}</TableCell>
-                              <TableCell className="text-sm text-muted-foreground">{item.associatedPurchase || "-"}</TableCell>
-                              <TableCell className="text-right">{productItem?.quantity || 0}</TableCell>
-                              <TableCell className="text-right font-medium">{productItem?.currency || 'USD'} ${productItem?.priceWithoutIVA || 0}</TableCell>
-                            </TableRow>
-                          )
-                        })}
-                      </TableBody>
-                    </Table>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center py-6 text-center text-muted-foreground"><DollarSign className="h-8 w-8 mb-2 opacity-20" /><p className="text-sm">No hay cotizaciones registradas</p></div>
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader><CardTitle className="text-lg">Historial de Adjudicaciones</CardTitle></CardHeader>
-                <CardContent>
-                  {adjudicationHistory && adjudicationHistory.length > 0 ? (
-                    <Table>
-                      <TableHeader>
-                        <TableRow><TableHead>Fecha</TableHead><TableHead>Referencias</TableHead><TableHead>Cliente</TableHead><TableHead>Estado</TableHead><TableHead className="text-right">Cantidad</TableHead><TableHead className="text-right">Precio Unit.</TableHead></TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {adjudicationHistory.map((item, index) => (
-                          <TableRow key={index}>
-                            <TableCell className="whitespace-nowrap"><div className="flex flex-col"><span>{new Date(item.date).toLocaleDateString()}</span>{item.deadlineDate && (<span className="text-xs text-muted-foreground">Plazo: {new Date(item.deadlineDate).toLocaleDateString()}</span>)}</div></TableCell>
-                            <TableCell><div className="flex flex-col text-sm">{item.internalNumber && (<span className="font-medium">{item.internalNumber}</span>)}{item.contractId && (<span className="text-xs text-muted-foreground">{item.contractId}</span>)}{!item.internalNumber && !item.contractId && "-"}</div></TableCell>
-                            <TableCell>{item.entity}</TableCell>
-                            <TableCell><Badge variant={item.status === "Pending" ? "outline" : "secondary"}>{item.status}</Badge></TableCell>
-                            <TableCell className="text-right">{item.quantity}</TableCell>
-                            <TableCell className="text-right font-medium">${item.unitPrice ? item.unitPrice.toLocaleString() : "-"}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center py-6 text-center text-muted-foreground"><Tag className="h-8 w-8 mb-2 opacity-20" /><p className="text-sm">No hay adjudicaciones registradas</p></div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
+              <TabsContent value="adjudications" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
+                <ProductAdjudicationsTab adjudications={adjudicationHistory} />
+              </TabsContent>
+            </Tabs>
           </FadeIn>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ProductDetailSkeleton() {
+  return (
+    <div className="space-y-8 animate-pulse">
+      {/* Header Skeleton */}
+      <div className="flex items-center gap-4">
+        <Skeleton className="h-10 w-10 rounded-full" />
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-64" />
+          <Skeleton className="h-4 w-32" />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Left Column Skeleton */}
+        <div className="lg:col-span-4 space-y-6">
+          <Skeleton className="h-[400px] w-full rounded-xl" />
+          <Skeleton className="h-[120px] w-full rounded-xl" />
+          <Skeleton className="h-[200px] w-full rounded-xl" />
+        </div>
+
+        {/* Right Column Skeleton */}
+        <div className="lg:col-span-8 space-y-8">
+          <Skeleton className="h-[300px] w-full rounded-xl" />
+          <div className="space-y-4">
+            <Skeleton className="h-12 w-full rounded-lg" />
+            <Skeleton className="h-[400px] w-full rounded-xl" />
+          </div>
         </div>
       </div>
     </div>

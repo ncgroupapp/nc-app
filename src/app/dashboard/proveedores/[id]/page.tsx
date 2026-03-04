@@ -10,7 +10,7 @@ import { proveedoresService } from '@/services/proveedores.service'
 import { Proveedor } from '@/types'
 import { cotizacionesService, ProviderQuotationHistory } from '@/services/cotizaciones.service'
 import { adjudicacionesService, ProviderAdjudicationHistory } from '@/services/adjudicaciones.service'
-import { AlertCircle, ArrowLeft, Award, Building, Calendar, FileText, Mail, MapPin, Phone, Tag, Users } from "lucide-react";
+import { AlertCircle, ArrowLeft, Award, Building, Calendar, FileText, Mail, MapPin, Phone, Tag, Users, Globe, ExternalLink, Clock, CheckCircle, XCircle } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -20,6 +20,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { FadeIn } from '@/components/common/fade-in'
+import { Skeleton } from '@/components/ui/skeleton'
 
 export default function ProveedorDetailPage() {
   const params = useParams()
@@ -56,164 +57,321 @@ export default function ProveedorDetailPage() {
   }, [id])
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    )
+    return <ProviderDetailSkeleton />
   }
 
   if (error || !proveedor) {
     return (
-      <div className="flex flex-col items-center justify-center h-96 space-y-4">
-        <div className="text-red-500 font-medium flex items-center gap-2"><AlertCircle className="h-5 w-5" />{error || 'Proveedor no encontrado'}</div>
-        <Button onClick={() => router.back()}>Volver</Button>
+      <div className="flex flex-col items-center justify-center p-8 h-[60vh] text-center">
+        <div className="bg-red-50 p-4 rounded-full mb-4">
+          <AlertCircle className="h-12 w-12 text-red-500" />
+        </div>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Error</h2>
+        <p className="text-muted-foreground mb-6 max-w-md">
+          {error || "No pudimos encontrar el proveedor que estás buscando."}
+        </p>
+        <Button onClick={() => router.back()}>Volver al listado</Button>
       </div>
     )
   }
 
+  const getStatusInfo = (status: string) => {
+    const s = status.toLowerCase();
+    if (s.includes('finalizada') || s.includes('adjudicada') || s.includes('total')) {
+      return { icon: CheckCircle, color: "text-green-600", bgColor: "bg-green-100", label: "Finalizada" };
+    } else if (s.includes('enviada')) {
+      return { icon: ExternalLink, color: "text-purple-600", bgColor: "bg-purple-100", label: "Enviada" };
+    } else if (s.includes('rechazada')) {
+      return { icon: XCircle, color: "text-red-600", bgColor: "bg-red-100", label: "Rechazada" };
+    }
+    return { icon: Clock, color: "text-blue-600", bgColor: "bg-blue-100", label: status };
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 pb-8">
+      {/* Header */}
       <FadeIn direction="none">
-        <div className="flex items-center space-x-4 mb-6">
-          <Button variant="outline" size="icon" onClick={() => router.back()}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <h1 className="text-2xl font-bold tracking-tight">Detalle de Proveedor</h1>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => router.back()}
+              aria-label="Volver"
+              className="h-9 w-9 rounded-full"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">{proveedor.name}</h1>
+              <div className="flex items-center gap-2 mt-1">
+                <Building className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                <p className="text-muted-foreground font-medium">
+                  {proveedor.rut || "Sin RUT"}
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </FadeIn>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* Left Column: Info & Contacts */}
         <div className="lg:col-span-4 space-y-6">
           <FadeIn delay={100}>
-            <Card className="overflow-hidden border-0 shadow-lg">
-              <div className="h-32 bg-primary/10 flex items-center justify-center">
-                <Building className="h-16 w-16 text-primary/40" />
-              </div>
-              <CardHeader className="text-center pb-2">
-                <CardTitle className="text-xl">{proveedor.name}</CardTitle>
-                <CardDescription className="flex items-center justify-center gap-2 mt-1">
-                  {proveedor.rut && (<Badge variant="outline">{proveedor.rut}</Badge>)}
-                  {proveedor.country && (<Badge variant="secondary">{proveedor.country}</Badge>)}
-                </CardDescription>
+            <Card className="border shadow-sm">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-semibold">Información del Proveedor</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4 pt-4">
-                <div className="grid gap-3 text-sm">
-                  {proveedor.direccion && (<div className="flex items-start gap-3"><MapPin className="h-4 w-4 text-muted-foreground mt-0.5" /><span>{proveedor.direccion}</span></div>)}
-                  {proveedor.email && (<div className="flex items-center gap-3"><Mail className="h-4 w-4 text-muted-foreground" /><a href={`mailto:${proveedor.email}`} className="hover:text-primary hover:underline">{proveedor.email}</a></div>)}
-                  {proveedor.telefono && (<div className="flex items-center gap-3"><Phone className="h-4 w-4 text-muted-foreground" /><a href={`tel:${proveedor.telefono}`} className="hover:text-primary hover:underline">{proveedor.telefono}</a></div>)}
-                  {proveedor.contacto && (<div className="flex items-center gap-3"><Users className="h-4 w-4 text-muted-foreground" /><span>Contacto: {proveedor.contacto}</span></div>)}
+              <CardContent className="space-y-5">
+                <div className="space-y-4 text-sm">
+                  {proveedor.country && (
+                    <div className="flex items-start gap-3">
+                      <Globe className="h-4 w-4 text-muted-foreground mt-0.5" />
+                      <div className="flex flex-col">
+                        <span className="text-xs text-muted-foreground uppercase font-semibold">País</span>
+                        <span className="font-medium">{proveedor.country}</span>
+                      </div>
+                    </div>
+                  )}
+                  {proveedor.direccion && (
+                    <div className="flex items-start gap-3">
+                      <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
+                      <div className="flex flex-col">
+                        <span className="text-xs text-muted-foreground uppercase font-semibold">Dirección</span>
+                        <span className="font-medium">{proveedor.direccion}</span>
+                      </div>
+                    </div>
+                  )}
+                  {proveedor.email && (
+                    <div className="flex items-start gap-3">
+                      <Mail className="h-4 w-4 text-muted-foreground mt-0.5" />
+                      <div className="flex flex-col">
+                        <span className="text-xs text-muted-foreground uppercase font-semibold">Email</span>
+                        <a href={`mailto:${proveedor.email}`} className="font-medium hover:text-primary hover:underline">{proveedor.email}</a>
+                      </div>
+                    </div>
+                  )}
+                  {proveedor.telefono && (
+                    <div className="flex items-start gap-3">
+                      <Phone className="h-4 w-4 text-muted-foreground mt-0.5" />
+                      <div className="flex flex-col">
+                        <span className="text-xs text-muted-foreground uppercase font-semibold">Teléfono</span>
+                        <a href={`tel:${proveedor.telefono}`} className="font-medium hover:text-primary hover:underline">{proveedor.telefono}</a>
+                      </div>
+                    </div>
+                  )}
                   {(proveedor.brands && proveedor.brands.length > 0) || proveedor.brand ? (
                     <div className="flex items-start gap-3">
-                      <Tag className="h-4 w-4 text-muted-foreground mt-1" />
-                      <div className="flex-1">
-                        <span className="text-sm font-medium mb-2 block">Marcas:</span>
-                        <div className="flex flex-wrap gap-2">
-                          {proveedor.brands && proveedor.brands.length > 0 ? proveedor.brands.map((brand, index) => (<Badge key={index} variant="secondary" className="font-normal">{brand}</Badge>)) : (<Badge variant="secondary" className="font-normal">{proveedor.brand}</Badge>)}
+                      <Tag className="h-4 w-4 text-muted-foreground mt-0.5" />
+                      <div className="flex flex-col gap-2">
+                        <span className="text-xs text-muted-foreground uppercase font-semibold">Marcas Representadas</span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {proveedor.brands && proveedor.brands.length > 0 
+                            ? proveedor.brands.map((brand, index) => (<Badge key={index} variant="secondary" className="font-medium text-[10px]">{brand}</Badge>)) 
+                            : (<Badge variant="secondary" className="font-medium text-[10px]">{proveedor.brand}</Badge>)}
                         </div>
                       </div>
                     </div>
                   ) : null}
-                  <div className="flex items-center gap-3 text-muted-foreground"><Calendar className="h-4 w-4" /><span>Registrado: {new Date(proveedor.createdAt).toLocaleDateString()}</span></div>
+                  <div className="flex items-start gap-3 pt-2">
+                    <Calendar className="h-4 w-4 text-muted-foreground mt-0.5" />
+                    <div className="flex flex-col">
+                      <span className="text-xs text-muted-foreground uppercase font-semibold">Registrado el</span>
+                      <span className="font-medium">{new Date(proveedor.createdAt).toLocaleDateString()}</span>
+                    </div>
+                  </div>
                 </div>
 
                 {proveedor.contacts && proveedor.contacts.length > 0 && (
-                  <>
-                    <div className="border-t my-4" />
-                    <h3 className="text-sm font-semibold mb-3 flex items-center gap-2"><Users className="h-4 w-4" />Contactos Adicionales</h3>
+                  <div className="space-y-4 pt-4 border-t">
+                    <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                      <Users className="h-3.5 w-3.5" />
+                      Contactos Adicionales
+                    </h3>
                     <div className="space-y-3">
                       {proveedor.contacts.map((contact, index) => (
-                        <div key={index} className="bg-secondary/10 p-3 rounded-lg text-sm space-y-1.5">
-                          <div className="font-medium">{contact.name}</div>
-                          {contact.email && (<div className="flex items-center gap-2 text-muted-foreground text-xs"><Mail className="h-3 w-3" /><span className="truncate">{contact.email}</span></div>)}
-                          {contact.phone && (<div className="flex items-center gap-2 text-muted-foreground text-xs"><Phone className="h-3 w-3" /><span>{contact.phone}</span></div>)}
+                        <div key={index} className="p-3 border rounded-lg bg-muted/20 hover:bg-muted/30 transition-colors space-y-2">
+                          <div className="font-semibold text-sm">{contact.name}</div>
+                          <div className="grid grid-cols-1 gap-1">
+                            {contact.email && (
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <Mail className="h-3 w-3" />
+                                <span className="truncate">{contact.email}</span>
+                              </div>
+                            )}
+                            {contact.phone && (
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <Phone className="h-3 w-3" />
+                                <span>{contact.phone}</span>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       ))}
                     </div>
-                  </>
+                  </div>
                 )}
-
-                <div className="border-t my-4" />
-                <div className="grid grid-cols-2 gap-4 text-center">
-                  <div className="p-3 bg-secondary/10 rounded-lg"><div className="text-2xl font-bold text-primary">{quotationHistory.length}</div><div className="text-xs text-muted-foreground font-medium">Cotizaciones</div></div>
-                  <div className="p-3 bg-secondary/10 rounded-lg"><div className="text-2xl font-bold text-primary">{adjudicationHistory.length}</div><div className="text-xs text-muted-foreground font-medium">Adjudicaciones</div></div>
-                </div>
               </CardContent>
             </Card>
           </FadeIn>
         </div>
 
-        <div className="lg:col-span-8 space-y-6">
-          <FadeIn delay={200}>
-            <Card className="h-full border-0 shadow-sm bg-transparent">
-              <Tabs defaultValue="cotizaciones" className="w-full">
-                <div className="flex items-center justify-between mb-4">
-                  <TabsList>
-                    <TabsTrigger value="cotizaciones" className="flex items-center gap-2"><FileText className="h-4 w-4" />Cotizaciones</TabsTrigger>
-                    <TabsTrigger value="adjudicaciones" className="flex items-center gap-2"><Award className="h-4 w-4" />Adjudicaciones</TabsTrigger>
-                  </TabsList>
-                </div>
+        {/* Right Column: History Tabs */}
+        <div className="lg:col-span-8">
+          <FadeIn delay={300}>
+            <Tabs defaultValue="cotizaciones" className="w-full">
+              <TabsList className="w-full grid grid-cols-2 bg-muted/50 p-1 h-auto mb-6 border">
+                <TabsTrigger value="cotizaciones" className="data-[state=active]:bg-background py-2 transition-all font-semibold">
+                  Cotizaciones ({quotationHistory.length})
+                </TabsTrigger>
+                <TabsTrigger value="adjudicaciones" className="data-[state=active]:bg-background py-2 transition-all font-semibold">
+                  Adjudicaciones ({adjudicationHistory.length})
+                </TabsTrigger>
+              </TabsList>
 
-                <TabsContent value="cotizaciones" className="mt-0">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Historial de Cotizaciones</CardTitle>
-                      <CardDescription>Cotizaciones realizadas por este proveedor en las diferentes licitaciones.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
+              <TabsContent value="cotizaciones" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
+                <Card className="border shadow-sm bg-card overflow-hidden">
+                  <CardHeader className="px-6 pt-6 pb-4">
+                    <CardTitle className="text-xl">Historial de Cotizaciones</CardTitle>
+                    <CardDescription>Seguimiento de ofertas realizadas por este proveedor</CardDescription>
+                  </CardHeader>
+                  <CardContent className="px-6 pb-6">
+                    <div className="rounded-md border overflow-hidden bg-background">
                       {quotationHistory.length > 0 ? (
                         <Table>
-                          <TableHeader>
-                            <TableRow><TableHead>Fecha</TableHead><TableHead>Identificador</TableHead><TableHead>Producto</TableHead><TableHead>Estado</TableHead><TableHead className="text-right">Precio</TableHead></TableRow>
+                          <TableHeader className="bg-muted/50">
+                            <TableRow>
+                              <TableHead>Fecha</TableHead>
+                              <TableHead>Identificador</TableHead>
+                              <TableHead>Producto</TableHead>
+                              <TableHead>Estado</TableHead>
+                              <TableHead className="text-right">Precio</TableHead>
+                            </TableRow>
                           </TableHeader>
                           <TableBody>
-                            {quotationHistory.map((item, idx) => (
-                              <TableRow key={idx}>
-                                <TableCell className="font-medium">{new Date(item.date).toLocaleDateString()}</TableCell>
-                                <TableCell>{item.quotationIdentifier}</TableCell>
-                                <TableCell>{item.productName}</TableCell>
-                                <TableCell><Badge variant="outline" className="capitalize">{item.status}</Badge></TableCell>
-                                <TableCell className="text-right whitespace-nowrap">{item.currency} {item.price?.toLocaleString()}</TableCell>
-                              </TableRow>
-                            ))}
+                            {quotationHistory.map((item, idx) => {
+                              const statusInfo = getStatusInfo(item.status);
+                              return (
+                                <TableRow key={idx} className="hover:bg-muted/30 transition-colors">
+                                  <TableCell className="text-xs font-medium">
+                                    <div className="flex items-center gap-2">
+                                      <Calendar className="h-3 w-3 text-muted-foreground" />
+                                      {new Date(item.date).toLocaleDateString()}
+                                    </div>
+                                  </TableCell>
+                                  <TableCell className="text-sm font-medium">{item.quotationIdentifier}</TableCell>
+                                  <TableCell className="text-sm">{item.productName}</TableCell>
+                                  <TableCell>
+                                    <Badge className={`${statusInfo.bgColor} ${statusInfo.color} border-none font-medium text-[10px] h-5 px-1.5`}>
+                                      <statusInfo.icon className="mr-1 h-2.5 w-2.5" />
+                                      {statusInfo.label}
+                                    </Badge>
+                                  </TableCell>
+                                  <TableCell className="text-right font-mono text-xs">
+                                    <span className="text-[10px] text-muted-foreground mr-1">{item.currency}</span>
+                                    {item.price?.toLocaleString()}
+                                  </TableCell>
+                                </TableRow>
+                              )
+                            })}
                           </TableBody>
                         </Table>
-                      ) : (<div className="text-center py-12 text-muted-foreground bg-secondary/5 rounded-lg border border-dashed text-sm">No hay historial de cotizaciones disponible.</div>)}
-                    </CardContent>
-                  </Card>
-                </TabsContent>
+                      ) : (
+                        <div className="text-center py-12 text-muted-foreground">
+                          <FileText className="h-12 w-12 mx-auto mb-4 opacity-20" />
+                          <p>No hay historial de cotizaciones disponible.</p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
 
-                <TabsContent value="adjudicaciones" className="mt-0">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Historial de Adjudicaciones</CardTitle>
-                      <CardDescription>Productos adjudicados a este proveedor.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
+              <TabsContent value="adjudicaciones" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
+                <Card className="border shadow-sm bg-card overflow-hidden">
+                  <CardHeader className="px-6 pt-6 pb-4">
+                    <CardTitle className="text-xl">Historial de Adjudicaciones</CardTitle>
+                    <CardDescription>Productos efectivamente vendidos por este proveedor</CardDescription>
+                  </CardHeader>
+                  <CardContent className="px-6 pb-6">
+                    <div className="rounded-md border overflow-hidden bg-background">
                       {adjudicationHistory.length > 0 ? (
                         <Table>
-                          <TableHeader>
-                            <TableRow><TableHead>Fecha</TableHead><TableHead>Producto</TableHead><TableHead className="text-center">Cant.</TableHead><TableHead className="text-right">Precio Unit.</TableHead><TableHead className="text-right">Total</TableHead></TableRow>
+                          <TableHeader className="bg-muted/50">
+                            <TableRow>
+                              <TableHead>Fecha</TableHead>
+                              <TableHead>Producto</TableHead>
+                              <TableHead className="text-right">Cant.</TableHead>
+                              <TableHead className="text-right">Unitario</TableHead>
+                              <TableHead className="text-right">Total</TableHead>
+                            </TableRow>
                           </TableHeader>
                           <TableBody>
                             {adjudicationHistory.map((item, idx) => (
-                              <TableRow key={idx}>
-                                <TableCell className="font-medium">{new Date(item.date).toLocaleDateString()}</TableCell>
-                                <TableCell><div>{item.productName}</div>{item.licitationNumber && (<div className="text-xs text-muted-foreground mt-0.5">Lic: {item.licitationNumber}</div>)}</TableCell>
-                                <TableCell className="text-center">{item.quantity}</TableCell>
-                                <TableCell className="text-right whitespace-nowrap">{item.currency} {item.unitPrice?.toLocaleString()}</TableCell>
-                                <TableCell className="text-right font-medium whitespace-nowrap">{item.currency} {item.totalPrice?.toLocaleString()}</TableCell>
+                              <TableRow key={idx} className="hover:bg-muted/30 transition-colors">
+                                <TableCell className="text-xs font-medium whitespace-nowrap">
+                                  <div className="flex items-center gap-2">
+                                    <Calendar className="h-3 w-3 text-muted-foreground" />
+                                    {new Date(item.date).toLocaleDateString()}
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex flex-col">
+                                    <span className="text-sm font-medium">{item.productName}</span>
+                                    {item.licitationNumber && (
+                                      <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-tighter">Lic: {item.licitationNumber}</span>
+                                    )}
+                                  </div>
+                                </TableCell>
+                                <TableCell className="text-right font-mono text-xs">{item.quantity}</TableCell>
+                                <TableCell className="text-right font-mono text-xs">
+                                  <span className="text-[10px] text-muted-foreground mr-1">{item.currency}</span>
+                                  {item.unitPrice?.toLocaleString()}
+                                </TableCell>
+                                <TableCell className="text-right font-bold text-sm text-green-700 whitespace-nowrap">
+                                  <span className="text-[10px] opacity-70 mr-1">{item.currency}</span>
+                                  {item.totalPrice?.toLocaleString()}
+                                </TableCell>
                               </TableRow>
                             ))}
                           </TableBody>
                         </Table>
-                      ) : (<div className="text-center py-12 text-muted-foreground bg-secondary/5 rounded-lg border border-dashed text-sm">No hay historial de adjudicaciones disponible.</div>)}
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-              </Tabs>
-            </Card>
+                      ) : (
+                        <div className="text-center py-12 text-muted-foreground">
+                          <Award className="h-12 w-12 mx-auto mb-4 opacity-20" />
+                          <p>No hay historial de adjudicaciones disponible.</p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
           </FadeIn>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ProviderDetailSkeleton() {
+  return (
+    <div className="space-y-8 animate-pulse">
+      <div className="flex items-center gap-4">
+        <Skeleton className="h-10 w-10 rounded-full" />
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-64" />
+          <Skeleton className="h-4 w-32" />
+        </div>
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="lg:col-span-4 space-y-6">
+          <Skeleton className="h-[400px] w-full rounded-xl" />
+        </div>
+        <div className="lg:col-span-8 space-y-6">
+          <Skeleton className="h-12 w-full rounded-lg" />
+          <Skeleton className="h-[400px] w-full rounded-xl" />
         </div>
       </div>
     </div>

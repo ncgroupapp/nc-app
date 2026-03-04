@@ -170,14 +170,14 @@ export default function CotizacionesPage() {
                 ) : (
                   cotizaciones.map((cot) => (
                     <TableRow key={cot.id} className="hover:bg-muted/30 transition-colors">
-                      <TableCell className="font-mono text-xs text-muted-foreground">{cot.identifier}</TableCell>
-                      <TableCell className="font-medium">{cot.licitation?.callNumber || '-'}</TableCell>
-                      <TableCell>{cot.licitation?.client?.name || '-'}</TableCell>
-                      <TableCell>{new Date(cot.createdAt).toLocaleDateString()}</TableCell>
+                      <TableCell className="font-mono text-xs text-muted-foreground">{cot.quotationIdentifier || '-'}</TableCell>
+                      <TableCell className="font-medium">{cot.licitationId ? `#${cot.licitationId}` : '-'}</TableCell>
+                      <TableCell>{cot.clientName || '-'}</TableCell>
+                      <TableCell>{new Date(cot.createdAt).toLocaleDateString('es-CL')}</TableCell>
                       <TableCell>{getStatusBadge(cot.status)}</TableCell>
                       <TableCell className="text-right">
-                        <Link href={`/dashboard/licitaciones/${cot.licitationId}`}>
-                          <Button variant="ghost" size="icon" title="Ver Licitación"><Eye className="h-4 w-4" /></Button>
+                        <Link href={`/dashboard/licitaciones/${cot.licitationId}?tab=cotizaciones`}>
+                          <Button variant="ghost" size="icon" aria-label={`Ver licitación de cotización ${cot.quotationIdentifier}`}><Eye className="h-4 w-4" /></Button>
                         </Link>
                       </TableCell>
                     </TableRow>

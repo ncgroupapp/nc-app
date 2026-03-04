@@ -9,8 +9,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { showSnackbar } from '@/components/ui/snackbar'
 import { uploadProductImage } from '@/lib/firebase'
 import { CreateProductForm, Product } from '@/services/products.service'
-import { useBrandsStore } from '@/stores/brands/brandsStore'
-import { useProveedoresStore } from '@/stores'
+import { useMarcasStore, useProveedoresStore } from '@/stores'
 import { Upload, X } from "lucide-react";
 import { useEffect, useState, useMemo } from 'react'
 
@@ -23,7 +22,7 @@ interface ProductFormProps {
 
 export function ProductForm({ initialData, onSubmit, onCancel, isLoading }: ProductFormProps) {
   const { proveedores, fetchProveedores } = useProveedoresStore()
-  const { brands, fetchBrands, fetchBrandById, models } = useBrandsStore()
+  const { brands, fetchBrands, fetchBrandById, models } = useMarcasStore()
 
   const [brandSearch, setBrandSearch] = useState('')
   const [modelSearch, setModelSearch] = useState('')
