@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2 } from "lucide-react";
 import { LicitationStatus } from "@/services/licitaciones.service";
 import { QuotationStatus } from "@/types";
+import { FadeIn } from "@/components/common/fade-in";
 
 // Local imports
 import { useLicitationDetail, useQuotationActions, useAdjudicationActions } from "./hooks";
@@ -102,55 +103,61 @@ export default function LicitacionDetailPage() {
       )}
       
       {/* Header */}
-      <LicitationHeader licitation={licitation} />
+      <FadeIn direction="none">
+        <LicitationHeader licitation={licitation} />
+      </FadeIn>
 
       {/* General Info Card */}
-      <LicitationInfoCard licitation={licitation} />
+      <FadeIn delay={100}>
+        <LicitationInfoCard licitation={licitation} />
+      </FadeIn>
 
       {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="productos">Productos Solicitados</TabsTrigger>
-          <TabsTrigger value="cotizaciones">Cotización</TabsTrigger>
-          <TabsTrigger value="entregas">Entrega de Productos</TabsTrigger>
-        </TabsList>
+      <FadeIn delay={200}>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="productos">Productos Solicitados</TabsTrigger>
+            <TabsTrigger value="cotizaciones">Cotización</TabsTrigger>
+            <TabsTrigger value="entregas">Entrega de Productos</TabsTrigger>
+          </TabsList>
 
-        {/* Tab: Productos Solicitados */}
-        <TabsContent value="productos" className="space-y-4">
-          <RequestedProductsTab licitationProducts={licitation.licitationProducts} />
-        </TabsContent>
+          {/* Tab: Productos Solicitados */}
+          <TabsContent value="productos" className="space-y-4">
+            <RequestedProductsTab licitationProducts={licitation.licitationProducts} />
+          </TabsContent>
 
-        {/* Tab: Cotización */}
-        <TabsContent value="cotizaciones" className="space-y-4">
-          <QuotationTab
-            quotation={quotation}
-            submitting={quotationActions.submitting || adjudicationActions.submitting}
-            onOpenCreateQuotation={quotationActions.handleOpenCreateQuotationDialog}
-            isQuotationDialogOpen={quotationActions.isQuotationDialogOpen}
-            setIsQuotationDialogOpen={quotationActions.setIsQuotationDialogOpen}
-            newItemData={quotationActions.newItemData}
-            setNewItemData={quotationActions.setNewItemData}
-            onAddItem={quotationActions.handleAddItemToQuotation}
-            onEditItem={quotationActions.handleEditItem}
-            onStatusChange={adjudicationActions.handleStatusChange}
-            onOpenAward={adjudicationActions.handleOpenAward}
-            onOpenReject={adjudicationActions.handleOpenReject}
-            onEditAwardedQuantity={adjudicationActions.handleEditAwardedQuantity}
-            onFinalize={quotationActions.handleFinalizeQuotation}
-            onDownloadPdf={quotationActions.handleDownloadPdf}
-          />
-        </TabsContent>
+          {/* Tab: Cotización */}
+          <TabsContent value="cotizaciones" className="space-y-4">
+            <QuotationTab
+              quotation={quotation}
+              submitting={quotationActions.submitting || adjudicationActions.submitting}
+              onOpenCreateQuotation={quotationActions.handleOpenCreateQuotationDialog}
+              isQuotationDialogOpen={quotationActions.isQuotationDialogOpen}
+              setIsQuotationDialogOpen={quotationActions.setIsQuotationDialogOpen}
+              newItemData={quotationActions.newItemData}
+              setNewItemData={quotationActions.setNewItemData}
+              onAddItem={quotationActions.handleAddItemToQuotation}
+              onEditItem={quotationActions.handleEditItem}
+              onStatusChange={adjudicationActions.handleStatusChange}
+              onOpenAward={adjudicationActions.handleOpenAward}
+              onOpenReject={adjudicationActions.handleOpenReject}
+              onEditAwardedQuantity={adjudicationActions.handleEditAwardedQuantity}
+              onFinalize={quotationActions.handleFinalizeQuotation}
+              onDownloadPdf={quotationActions.handleDownloadPdf}
+            />
+          </TabsContent>
 
-        {/* Tab: Entrega */}
-        <TabsContent value="entregas" className="space-y-4">
-          <DeliveryTab 
-            licitationId={licitationId}
-            licitationStatus={licitation.status as LicitationStatus} 
-          />
-        </TabsContent>
-      </Tabs>
+          {/* Tab: Entrega */}
+          <TabsContent value="entregas" className="space-y-4">
+            <DeliveryTab 
+              licitationId={licitationId}
+              licitationStatus={licitation.status as LicitationStatus} 
+            />
+          </TabsContent>
+        </Tabs>
+      </FadeIn>
 
-      {/* Dialogs */}
+      {/* Dialogs - No need to animate these as they handle their own entrance */}
       <CreateQuotationDialog
         open={quotationActions.isCreateQuotationDialogOpen}
         onOpenChange={quotationActions.setIsCreateQuotationDialogOpen}
@@ -190,7 +197,6 @@ export default function LicitacionDetailPage() {
         submitting={adjudicationActions.submitting}
       />
 
-      {/* Edit Awarded Quantity Dialog */}
       <AwardDialog
         open={adjudicationActions.isEditAwardedDialogOpen}
         onOpenChange={adjudicationActions.setIsEditAwardedDialogOpen}

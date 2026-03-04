@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/table";
 import { format, isValid } from "date-fns";
 import { es } from "date-fns/locale";
+import { FadeIn } from "@/components/common/fade-in";
 
 export default function ClientDetailPage() {
   const params = useParams();
@@ -79,192 +80,119 @@ export default function ClientDetailPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-6">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => router.back()}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">{client.name}</h1>
-          <p className="text-muted-foreground flex items-center gap-2">
-            <Building2 className="h-4 w-4" />
-            {client.identifier}
-          </p>
+    <div className="flex flex-col gap-6">
+      <FadeIn direction="none">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" onClick={() => router.back()}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">{client.name}</h1>
+            <p className="text-muted-foreground flex items-center gap-2">
+              <Building2 className="h-4 w-4" />
+              {client.identifier}
+            </p>
+          </div>
         </div>
-      </div>
+      </FadeIn>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Client Info Sidebar */}
         <div className="md:col-span-1 space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Información de Contacto</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {client.email && (
-                <div className="flex items-center gap-3">
-                  <Mail className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">{client.email}</span>
-                </div>
-              )}
-              {client.phone && (
-                <div className="flex items-center gap-3">
-                  <Phone className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">{client.phone}</span>
-                </div>
-              )}
-              {client.address && (
-                <div className="flex items-center gap-3">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">{client.address}</span>
-                </div>
-              )}
-              <div className="h-[1px] w-full bg-border" />
-              <div className="text-xs text-muted-foreground">
-                <p>
-                  Registrado el:{" "}
-                  {client.created_at && isValid(new Date(client.created_at))
-                    ? format(new Date(client.created_at), "PPP", { locale: es })
-                    : "Fecha desconocida"}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {client.contacts && client.contacts.length > 0 && (
+          <FadeIn delay={100}>
             <Card>
-              <CardHeader>
-                <CardTitle>Contactos Adicionales</CardTitle>
-              </CardHeader>
+              <CardHeader><CardTitle>Información de Contacto</CardTitle></CardHeader>
               <CardContent className="space-y-4">
-                {client.contacts.map((contact, index) => (
-                  <div key={index} className="space-y-1">
-                    <p className="font-medium text-sm">{contact.name}</p>
-                    {contact.email && <p className="text-xs text-muted-foreground">{contact.email}</p>}
-                    {contact.phone && <p className="text-xs text-muted-foreground">{contact.phone}</p>}
-                    {index < (client.contacts?.length || 0) - 1 && <div className="h-[1px] w-full bg-border my-2" />}
-                  </div>
-                ))}
+                {client.email && (<div className="flex items-center gap-3"><Mail className="h-4 w-4 text-muted-foreground" /><span className="text-sm">{client.email}</span></div>)}
+                {client.phone && (<div className="flex items-center gap-3"><Phone className="h-4 w-4 text-muted-foreground" /><span className="text-sm">{client.phone}</span></div>)}
+                {client.address && (<div className="flex items-center gap-3"><MapPin className="h-4 w-4 text-muted-foreground" /><span className="text-sm">{client.address}</span></div>)}
+                <div className="h-[1px] w-full bg-border" />
+                <div className="text-xs text-muted-foreground"><p>Registrado el: {client.created_at && isValid(new Date(client.created_at)) ? format(new Date(client.created_at), "PPP", { locale: es }) : "Fecha desconocida"}</p></div>
               </CardContent>
             </Card>
+          </FadeIn>
+
+          {client.contacts && client.contacts.length > 0 && (
+            <FadeIn delay={200}>
+              <Card>
+                <CardHeader><CardTitle>Contactos Adicionales</CardTitle></CardHeader>
+                <CardContent className="space-y-4">
+                  {client.contacts.map((contact, index) => (
+                    <div key={index} className="space-y-1">
+                      <p className="font-medium text-sm">{contact.name}</p>
+                      {contact.email && <p className="text-xs text-muted-foreground">{contact.email}</p>}
+                      {contact.phone && <p className="text-xs text-muted-foreground">{contact.phone}</p>}
+                      {index < (client.contacts?.length || 0) - 1 && <div className="h-[1px] w-full bg-border my-2" />}
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            </FadeIn>
           )}
         </div>
 
-        {/* Main Content Area */}
         <div className="md:col-span-2">
-          <Tabs defaultValue="quotations" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="quotations">Cotizaciones ({quotations.length})</TabsTrigger>
-              <TabsTrigger value="adjudications">Adjudicaciones ({adjudications.length})</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="quotations" className="mt-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Historial de Cotizaciones</CardTitle>
-                  <CardDescription>
-                    Cotizaciones asociadas a este cliente
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {quotations.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      No hay cotizaciones registradas para este cliente.
-                    </div>
-                  ) : (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Identificador</TableHead>
-                          <TableHead>Fecha</TableHead>
-                          <TableHead>Estado</TableHead>
-                          <TableHead className="text-right">Total Items</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {quotations.map((quote) => (
-                          <TableRow 
-                            key={quote.id} 
-                            className="cursor-pointer hover:bg-muted/50"
-                            onClick={() => router.push(`/dashboard/licitaciones/${quote.licitationId}`)} // Assuming navigation to licitation or maybe quotation detail
-                          >
-                            <TableCell className="font-medium">
-                              <div className="flex items-center gap-2">
-                                <FileText className="h-4 w-4 text-muted-foreground" />
-                                {quote.quotationIdentifier}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              {quote.quotationDate ? format(new Date(quote.quotationDate), "dd/MM/yyyy") : "-"}
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant={quote.status === "finalizada" ? "secondary" : "default"}>
-                                {quote.status}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-right">{quote.items?.length || 0}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
+          <FadeIn delay={300}>
+            <Tabs defaultValue="quotations" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="quotations">Cotizaciones ({quotations.length})</TabsTrigger>
+                <TabsTrigger value="adjudications">Adjudicaciones ({adjudications.length})</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="quotations" className="mt-4">
+                <Card>
+                  <CardHeader><CardTitle>Historial de Cotizaciones</CardTitle><CardDescription>Cotizaciones asociadas a este cliente</CardDescription></CardHeader>
+                  <CardContent>
+                    {quotations.length === 0 ? (
+                      <div className="text-center py-8 text-muted-foreground">No hay cotizaciones registradas para este cliente.</div>
+                    ) : (
+                      <Table>
+                        <TableHeader>
+                          <TableRow><TableHead>Identificador</TableHead><TableHead>Fecha</TableHead><TableHead>Estado</TableHead><TableHead className="text-right">Total Items</TableHead></TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {quotations.map((quote) => (
+                            <TableRow key={quote.id} className="cursor-pointer hover:bg-muted/50" onClick={() => router.push(`/dashboard/licitaciones/${quote.licitationId}`)}>
+                              <TableCell className="font-medium"><div className="flex items-center gap-2"><FileText className="h-4 w-4 text-muted-foreground" />{quote.quotationIdentifier}</div></TableCell>
+                              <TableCell>{quote.quotationDate ? format(new Date(quote.quotationDate), "dd/MM/yyyy") : "-"}</TableCell>
+                              <TableCell><Badge variant={quote.status === "finalizada" ? "secondary" : "default"}>{quote.status}</Badge></TableCell>
+                              <TableCell className="text-right">{quote.items?.length || 0}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
 
-            <TabsContent value="adjudications" className="mt-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Historial de Adjudicaciones</CardTitle>
-                  <CardDescription>
-                    Adjudicaciones ganadas por este cliente
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {adjudications.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      No hay adjudicaciones registradas para este cliente.
-                    </div>
-                  ) : (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>ID</TableHead>
-                          <TableHead>Fecha</TableHead>
-                          <TableHead>Estado</TableHead>
-                          <TableHead className="text-right">Monto Total</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {adjudications.map((adj) => (
-                          <TableRow key={adj.id}>
-                            <TableCell className="font-medium">
-                              <div className="flex items-center gap-2">
-                                <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
-                                #{adj.id}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              {adj.adjudicationDate ? format(new Date(adj.adjudicationDate), "dd/MM/yyyy") : "-"}
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant="outline">{adj.status}</Badge>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              {/* Displaying price if available directly on adjudication object, otherwise might need calculation */}
-                              {adj.totalPriceWithIVA ? 
-                                new Intl.NumberFormat('es-UY', { style: 'currency', currency: 'UYU' }).format(adj.totalPriceWithIVA) 
-                                : "-"}
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+              <TabsContent value="adjudications" className="mt-4">
+                <Card>
+                  <CardHeader><CardTitle>Historial de Adjudicaciones</CardTitle><CardDescription>Adjudicaciones ganadas por este cliente</CardDescription></CardHeader>
+                  <CardContent>
+                    {adjudications.length === 0 ? (
+                      <div className="text-center py-8 text-muted-foreground">No hay adjudicaciones registradas para este cliente.</div>
+                    ) : (
+                      <Table>
+                        <TableHeader>
+                          <TableRow><TableHead>ID</TableHead><TableHead>Fecha</TableHead><TableHead>Estado</TableHead><TableHead className="text-right">Monto Total</TableHead></TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {adjudications.map((adj) => (
+                            <TableRow key={adj.id}>
+                              <TableCell className="font-medium"><div className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-muted-foreground" />#{adj.id}</div></TableCell>
+                              <TableCell>{adj.adjudicationDate ? format(new Date(adj.adjudicationDate), "dd/MM/yyyy") : "-"}</TableCell>
+                              <TableCell><Badge variant="outline">{adj.status}</Badge></TableCell>
+                              <TableCell className="text-right">{adj.totalPriceWithIVA ? new Intl.NumberFormat('es-UY', { style: 'currency', currency: 'UYU' }).format(adj.totalPriceWithIVA) : "-"}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </FadeIn>
         </div>
       </div>
     </div>
@@ -273,20 +201,22 @@ export default function ClientDetailPage() {
 
 function ClientDetailSkeleton() {
   return (
-    <div className="flex flex-col gap-6 p-6">
-      <div className="flex items-center gap-4">
-        <div className="h-10 w-10 bg-muted animate-pulse rounded-full" />
-        <div className="space-y-2">
-          <div className="h-8 w-64 bg-muted animate-pulse rounded" />
-          <div className="h-4 w-32 bg-muted animate-pulse rounded" />
+    <div className="flex flex-col gap-6">
+      <FadeIn direction="none">
+        <div className="flex items-center gap-4">
+          <div className="h-10 w-10 bg-muted animate-pulse rounded-full" />
+          <div className="space-y-2">
+            <div className="h-8 w-64 bg-muted animate-pulse rounded" />
+            <div className="h-4 w-32 bg-muted animate-pulse rounded" />
+          </div>
         </div>
-      </div>
+      </FadeIn>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="h-[300px] col-span-1 bg-muted animate-pulse rounded-lg" />
-        <div className="col-span-2 space-y-4">
+        <FadeIn delay={100} className="h-[300px] col-span-1 bg-muted animate-pulse rounded-lg" />
+        <FadeIn delay={200} className="col-span-2 space-y-4">
           <div className="h-10 w-full bg-muted animate-pulse rounded" />
           <div className="h-[400px] w-full bg-muted animate-pulse rounded-lg" />
-        </div>
+        </FadeIn>
       </div>
     </div>
   );
