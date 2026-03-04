@@ -2,6 +2,7 @@ import { AppSidebar } from '@/components/layout/app-sidebar'
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { AuthGuard } from '@/components/layout/auth-guard'
 import { Separator } from '@/components/ui/separator'
+import { ErrorBoundary } from '@/components/common/error-boundary'
 
 export default function DashboardLayout({
   children,
@@ -21,7 +22,9 @@ export default function DashboardLayout({
             </span>
           </header>
           <main id="main-content" className="flex-1 p-6" tabIndex={-1}>
-            {children}
+            <ErrorBoundary>
+              {children}
+            </ErrorBoundary>
           </main>
         </SidebarInset>
       </SidebarProvider>

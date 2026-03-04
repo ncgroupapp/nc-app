@@ -1,3 +1,7 @@
+'use client'
+
+import { useEffect, useCallback, useState } from 'react'
+import Link from 'next/link'
 import {
   Card,
   CardContent,
@@ -6,41 +10,50 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, Clock, FileText, Package, Truck } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertTriangle, Clock, FileText, Package, Truck, AlertCircle } from "lucide-react";
 import { FadeIn } from "@/components/common/fade-in";
+import { licitacionesService, Licitation, LicitationStatus } from "@/services/licitaciones.service";
 
 export default function DashboardPage() {
-  // Mock data
-  const stats = {
-    totalLicitaciones: 124,
-    licitacionesActivas: 23,
-    totalProductos: 456,
-    bajoStock: 12,
-    totalProveedores: 34,
-    totalClientes: 28,
-    adjudicacionesMes: 8,
-    entregasPendientes: 15,
-  };
+  const [licitaciones, setLicitaciones] = useState<Licitation[]>([])
+  const [total, setTotal] = useState(0)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  const recentLicitaciones = [
-    { id: 1, numero: "LIC-2024-001", cliente: "Municipalidad", estado: "En espera", fecha: "2024-01-15" },
-    { id: 2, numero: "LIC-2024-002", cliente: "Empresa XYZ", estado: "Cotización", fecha: "2024-01-14" },
-    { id: 3, numero: "LIC-2024-003", cliente: "Gobierno", estado: "Adjudicada", fecha: "2024-01-13" },
-  ];
+  const loadData = useCallback(async () => {
+    try {
+      setIsLoading(true)
+      setError(null)
+      const res = await licitacionesService.getAll({ page: 1 })
+      setLicitaciones(res.data ?? [])
+      setTotal(res.meta?.total ?? 0)
+    } catch (err) {
+      console.error('Error loading dashboard data:', err)
+      setError('No se pudieron cargar los datos. Verifica tu conexión e intenta de nuevo.')
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
 
-  const stockAlerts = [
-    { id: 1, sku: "PROD-001", nombre: "Producto A", stock: 2, minimo: 5 },
-    { id: 2, sku: "PROD-004", nombre: "Producto D", stock: 0, minimo: 10 },
-    { id: 3, sku: "PROD-007", nombre: "Producto G", stock: 3, minimo: 5 },
-  ];
+  useEffect(() => {
+    loadData()
+  }, [loadData])
 
-  const getEstadoColor = (estado: string) => {
-    switch (estado) {
-      case "En espera": return "bg-yellow-100 text-yellow-800";
-      case "Cotización": return "bg-blue-100 text-blue-800";
-      case "Adjudicada": return "bg-green-100 text-green-800";
-      case "No Adjudicada": return "bg-red-100 text-red-800";
-      default: return "bg-gray-100 text-gray-800";
+  // Derive stats from real data
+  const licitacionesActivas = licitaciones.filter(
+    (l) => l.status === LicitationStatus.PENDING || l.status === LicitationStatus.QUOTED
+  ).length
+  const recentLicitaciones = licitaciones.slice(0, 5)
+
+  const getEstadoVariant = (status: LicitationStatus): "default" | "secondary" | "destructive" | "outline" => {
+    switch (status) {
+      case LicitationStatus.PENDING: return "secondary";
+      case LicitationStatus.QUOTED: return "default";
+      case LicitationStatus.TOTAL_ADJUDICATION: return "outline";
+      case LicitationStatus.NOT_ADJUDICATED: return "destructive";
+      default: return "secondary";
     }
   };
 
@@ -53,17 +66,29 @@ export default function DashboardPage() {
         </p>
       </FadeIn>
 
+      {error && (
+        <FadeIn direction="none">
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        </FadeIn>
+      )}
+
       {/* Stats Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <FadeIn delay={100}>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Licitaciones</CardTitle>
-              <FileText className="h-4 w-4 text-blue-950" />
+              <FileText className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.totalLicitaciones}</div>
-              <p className="text-xs text-blue-950">+{stats.adjudicacionesMes} adjudicaciones este mes</p>
+              {isLoading ? (
+                <Skeleton className="h-8 w-16" />
+              ) : (
+                <div className="text-2xl font-bold">{total}</div>
+              )}
             </CardContent>
           </Card>
         </FadeIn>
@@ -72,11 +97,15 @@ export default function DashboardPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Licitaciones Activas</CardTitle>
-              <Clock className="h-4 w-4 text-blue-950" />
+              <Clock className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.licitacionesActivas}</div>
-              <p className="text-xs text-blue-950">En proceso actualmente</p>
+              {isLoading ? (
+                <Skeleton className="h-8 w-16" />
+              ) : (
+                <div className="text-2xl font-bold">{licitacionesActivas}</div>
+              )}
+              <p className="text-xs text-muted-foreground mt-1">En proceso actualmente</p>
             </CardContent>
           </Card>
         </FadeIn>
@@ -84,12 +113,15 @@ export default function DashboardPage() {
         <FadeIn delay={300}>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Productos</CardTitle>
-              <Package className="h-4 w-4 text-blue-950" />
+              <CardTitle className="text-sm font-medium">Proveedores</CardTitle>
+              <Package className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.totalProductos}</div>
-              <p className="text-xs text-blue-950">{stats.bajoStock} con bajo stock</p>
+              <p className="text-xs text-muted-foreground mt-2">
+                <Link href="/dashboard/proveedores" className="underline underline-offset-2 hover:text-foreground">
+                  Ver listado completo
+                </Link>
+              </p>
             </CardContent>
           </Card>
         </FadeIn>
@@ -97,70 +129,104 @@ export default function DashboardPage() {
         <FadeIn delay={400}>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Entregas Pendientes</CardTitle>
-              <Truck className="h-4 w-4 text-blue-950" />
+              <CardTitle className="text-sm font-medium">Clientes</CardTitle>
+              <Truck className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.entregasPendientes}</div>
-              <p className="text-xs text-blue-950">Por entregar esta semana</p>
+              <p className="text-xs text-muted-foreground mt-2">
+                <Link href="/dashboard/clientes" className="underline underline-offset-2 hover:text-foreground">
+                  Ver listado completo
+                </Link>
+              </p>
             </CardContent>
           </Card>
         </FadeIn>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <FadeIn delay={500} className="col-span-4">
-          <Card>
-            <CardHeader><CardTitle>Licitaciones Recientes</CardTitle></CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {recentLicitaciones.map((licitacion) => (
-                  <div key={licitacion.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/30 transition-colors">
-                    <div className="flex items-center space-x-3">
-                      <div>
-                        <p className="font-medium">{licitacion.numero}</p>
-                        <p className="text-sm text-blue-950">{licitacion.cliente}</p>
-                      </div>
+      <FadeIn delay={500}>
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>Licitaciones Recientes</CardTitle>
+              <Link
+                href="/dashboard/licitaciones"
+                className="text-sm text-muted-foreground underline underline-offset-2 hover:text-foreground"
+              >
+                Ver todas
+              </Link>
+            </div>
+            <CardDescription>Últimas licitaciones registradas en el sistema</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {isLoading ? (
+                Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="space-y-1">
+                      <Skeleton className="h-4 w-32" />
+                      <Skeleton className="h-3 w-24" />
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm text-blue-950">{licitacion.fecha}</span>
-                      <Badge className={getEstadoColor(licitacion.estado)}>{licitacion.estado}</Badge>
-                    </div>
+                    <Skeleton className="h-6 w-20" />
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </FadeIn>
-
-        <FadeIn delay={600} className="col-span-3">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <AlertTriangle className="h-4 w-4 text-yellow-600" />
-                <span>Alertas de Stock</span>
-              </CardTitle>
-              <CardDescription>Productos con stock bajo o agotado</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {stockAlerts.map((alert) => (
-                  <div key={alert.id} className="flex items-center justify-between p-3 border rounded-lg bg-red-50/50 hover:bg-red-100/50 transition-colors">
+                ))
+              ) : recentLicitaciones.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-6">
+                  No hay licitaciones registradas
+                </p>
+              ) : (
+                recentLicitaciones.map((licitacion) => (
+                  <Link
+                    key={licitacion.id}
+                    href={`/dashboard/licitaciones/${licitacion.id}`}
+                    className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/30 transition-colors"
+                  >
                     <div>
-                      <p className="font-medium text-sm">{alert.nombre}</p>
-                      <p className="text-xs text-blue-950">{alert.sku}</p>
+                      <p className="font-medium text-sm">{licitacion.callNumber}</p>
+                      <p className="text-xs text-muted-foreground">{licitacion.client?.name ?? '—'}</p>
                     </div>
-                    <div className="text-right">
-                      <Badge variant={alert.stock === 0 ? "destructive" : "outline"}>{alert.stock} unidades</Badge>
-                      <p className="text-xs text-blue-950 mt-1">Mínimo: {alert.minimo}</p>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(licitacion.startDate).toLocaleDateString('es-CL')}
+                      </span>
+                      <Badge variant={getEstadoVariant(licitacion.status)}>
+                        {licitacion.status}
+                      </Badge>
                     </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </FadeIn>
-      </div>
+                  </Link>
+                ))
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </FadeIn>
+
+      <FadeIn delay={600}>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-yellow-600" aria-hidden="true" />
+              Módulos adicionales
+            </CardTitle>
+            <CardDescription>Accesos directos a otras secciones del sistema</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { label: 'Adjudicaciones', href: '/dashboard/adjudicaciones' },
+                { label: 'Cotizaciones', href: '/dashboard/cotizaciones' },
+                { label: 'Productos', href: '/dashboard/productos' },
+                { label: 'Marcas', href: '/dashboard/marcas' },
+              ].map((item) => (
+                <Link key={item.href} href={item.href}>
+                  <Badge variant="outline" className="cursor-pointer hover:bg-muted transition-colors px-3 py-1">
+                    {item.label}
+                  </Badge>
+                </Link>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </FadeIn>
     </div>
   );
 }

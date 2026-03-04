@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import {
   Table,
@@ -17,6 +17,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -27,7 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { AlertCircle, CheckCircle, Eye, FileText, Gavel, Loader2, Search } from "lucide-react";
+import { AlertCircle, Eye, Gavel, Search } from "lucide-react";
 import { adjudicacionesService, Adjudication } from '@/services/adjudicaciones.service'
 import { AdjudicationStatus } from '@/types'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -36,6 +37,7 @@ import { FadeIn } from '@/components/common/fade-in'
 export default function AdjudicacionesPage() {
   const [adjudicaciones, setAdjudicaciones] = useState<Adjudication[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [pagination, setPagination] = useState({
@@ -45,9 +47,10 @@ export default function AdjudicacionesPage() {
     lastPage: 1
   })
 
-  const fetchAdjudicaciones = async (page = 1, search = '', status = 'all') => {
+  const fetchAdjudicaciones = useCallback(async (page = 1, search = '', status = 'all') => {
     try {
       setLoading(true)
+      setError(null)
       const res = await adjudicacionesService.getAll({
         page,
         limit: 10,
@@ -63,17 +66,18 @@ export default function AdjudicacionesPage() {
       })
     } catch (err) {
       console.error('Error fetching adjudicaciones:', err)
+      setError('No se pudieron cargar las adjudicaciones. Verifica tu conexión e intenta de nuevo.')
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       fetchAdjudicaciones(1, searchTerm, statusFilter)
     }, 300)
     return () => clearTimeout(timeoutId)
-  }, [searchTerm, statusFilter])
+  }, [searchTerm, statusFilter, fetchAdjudicaciones])
 
   const handlePageChange = (newPage: number) => {
     fetchAdjudicaciones(newPage, searchTerm, statusFilter)
@@ -115,12 +119,20 @@ export default function AdjudicacionesPage() {
           <CardContent>
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex-1 relative">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Buscar por ID..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-8" />
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                <Input
+                  placeholder="Buscar por ID..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-8"
+                  aria-label="Buscar adjudicaciones"
+                />
               </div>
               <div className="w-full sm:w-[200px]">
                 <Select onValueChange={handleStatusChange} defaultValue="all">
-                  <SelectTrigger><SelectValue placeholder="Estado" /></SelectTrigger>
+                  <SelectTrigger aria-label="Filtrar por estado">
+                    <SelectValue placeholder="Estado" />
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Todos los estados</SelectItem>
                     <SelectItem value={AdjudicationStatus.TOTAL}>Total</SelectItem>
@@ -143,6 +155,12 @@ export default function AdjudicacionesPage() {
             <CardDescription>Seguimiento de procesos adjudicados y sus estados</CardDescription>
           </CardHeader>
           <CardContent>
+            {error && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
             <Table>
               <TableHeader>
                 <TableRow>
@@ -167,18 +185,28 @@ export default function AdjudicacionesPage() {
                     </TableRow>
                   ))
                 ) : adjudicaciones.length === 0 ? (
-                  <TableRow><TableCell colSpan={6} className="text-center py-10 text-muted-foreground">No se encontraron adjudicaciones</TableCell></TableRow>
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">
+                      No se encontraron adjudicaciones
+                    </TableCell>
+                  </TableRow>
                 ) : (
                   adjudicaciones.map((adj) => (
                     <TableRow key={adj.id} className="hover:bg-muted/30 transition-colors">
                       <TableCell className="font-mono text-xs text-muted-foreground">{adj.identifier}</TableCell>
                       <TableCell className="font-medium">{adj.licitation?.callNumber || '-'}</TableCell>
                       <TableCell>{adj.licitation?.client?.name || '-'}</TableCell>
-                      <TableCell>{new Date(adj.createdAt).toLocaleDateString()}</TableCell>
+                      <TableCell>{new Date(adj.createdAt).toLocaleDateString('es-CL')}</TableCell>
                       <TableCell>{getStatusBadge(adj.status)}</TableCell>
                       <TableCell className="text-right">
                         <Link href={`/dashboard/licitaciones/${adj.licitationId}`}>
-                          <Button variant="ghost" size="icon" title="Ver Licitación"><Eye className="h-4 w-4" /></Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            aria-label={`Ver licitación ${adj.licitation?.callNumber ?? adj.licitationId}`}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
                         </Link>
                       </TableCell>
                     </TableRow>
@@ -189,8 +217,24 @@ export default function AdjudicacionesPage() {
             <div className="flex items-center justify-between mt-4">
               <p className="text-sm text-muted-foreground">Página {pagination.page} de {pagination.lastPage}</p>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={() => handlePageChange(pagination.page - 1)} disabled={pagination.page === 1 || loading}>Anterior</Button>
-                <Button variant="outline" size="sm" onClick={() => handlePageChange(pagination.page + 1)} disabled={pagination.page === pagination.lastPage || loading}>Siguiente</Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(pagination.page - 1)}
+                  disabled={pagination.page === 1 || loading}
+                  aria-label="Página anterior"
+                >
+                  Anterior
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(pagination.page + 1)}
+                  disabled={pagination.page === pagination.lastPage || loading}
+                  aria-label="Página siguiente"
+                >
+                  Siguiente
+                </Button>
               </div>
             </div>
           </CardContent>
