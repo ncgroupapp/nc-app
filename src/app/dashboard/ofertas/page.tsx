@@ -30,7 +30,6 @@ import {
   Package,
   Plus,
   Search,
-  Tag,
   Trash2,
   Users
 } from "lucide-react";
@@ -178,6 +177,7 @@ export default function OfertasPage() {
     const matchesSearch =
       (oferta.name?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
       (oferta.product?.name?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
+      (oferta.product?.code?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
       (oferta.provider?.name?.toLowerCase().includes(searchTerm.toLowerCase()) || false);
 
     const matchesProduct = selectedProducts.length === 0 || selectedProducts.includes(oferta.productId)
@@ -294,7 +294,6 @@ export default function OfertasPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Ofertas</CardTitle>
-              <Tag className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               {loading ? (

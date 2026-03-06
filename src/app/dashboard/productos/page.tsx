@@ -1,10 +1,12 @@
 'use client'
 
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { AlertTriangle, Package, Plus } from "lucide-react"
+
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { useConfirm } from '@/hooks/use-confirm'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { DataTable, DataTableColumn } from '@/components/ui/data-table'
+import { DataTableColumn } from '@/components/ui/data-table'
 import { ActionCell } from '@/components/ui/data-table-cells'
 import {
   Dialog,
@@ -12,20 +14,21 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
 import { MultiSelectSearch } from '@/components/ui/multi-select-search'
 import { showSnackbar } from '@/components/ui/snackbar'
-import { CreateProductForm, Product } from '@/services/products.service'
-import { proveedoresService } from '@/services/proveedores.service'
-import { useProductsStore } from '@/stores'
-import { Proveedor } from '@/types'
-import { AlertTriangle, Package, Plus, Search } from "lucide-react";
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { ProductForm } from '@/components/productos/product-form'
+
 import { FadeIn } from '@/components/common/fade-in'
+import { PageHeader } from '@/components/common/page-header'
+import { DataView } from '@/components/common/data-view'
+import { ProductForm } from '@/components/productos/product-form'
+
+import { useConfirm } from '@/hooks/use-confirm'
+import { useDebounce } from '@/hooks/use-debounce'
+import { useProductsStore } from '@/stores'
+import { proveedoresService } from '@/services/proveedores.service'
+import { CreateProductForm, Product } from '@/services/products.service'
+import { Proveedor } from '@/types'
 
 export default function ProductosPage() {
   const router = useRouter()
@@ -37,48 +40,45 @@ export default function ProductosPage() {
     createProduct,
     updateProduct,
     deleteProduct,
-    setCurrentPage
   } = useProductsStore()
 
   const { confirm } = useConfirm()
 
   const [searchTerm, setSearchTerm] = useState('')
+  const debouncedSearch = useDebounce(searchTerm, 300)
   const [selectedProveedor, setSelectedProveedor] = useState<string>('all')
   const [proveedorSearch, setProveedorSearch] = useState('')
   const [searchResults, setSearchResults] = useState<Proveedor[]>([])
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
 
+  // Initial fetch
   useEffect(() => {
     fetchProducts(1)
-  }, [])
+  }, [fetchProducts])
 
+  // Sync search and filter
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      const providerId = selectedProveedor !== 'all' ? parseInt(selectedProveedor) : undefined
-      fetchProducts(1, searchTerm || undefined, providerId)
-    }, 300)
-    return () => clearTimeout(timeoutId)
-  }, [searchTerm, selectedProveedor])
+    const providerId = selectedProveedor !== 'all' ? parseInt(selectedProveedor) : undefined
+    fetchProducts(1, debouncedSearch || undefined, providerId)
+  }, [debouncedSearch, selectedProveedor, fetchProducts])
 
-
+  // Provider search for filter
   useEffect(() => {
-      const fetchProducts = async () => {
-        try {
-          const response = await  proveedoresService.getAll({
-            search: proveedorSearch,
-          });
-          setSearchResults(response.data || [])
-        } catch (error) {
-          console.error('Error searching products:', error)
-        }
+    const fetchProviders = async () => {
+      try {
+        const response = await proveedoresService.getAll({
+          search: proveedorSearch,
+        })
+        setSearchResults(response.data || [])
+      } catch (error) {
+        console.error('Error searching providers:', error)
       }
-  
-      const timeoutId = setTimeout(fetchProducts, 300)
-      return () => clearTimeout(timeoutId)
-    }, [proveedorSearch]) 
+    }
 
-  const filteredProducts = products
+    const timeoutId = setTimeout(fetchProviders, 300)
+    return () => clearTimeout(timeoutId)
+  }, [proveedorSearch])
 
   const getStockStatus = (stock?: number) => {
     const stockValue = stock ?? 0
@@ -100,7 +100,7 @@ export default function ProductosPage() {
       setEditingProduct(null)
     } catch (error) {
       console.error('Error saving product:', error)
-      showSnackbar('Error al guardar el producto: ' + (error as Error).message, 'error')
+      showSnackbar('Error al guardar el producto', 'error')
     }
   }
 
@@ -114,25 +114,20 @@ export default function ProductosPage() {
   }
 
   const handleDelete = async (id: number) => {
-    if (await confirm({
+    const confirmed = await confirm({
       title: 'Eliminar Producto',
       message: '¿Está seguro que desea eliminar este producto?',
       variant: 'destructive'
-    })) {
+    })
+    
+    if (confirmed) {
       try {
         await deleteProduct(id)
         showSnackbar('Producto eliminado correctamente', 'success')
-      } catch (error: any) {
+      } catch (error) {
         console.error('Error deleting product:', error)
-        showSnackbar("Error al eliminar el producto", "error");
+        showSnackbar("Error al eliminar el producto", "error")
       }
-    }
-  }
-
-  const handleDialogChange = (open: boolean) => {
-    setIsCreateDialogOpen(open)
-    if (!open) {
-      setTimeout(() => setEditingProduct(null), 300)
     }
   }
 
@@ -141,87 +136,155 @@ export default function ProductosPage() {
       key: 'image',
       header: 'Imagen',
       render: (product) => (
-        product.images && product.images.length > 0 ? (
-          <div className="relative w-12 h-12 rounded-md overflow-hidden border bg-background">
+        <div className="flex items-center justify-center w-12 h-12 rounded-md overflow-hidden border bg-muted/20">
+          {product.images && product.images.length > 0 ? (
+            // eslint-disable-next-line @next/next/no-img-element
             <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
-          </div>
-        ) : (
-          <div className="w-12 h-12 rounded-md bg-muted flex items-center justify-center">
-             <Package className="h-6 w-6 text-muted-foreground" />
-          </div>
-        )
+          ) : (
+            <Package className="h-5 w-5 text-muted-foreground" />
+          )}
+        </div>
       )
     },
     { key: 'code', header: 'Código', accessorKey: 'code' },
     { key: 'name', header: 'Nombre', accessorKey: 'name', className: 'font-medium' },
-    { key: 'brand_model', header: 'Marca/Modelo', render: (product) => (<span>{product.brand && product.model ? `${product.brand} ${product.model}` : product.brand || product.model || '-'}</span>) },
-    { key: 'provider', header: 'Proveedor', render: (product) => (<span>{product.providers?.map(p => p.name).join(', ') || '-'}</span>) },
-    { key: 'stock', header: 'Stock', render: (product) => (<div className="flex items-center space-x-2"><span>{product.stockQuantity ?? 0}</span>{(product.stockQuantity ?? 0) <= 5 && (<AlertTriangle className="h-4 w-4 text-warning" />)}</div>) },
-    { key: 'status', header: 'Estado', render: (product) => { const stockStatus = getStockStatus(product.stockQuantity); return (<Badge variant={stockStatus.variant}>{stockStatus.label}</Badge>) } },
-    { key: 'actions', header: 'Acciones', className: 'text-right', render: (product) => (<ActionCell row={product} onView={handleView} onEdit={handleEdit} onDelete={(p) => handleDelete(p.id)} />) }
+    { 
+      key: 'brand_model', 
+      header: 'Marca/Modelo', 
+      render: (product) => (
+        <span className="text-sm">
+          {product.brand && product.model ? `${product.brand} ${product.model}` : product.brand || product.model || '-'}
+        </span>
+      ) 
+    },
+    { 
+      key: 'provider', 
+      header: 'Proveedores', 
+      render: (product) => (
+        <span className="text-sm text-muted-foreground line-clamp-1">
+          {product.providers?.map(p => p.name).join(', ') || '-'}
+        </span>
+      ) 
+    },
+    { 
+      key: 'stock', 
+      header: 'Stock', 
+      render: (product) => (
+        <div className="flex items-center gap-2">
+          <span className="font-medium">{product.stockQuantity ?? 0}</span>
+          {(product.stockQuantity ?? 0) <= 5 && (
+            <AlertTriangle className="h-4 w-4 text-amber-500" />
+          )}
+        </div>
+      ) 
+    },
+    { 
+      key: 'status', 
+      header: 'Estado', 
+      render: (product) => { 
+        const status = getStockStatus(product.stockQuantity); 
+        return <Badge variant={status.variant}>{status.label}</Badge>
+      } 
+    },
+    { 
+      key: 'actions', 
+      header: 'Acciones', 
+      className: 'text-right', 
+      render: (product) => (
+        <ActionCell 
+          row={product} 
+          onView={handleView} 
+          onEdit={handleEdit} 
+          onDelete={(p) => handleDelete(p.id)} 
+        />
+      ) 
+    }
   ]
 
   return (
     <div className="space-y-6">
       <FadeIn direction="none">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Productos</h1>
-            <p className="text-muted-foreground">Gestión del inventario de productos</p>
-          </div>
-          <Dialog open={isCreateDialogOpen} onOpenChange={handleDialogChange}>
-            <DialogTrigger asChild>
-              <Button onClick={() => setEditingProduct(null)}><Plus className="mr-2 h-4 w-4" />Nuevo Producto</Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px]">
-              <DialogHeader>
-                <DialogTitle>{editingProduct ? "Editar Producto" : "Crear Nuevo Producto"}</DialogTitle>
-                <DialogDescription>Complete los datos del producto para {editingProduct ? "actualizar" : "crear"} el registro.</DialogDescription>
-              </DialogHeader>
-              <ProductForm initialData={editingProduct} onSubmit={handleProductSubmit} onCancel={() => setIsCreateDialogOpen(false)} isLoading={isLoading} />
-            </DialogContent>
-          </Dialog>
-        </div>
+        <PageHeader 
+          title="Productos"
+          subtitle="Gestión del inventario de productos"
+          backButton={false}
+          actions={
+            <Button onClick={() => { setEditingProduct(null); setIsCreateDialogOpen(true); }}>
+              <Plus className="mr-2 h-4 w-4" /> Nuevo Producto
+            </Button>
+          }
+        />
       </FadeIn>
 
       <FadeIn delay={100}>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Search className="h-5 w-5" /> Filtros y Búsqueda
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex gap-4 items-center">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                  <Input placeholder="Buscar por nombre, código, marca o modelo..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
-                </div>
-              </div>
-              <div className="w-48">
-                <MultiSelectSearch single={true} options={[{ id: "all", label: "Todos los proveedores" }, ...searchResults.map((p) => ({ id: p.id, label: `${p.name}` }))]} selectedValues={selectedProveedor === "all" ? ["all"] : [parseInt(selectedProveedor)]} onSelect={(val) => { if (val === "all") { setSelectedProveedor("all"); } else { const id = typeof val === "string" ? parseInt(val) : val; setSelectedProveedor(id.toString()); } }} onRemove={() => { setSelectedProveedor("all"); }} placeholder="Seleccionar proveedor" searchPlaceholder="Buscar proveedor..." searchValue={proveedorSearch} onSearchValueChange={setProveedorSearch} shouldFilter={false} />
-              </div>
+        <DataView
+          data={products}
+          columns={columns}
+          isLoading={isLoading}
+          search={{
+            placeholder: "Buscar por nombre, código, marca o modelo...",
+            onSearch: setSearchTerm,
+            initialValue: searchTerm
+          }}
+          pagination={{
+            page: pagination.page,
+            limit: pagination.limit,
+            total: pagination.total,
+            totalPages: pagination.lastPage,
+            onPageChange: (page) => {
+              const providerId = selectedProveedor !== "all" ? parseInt(selectedProveedor) : undefined;
+              fetchProducts(page, debouncedSearch || undefined, providerId);
+            },
+          }}
+          filters={
+            <div className="w-64">
+              <MultiSelectSearch 
+                single={true} 
+                options={[
+                  { id: "all", label: "Todos los proveedores" }, 
+                  ...searchResults.map((p) => ({ id: p.id, label: p.name }))
+                ]} 
+                selectedValues={selectedProveedor === "all" ? ["all"] : [parseInt(selectedProveedor)]} 
+                onSelect={(val) => { 
+                  if (val === "all") { 
+                    setSelectedProveedor("all"); 
+                  } else { 
+                    const id = typeof val === "string" ? parseInt(val) : val; 
+                    setSelectedProveedor(id.toString()); 
+                  } 
+                }} 
+                onRemove={() => setSelectedProveedor("all")} 
+                placeholder="Filtrar por proveedor" 
+                searchPlaceholder="Buscar proveedor..." 
+                searchValue={proveedorSearch} 
+                onSearchValueChange={setProveedorSearch} 
+                shouldFilter={false} 
+              />
             </div>
-          </CardContent>
-        </Card>
+          }
+          emptyMessage="No se encontraron productos"
+        />
       </FadeIn>
 
-      <FadeIn delay={200}>
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Package className="h-5 w-5" />
-              <span>Listado de Productos</span>
-              <Badge variant="outline">{filteredProducts.length} productos</Badge>
-            </CardTitle>
-            <CardDescription>Gestione el inventario de productos del sistema</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <DataTable data={filteredProducts} columns={columns} isLoading={isLoading} pagination={{ page: pagination.page, limit: pagination.limit, total: pagination.total, totalPages: pagination.lastPage, onPageChange: (page) => { const providerId = selectedProveedor !== "all" ? parseInt(selectedProveedor) : undefined; fetchProducts(page, searchTerm || undefined, providerId); }, }} emptyMessage="No se encontraron productos" />
-          </CardContent>
-        </Card>
-      </FadeIn>
+      <Dialog open={isCreateDialogOpen} onOpenChange={(open) => {
+        setIsCreateDialogOpen(open);
+        if (!open) setTimeout(() => setEditingProduct(null), 300);
+      }}>
+        <DialogContent className="sm:max-w-[650px]">
+          <DialogHeader>
+            <DialogTitle>{editingProduct ? "Editar Producto" : "Crear Nuevo Producto"}</DialogTitle>
+            <DialogDescription>
+              Complete los datos del producto para {editingProduct ? "actualizar" : "crear"} el registro.
+            </DialogDescription>
+          </DialogHeader>
+          <ProductForm 
+            initialData={editingProduct} 
+            onSubmit={handleProductSubmit} 
+            onCancel={() => setIsCreateDialogOpen(false)} 
+            isLoading={isLoading} 
+          />
+        </DialogContent>
+      </Dialog>
     </div>
-  );
+  )
 }
