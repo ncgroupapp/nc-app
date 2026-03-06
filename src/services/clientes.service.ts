@@ -1,5 +1,7 @@
 import api from '@/lib/axios';
-import { Cliente, CreateClienteForm, ApiResponse, PaginatedResponse, Licitacion, ClienteResponse } from '@/types';
+import { Cliente, CreateClienteForm, ClienteResponse } from '@/types/cliente';
+import { ApiResponse, PaginatedResponse } from '@/types/api';
+import { Licitacion } from '@/types/licitacion';
 
 export interface ClientFilters { 
   page?: number;

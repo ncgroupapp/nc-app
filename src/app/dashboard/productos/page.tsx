@@ -25,7 +25,7 @@ import { ProductForm } from '@/components/productos/product-form'
 
 import { useConfirm } from '@/hooks/use-confirm'
 import { useDebounce } from '@/hooks/use-debounce'
-import { useProductsStore } from '@/stores'
+import { useProductsStore } from '@/stores/products/productsStore'
 import { proveedoresService } from '@/services/proveedores.service'
 import { CreateProductForm, Product } from '@/services/products.service'
 import { Proveedor } from '@/types'

@@ -10,7 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { OfferSearchCombobox } from "./OfferSearchCombobox";
-import { Currency } from "@/types";
+import { Currency } from "@/types/enums";
 import { Offer } from "@/services/offers.service";
 
 export type QuotationItemFormData = {

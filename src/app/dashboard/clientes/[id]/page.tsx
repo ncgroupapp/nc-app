@@ -8,14 +8,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { FadeIn } from "@/components/common/fade-in";
 
 // Local imports
-import { useClientDetail } from "./hooks";
-import {
-  ClientHeader,
-  ClientInfoCard,
-  ClientContactsCard,
-  ClientQuotationsTab,
-  ClientAdjudicationsTab,
-} from "./components";
+import { useClientDetail } from "./hooks/use-client-detail";
+import { ClientHeader } from "./components/client-header";
+import { ClientInfoCard } from "./components/client-info-card";
+import { ClientContactsCard } from "./components/client-contacts-card";
+import { ClientQuotationsTab } from "./components/client-quotations-tab";
+import { ClientAdjudicationsTab } from "./components/client-adjudications-tab";
 
 export default function ClientDetailPage() {
   const params = useParams();

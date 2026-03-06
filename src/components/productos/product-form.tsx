@@ -9,7 +9,8 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { showSnackbar } from '@/components/ui/snackbar'
 import { uploadProductImage } from '@/lib/firebase'
 import { CreateProductForm, Product } from '@/services/products.service'
-import { useMarcasStore, useProveedoresStore } from '@/stores'
+import { useMarcasStore } from '@/stores/brands/brandsStore'
+import { useProveedoresStore } from '@/stores/proveedores/proveedoresStore'
 import { Upload, X } from "lucide-react";
 import { useEffect, useState, useMemo } from 'react'
 

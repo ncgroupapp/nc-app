@@ -1,4 +1,5 @@
-import { Proveedor, CreateProveedorForm, PaginationMeta } from '@/types';
+import { Proveedor, CreateProveedorForm } from '@/types/proveedor';
+import { PaginationMeta } from '@/types/api';
 import { SearchFilters } from '@/lib/validations/schema';
 
 export interface ProveedoresState {

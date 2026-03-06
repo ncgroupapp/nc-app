@@ -1,5 +1,5 @@
 import api from '@/lib/axios';
-import { PaginatedResponse, ApiResponse } from '@/types';
+import { ApiResponse, PaginatedResponse } from '@/types/api';
 
 // Product interface matching backend entity
 export interface Product {

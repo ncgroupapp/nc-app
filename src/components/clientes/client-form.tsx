@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Plus, Trash2 } from "lucide-react";
-import { Cliente } from '@/types'
+import { Cliente } from '@/types/cliente'
 import { useConfirm } from "@/hooks/use-confirm";
 import { clienteSchema, ClienteForm as ClienteFormType } from '@/lib/validations/schema'
 import { Button } from '@/components/ui/button'

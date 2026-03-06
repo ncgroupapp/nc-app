@@ -1,5 +1,6 @@
 import api from '@/lib/axios';
-import { PaginatedResponse, ApiResponse, AdjudicationStatus } from '@/types';
+import { ApiResponse, PaginatedResponse } from '@/types/api';
+import { AdjudicationStatus } from '@/types/enums';
 
 // Types matching backend entities
 export interface ProviderAdjudicationHistory {

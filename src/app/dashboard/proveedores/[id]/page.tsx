@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { proveedoresService } from '@/services/proveedores.service'
-import { Proveedor } from '@/types'
+import { Proveedor } from '@/types/proveedor'
 import { cotizacionesService, ProviderQuotationHistory } from '@/services/cotizaciones.service'
 import { adjudicacionesService, ProviderAdjudicationHistory } from '@/services/adjudicaciones.service'
 import { AlertCircle, ArrowLeft, Award, Building, Calendar, FileText, Mail, MapPin, Phone, Tag, Users, Globe, ExternalLink, Clock, CheckCircle, XCircle } from "lucide-react";

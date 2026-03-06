@@ -8,16 +8,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { FadeIn } from "@/components/common/fade-in";
 
 // Local imports
-import { useProductDetail } from "./hooks";
-import {
-  ProductHeader,
-  ProductImageCard,
-  ProductInventoryCard,
-  ProductInfoCard,
-  ProductProvidersCard,
-  ProductQuotationsTab,
-  ProductAdjudicationsTab,
-} from "./components";
+import { useProductDetail } from "./hooks/use-product-detail";
+import { ProductHeader } from "./components/product-header";
+import { ProductImageCard } from "./components/product-image-card";
+import { ProductInventoryCard } from "./components/product-inventory-card";
+import { ProductInfoCard } from "./components/product-info-card";
+import { ProductProvidersCard } from "./components/product-providers-card";
+import { ProductQuotationsTab } from "./components/product-quotations-tab";
+import { ProductAdjudicationsTab } from "./components/product-adjudications-tab";
 
 export default function ProductDetailPage() {
   const params = useParams();

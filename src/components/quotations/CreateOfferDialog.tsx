@@ -18,7 +18,7 @@ import { offersService, Offer, CreateOfferDto } from "@/services/offers.service"
 import { productsService, Product } from "@/services/products.service";
 import { proveedoresService } from "@/services/proveedores.service";
 import { format } from "date-fns";
-import { Proveedor } from "@/types";
+import { Proveedor } from "@/types/proveedor";
 import { useDebounce } from "@/hooks/use-debounce";
 
 type CreateOfferDialogProps = {

@@ -14,7 +14,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { useClientesStore } from '@/stores'
+import { useClientesStore } from '@/stores/clientes/clientesStore'
 import { Cliente, CreateClienteForm } from '@/types'
 import { Building2, Mail, Phone, Plus, Search } from "lucide-react";
 import { useEffect, useState } from 'react'

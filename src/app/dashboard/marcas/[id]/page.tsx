@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { ArrowLeft } from "lucide-react";
 import { Button } from '@/components/ui/button'
 import { DataTable, DataTableColumn } from '@/components/ui/data-table'
-import { useMarcasStore } from '@/stores'
+import { useMarcasStore } from '@/stores/brands/brandsStore'
 import { Model } from '@/types'
 
 export default function MarcaDetallePage() {

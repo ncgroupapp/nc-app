@@ -1,5 +1,6 @@
 import api from '@/lib/axios';
-import { PaginatedResponse, ApiResponse, Proveedor } from '@/types';
+import { ApiResponse, PaginatedResponse } from '@/types/api';
+import { Proveedor } from '@/types/proveedor';
 import { Product } from './products.service';
 
 // Types matching backend entities

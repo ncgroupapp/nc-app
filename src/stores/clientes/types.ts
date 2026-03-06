@@ -1,4 +1,5 @@
-import { Cliente, CreateClienteForm, PaginationMeta } from '@/types';
+import { Cliente, CreateClienteForm } from '@/types/cliente';
+import { PaginationMeta } from '@/types/api';
 
 export interface ClientesState {
   clientes: Cliente[];

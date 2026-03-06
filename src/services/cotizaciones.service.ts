@@ -1,8 +1,9 @@
 import api from '@/lib/axios';
-import { PaginatedResponse, ApiResponse, QuotationStatus, QuotationAwardStatus, Currency } from '@/types';
+import { PaginatedResponse, ApiResponse } from '@/types/api';
+import { QuotationStatus, QuotationAwardStatus, Currency } from '@/types/enums';
 
 // Re-export enums so consumers can import them from this module
-export { QuotationStatus, QuotationAwardStatus, Currency } from '@/types';
+export { QuotationStatus, QuotationAwardStatus, Currency } from '@/types/enums';
 
 
 // Types matching backend entities

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import { Brand, Model, PaginationMeta } from '@/types';
+import { Brand, Model } from '@/types/brand';
+import { PaginationMeta } from '@/types/api';
 import { brandsService } from '@/services/brands.service';
 
 interface MarcasState {

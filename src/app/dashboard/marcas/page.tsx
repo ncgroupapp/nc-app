@@ -15,7 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { useMarcasStore } from '@/stores'
+import { useMarcasStore } from '@/stores/brands/brandsStore'
 import { Brand, CreateBrandDto } from '@/services/brands.service'
 import { MarcaForm } from '@/components/marcas/marca-form'
 import { showSnackbar } from '@/components/ui/snackbar'

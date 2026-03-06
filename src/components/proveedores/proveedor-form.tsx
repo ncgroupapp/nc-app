@@ -6,9 +6,9 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { DialogFooter } from '@/components/ui/dialog'
 import { Plus, Trash2 } from "lucide-react";
-import { Proveedor } from '@/types'
+import { Proveedor } from '@/types/proveedor'
 import { useConfirm } from "@/hooks/use-confirm";
-import { useMarcasStore } from '@/stores'
+import { useMarcasStore } from '@/stores/brands/brandsStore'
 import { MultiSelectSearch } from '@/components/ui/multi-select-search'
 import { useDebounce } from '@/hooks/use-debounce'
 import { toast } from "sonner"

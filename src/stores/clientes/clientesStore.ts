@@ -3,7 +3,7 @@ import { devtools } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 import { ClientesStore } from './types';
 import { clientesService } from '@/services/clientes.service';
-import { PaginationMeta } from '@/types';
+import { PaginationMeta } from '@/types/api';
 
 const getErrorMessage = (error: unknown): string => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

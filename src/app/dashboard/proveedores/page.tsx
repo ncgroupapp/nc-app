@@ -17,8 +17,8 @@ import {
 } from '@/components/ui/dialog'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Building2, Plus, Search } from "lucide-react";
-import { Proveedor, CreateProveedorForm } from '@/types'
-import { useProveedoresStore } from '@/stores'
+import { Proveedor, CreateProveedorForm } from '@/types/proveedor'
+import { useProveedoresStore } from '@/stores/proveedores/proveedoresStore'
 import { ProveedorForm } from '@/components/proveedores/proveedor-form'
 import { showSnackbar } from '@/components/ui/snackbar'
 import { useConfirm } from '@/hooks/use-confirm'

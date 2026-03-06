@@ -11,18 +11,18 @@ import { QuotationStatus } from "@/types";
 import { FadeIn } from "@/components/common/fade-in";
 
 // Local imports
-import { useLicitationDetail, useQuotationActions, useAdjudicationActions } from "./hooks";
-import {
-  LicitationHeader,
-  LicitationInfoCard,
-  RequestedProductsTab,
-  QuotationTab,
-  DeliveryTab,
-  CreateQuotationDialog,
-  EditItemDialog,
-  AwardDialog,
-  RejectDialog,
-} from "./components";
+import { useLicitationDetail } from "./hooks/useLicitationDetail";
+import { useQuotationActions } from "./hooks/useQuotationActions";
+import { useAdjudicationActions } from "./hooks/useAdjudicationActions";
+import { LicitationHeader } from "./components/LicitationHeader";
+import { LicitationInfoCard } from "./components/LicitationInfoCard";
+import { RequestedProductsTab } from "./components/tabs/RequestedProductsTab";
+import { QuotationTab } from "./components/tabs/QuotationTab";
+import { DeliveryTab } from "./components/tabs/DeliveryTab";
+import { CreateQuotationDialog } from "./components/dialogs/CreateQuotationDialog";
+import { EditItemDialog } from "./components/dialogs/EditItemDialog";
+import { AwardDialog } from "./components/dialogs/AwardDialog";
+import { RejectDialog } from "./components/dialogs/RejectDialog";
 
 export default function LicitacionDetailPage() {
   const params = useParams();
