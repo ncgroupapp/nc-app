@@ -1,212 +1,82 @@
-"use client";
-
-import { useParams, useSearchParams } from "next/navigation";
-import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2 } from "lucide-react";
-import { LicitationStatus } from "@/services/licitaciones.service";
-import { QuotationStatus } from "@/types";
 import { FadeIn } from "@/components/common/fade-in";
+import { licitacionesService } from "@/services/licitaciones.service";
+import { cotizacionesService } from "@/services/cotizaciones.service";
+import { adjudicacionesService } from "@/services/adjudicaciones.service";
 
 // Local imports
-import { useLicitationDetail } from "./hooks/useLicitationDetail";
-import { useQuotationActions } from "./hooks/useQuotationActions";
-import { useAdjudicationActions } from "./hooks/useAdjudicationActions";
 import { LicitationHeader } from "./components/LicitationHeader";
 import { LicitationInfoCard } from "./components/LicitationInfoCard";
-import { RequestedProductsTab } from "./components/tabs/RequestedProductsTab";
-import { QuotationTab } from "./components/tabs/QuotationTab";
-import { DeliveryTab } from "./components/tabs/DeliveryTab";
-import { CreateQuotationDialog } from "./components/dialogs/CreateQuotationDialog";
-import { EditItemDialog } from "./components/dialogs/EditItemDialog";
-import { AwardDialog } from "./components/dialogs/AwardDialog";
-import { RejectDialog } from "./components/dialogs/RejectDialog";
+import { LicitationDetailClient } from "./components/LicitationDetailClient";
 
-export default function LicitacionDetailPage() {
-  const params = useParams();
-  const searchParams = useSearchParams();
-  const licitationId = parseInt(params.id as string);
+interface PageProps {
+  params: Promise<{ id: string }>;
+}
 
-  const [activeTab, setActiveTab] = useState(() => {
-    return searchParams.get("tab") || "productos";
-  });
+export default async function LicitacionDetailPage({ params }: PageProps) {
+  const { id: idParam } = await params;
+  const licitationId = parseInt(idParam);
 
-  useEffect(() => {
-    const tabParam = searchParams.get("tab");
-    if (tabParam) {
-      setActiveTab(tabParam);
+  try {
+    // Parallel fetching on the server - Eliminates Waterfalls
+    const [licitation, quotationsRes, adjudicationsData] = await Promise.all([
+      licitacionesService.getById(licitationId),
+      cotizacionesService.getAll({ page: 1, limit: 100 }), // We'll find the one for this licitation
+      adjudicacionesService.getByLicitation(licitationId).catch(() => [])
+    ]);
+
+    const quotation = quotationsRes.data?.find(q => q.licitationId === licitationId) || null;
+    
+    // Handle adjudications data structure
+    let adjudications = [];
+    if (Array.isArray(adjudicationsData)) {
+      adjudications = adjudicationsData;
+    } else if (adjudicationsData && typeof adjudicationsData === 'object' && 'data' in adjudicationsData) {
+      adjudications = (adjudicationsData as any).data || [];
     }
-  }, [searchParams]);
 
-  // Load data using custom hook
-  const {
-    licitation,
-    quotation,
-    adjudications,
-    loading,
-    error,
-    setQuotation,
-    setError,
-    loadData,
-  } = useLicitationDetail(licitationId);
+    if (!licitation) {
+      return (
+        <div className="text-center py-8">
+          <p className="text-red-500">Licitación no encontrada</p>
+          <Link href="/dashboard/licitaciones">
+            <Button className="mt-4">Volver al listado</Button>
+          </Link>
+        </div>
+      );
+    }
 
-  // Quotation actions hook
-  const quotationActions = useQuotationActions(
-    licitation,
-    licitationId,
-    quotation,
-    setQuotation,
-    setError
-  );
-
-  // Adjudication actions hook
-  const adjudicationActions = useAdjudicationActions(
-    quotation,
-    licitationId,
-    loadData,
-    setError,
-    quotation?.status === QuotationStatus.FINALIZED
-  );
-
-  // Loading state
-  if (loading) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="ml-2">Cargando licitación...</span>
+      <div className="space-y-6">
+        {/* Header */}
+        <FadeIn direction="none">
+          <LicitationHeader licitation={licitation} />
+        </FadeIn>
+
+        {/* General Info Card */}
+        <FadeIn delay={100}>
+          <LicitationInfoCard licitation={licitation} />
+        </FadeIn>
+
+        {/* Client side interactive part (Tabs, Dialogs, etc) */}
+        <LicitationDetailClient 
+          licitationId={licitationId}
+          initialLicitation={licitation}
+          initialQuotation={quotation}
+          initialAdjudications={adjudications}
+        />
       </div>
     );
-  }
-
-  // Not found state
-  if (!licitation) {
+  } catch (error) {
+    console.error("Error loading licitation detail on server:", error);
     return (
       <div className="text-center py-8">
-        <p className="text-red-500">Licitación no encontrada</p>
+        <p className="text-red-500">Ocurrió un error al cargar la licitación.</p>
         <Link href="/dashboard/licitaciones">
           <Button className="mt-4">Volver al listado</Button>
         </Link>
       </div>
     );
   }
-
-  return (
-    <div className="space-y-6">
-      {/* Error Alert */}
-      {error && (
-        <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-md">
-          {error}
-          <button onClick={() => setError(null)} className="ml-2 underline">Cerrar</button>
-        </div>
-      )}
-      
-      {/* Header */}
-      <FadeIn direction="none">
-        <LicitationHeader licitation={licitation} />
-      </FadeIn>
-
-      {/* General Info Card */}
-      <FadeIn delay={100}>
-        <LicitationInfoCard licitation={licitation} />
-      </FadeIn>
-
-      {/* Tabs */}
-      <FadeIn delay={200}>
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="productos">Productos Solicitados</TabsTrigger>
-            <TabsTrigger value="cotizaciones">Cotización</TabsTrigger>
-            <TabsTrigger value="entregas">Entrega de Productos</TabsTrigger>
-          </TabsList>
-
-          {/* Tab: Productos Solicitados */}
-          <TabsContent value="productos" className="space-y-4">
-            <RequestedProductsTab licitationProducts={licitation.licitationProducts} />
-          </TabsContent>
-
-          {/* Tab: Cotización */}
-          <TabsContent value="cotizaciones" className="space-y-4">
-            <QuotationTab
-              quotation={quotation}
-              submitting={quotationActions.submitting || adjudicationActions.submitting}
-              onOpenCreateQuotation={quotationActions.handleOpenCreateQuotationDialog}
-              isQuotationDialogOpen={quotationActions.isQuotationDialogOpen}
-              setIsQuotationDialogOpen={quotationActions.setIsQuotationDialogOpen}
-              newItemData={quotationActions.newItemData}
-              setNewItemData={quotationActions.setNewItemData}
-              onAddItem={quotationActions.handleAddItemToQuotation}
-              onEditItem={quotationActions.handleEditItem}
-              onStatusChange={adjudicationActions.handleStatusChange}
-              onOpenAward={adjudicationActions.handleOpenAward}
-              onOpenReject={adjudicationActions.handleOpenReject}
-              onEditAwardedQuantity={adjudicationActions.handleEditAwardedQuantity}
-              onFinalize={quotationActions.handleFinalizeQuotation}
-              onDownloadPdf={quotationActions.handleDownloadPdf}
-            />
-          </TabsContent>
-
-          {/* Tab: Entrega */}
-          <TabsContent value="entregas" className="space-y-4">
-            <DeliveryTab 
-              licitationId={licitationId}
-              licitationStatus={licitation.status as LicitationStatus} 
-            />
-          </TabsContent>
-        </Tabs>
-      </FadeIn>
-
-      {/* Dialogs - No need to animate these as they handle their own entrance */}
-      <CreateQuotationDialog
-        open={quotationActions.isCreateQuotationDialogOpen}
-        onOpenChange={quotationActions.setIsCreateQuotationDialogOpen}
-        licitation={licitation}
-        data={quotationActions.createQuotationData}
-        setData={quotationActions.setCreateQuotationData}
-        onConfirm={quotationActions.handleConfirmCreateQuotation}
-        submitting={quotationActions.submitting}
-      />
-
-      <EditItemDialog
-        open={quotationActions.isEditItemDialogOpen}
-        onOpenChange={quotationActions.setIsEditItemDialogOpen}
-        data={quotationActions.newItemData}
-        setData={quotationActions.setNewItemData}
-        onSave={quotationActions.handleUpdateItem}
-        submitting={quotationActions.submitting}
-      />
-
-      <AwardDialog
-        open={adjudicationActions.isAwardDialogOpen}
-        onOpenChange={adjudicationActions.setIsAwardDialogOpen}
-        item={adjudicationActions.awardingItem}
-        awardQuantity={adjudicationActions.awardQuantity}
-        setAwardQuantity={adjudicationActions.setAwardQuantity}
-        isFullAward={adjudicationActions.isFullAward}
-        onConfirm={adjudicationActions.handleConfirmAward}
-        submitting={adjudicationActions.submitting}
-      />
-
-      <RejectDialog
-        open={adjudicationActions.isRejectDialogOpen}
-        onOpenChange={adjudicationActions.setIsRejectDialogOpen}
-        competitorData={adjudicationActions.competitorData}
-        setCompetitorData={adjudicationActions.setCompetitorData}
-        onConfirm={adjudicationActions.handleConfirmReject}
-        submitting={adjudicationActions.submitting}
-      />
-
-      <AwardDialog
-        open={adjudicationActions.isEditAwardedDialogOpen}
-        onOpenChange={adjudicationActions.setIsEditAwardedDialogOpen}
-        item={adjudicationActions.editingAwardedItem}
-        awardQuantity={adjudicationActions.awardQuantity}
-        setAwardQuantity={adjudicationActions.setAwardQuantity}
-        isFullAward={false}
-        onConfirm={adjudicationActions.handleConfirmEditAwardedQuantity}
-        submitting={adjudicationActions.submitting}
-      />
-    </div>
-  );
 }

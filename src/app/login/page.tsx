@@ -10,6 +10,7 @@ import { auth } from "@/lib/firebase"
 import { loginSchema } from "@/lib/validations/schema"
 import api from "@/lib/axios"
 import { isTokenExpired } from "@/lib/utils"
+import { setAuthToken } from "@/lib/auth-actions"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -72,7 +73,9 @@ export default function LoginPage() {
 
       // 3. Guardar token
       if (response.data && response.data.data.access_token) {
-        localStorage.setItem('backend_token', response.data.data.access_token)
+        const token = response.data.data.access_token
+        localStorage.setItem('backend_token', token)
+        await setAuthToken(token)
       } else {
         throw new Error("No se recibió el token de acceso del servidor")
       }

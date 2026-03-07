@@ -20,7 +20,7 @@ import { showSnackbar } from '@/components/ui/snackbar'
 
 import { FadeIn } from '@/components/common/fade-in'
 import { PageHeader } from '@/components/common/page-header'
-import { DataView } from '@/components/common/data-view'
+import { SearchInput } from '@/components/common/search-input'
 import { ProductForm } from '@/components/productos/product-form'
 
 import { useConfirm } from '@/hooks/use-confirm'
@@ -28,7 +28,10 @@ import { useDebounce } from '@/hooks/use-debounce'
 import { useProductsStore } from '@/stores/products/productsStore'
 import { proveedoresService } from '@/services/proveedores.service'
 import { CreateProductForm, Product } from '@/services/products.service'
-import { Proveedor } from '@/types'
+import { Proveedor } from '@/types/proveedor'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { DataTable } from '@/components/ui/data-table'
+import { Search } from "lucide-react"
 
 export default function ProductosPage() {
   const router = useRouter()
@@ -217,53 +220,79 @@ export default function ProductosPage() {
       </FadeIn>
 
       <FadeIn delay={100}>
-        <DataView
-          data={products}
-          columns={columns}
-          isLoading={isLoading}
-          search={{
-            placeholder: "Buscar por nombre, código, marca o modelo...",
-            onSearch: setSearchTerm,
-            initialValue: searchTerm
-          }}
-          pagination={{
-            page: pagination.page,
-            limit: pagination.limit,
-            total: pagination.total,
-            totalPages: pagination.lastPage,
-            onPageChange: (page) => {
-              const providerId = selectedProveedor !== "all" ? parseInt(selectedProveedor) : undefined;
-              fetchProducts(page, debouncedSearch || undefined, providerId);
-            },
-          }}
-          filters={
-            <div className="w-64">
-              <MultiSelectSearch 
-                single={true} 
-                options={[
-                  { id: "all", label: "Todos los proveedores" }, 
-                  ...searchResults.map((p) => ({ id: p.id, label: p.name }))
-                ]} 
-                selectedValues={selectedProveedor === "all" ? ["all"] : [parseInt(selectedProveedor)]} 
-                onSelect={(val) => { 
-                  if (val === "all") { 
-                    setSelectedProveedor("all"); 
-                  } else { 
-                    const id = typeof val === "string" ? parseInt(val) : val; 
-                    setSelectedProveedor(id.toString()); 
-                  } 
-                }} 
-                onRemove={() => setSelectedProveedor("all")} 
-                placeholder="Filtrar por proveedor" 
-                searchPlaceholder="Buscar proveedor..." 
-                searchValue={proveedorSearch} 
-                onSearchValueChange={setProveedorSearch} 
-                shouldFilter={false} 
-              />
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Search className="h-5 w-5" /> Filtros y Búsqueda
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col md:flex-row gap-4 items-end">
+              <div className="flex-1 w-full">
+                <SearchInput 
+                  placeholder="Buscar por nombre, código, marca o modelo..." 
+                  value={searchTerm} 
+                  onChange={setSearchTerm} 
+                />
+              </div>
+              <div className="w-full md:w-64">
+                <MultiSelectSearch 
+                  single={true} 
+                  options={[
+                    { id: "all", label: "Todos los proveedores" }, 
+                    ...searchResults.map((p) => ({ id: p.id, label: p.name }))
+                  ]} 
+                  selectedValues={selectedProveedor === "all" ? ["all"] : [parseInt(selectedProveedor)]} 
+                  onSelect={(val) => { 
+                    if (val === "all") { 
+                      setSelectedProveedor("all"); 
+                    } else { 
+                      const id = typeof val === "string" ? parseInt(val) : val; 
+                      setSelectedProveedor(id.toString()); 
+                    } 
+                  }} 
+                  onRemove={() => setSelectedProveedor("all")} 
+                  placeholder="Filtrar por proveedor" 
+                  searchPlaceholder="Buscar proveedor..." 
+                  searchValue={proveedorSearch} 
+                  onSearchValueChange={setProveedorSearch} 
+                  shouldFilter={false} 
+                />
+              </div>
             </div>
-          }
-          emptyMessage="No se encontraron productos"
-        />
+          </CardContent>
+        </Card>
+      </FadeIn>
+
+      <FadeIn delay={200}>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Package className="h-5 w-5" />
+              <span>Listado de Productos</span>
+              <Badge variant="outline">{pagination.total} productos</Badge>
+            </CardTitle>
+            <CardDescription>Gestione el inventario y stock de productos</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <DataTable 
+              columns={columns} 
+              data={products} 
+              isLoading={isLoading} 
+              pagination={{ 
+                page: pagination.page, 
+                limit: pagination.limit, 
+                total: pagination.total, 
+                totalPages: pagination.lastPage, 
+                onPageChange: (page) => {
+                  const providerId = selectedProveedor !== "all" ? parseInt(selectedProveedor) : undefined;
+                  fetchProducts(page, debouncedSearch || undefined, providerId);
+                }, 
+              }} 
+              emptyMessage="No se encontraron productos" 
+            />
+          </CardContent>
+        </Card>
       </FadeIn>
 
       <Dialog open={isCreateDialogOpen} onOpenChange={(open) => {

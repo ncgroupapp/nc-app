@@ -1,151 +1,108 @@
-"use client";
-
-import { useParams, useRouter } from "next/navigation";
+import { Suspense } from "react";
 import { AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FadeIn } from "@/components/common/fade-in";
+import { productsService } from "@/services/products.service";
+import { cotizacionesService } from "@/services/cotizaciones.service";
+import { adjudicacionesService } from "@/services/adjudicaciones.service";
 
 // Local imports
-import { useProductDetail } from "./hooks/use-product-detail";
 import { ProductHeader } from "./components/product-header";
 import { ProductImageCard } from "./components/product-image-card";
 import { ProductInventoryCard } from "./components/product-inventory-card";
 import { ProductInfoCard } from "./components/product-info-card";
 import { ProductProvidersCard } from "./components/product-providers-card";
-import { ProductQuotationsTab } from "./components/product-quotations-tab";
-import { ProductAdjudicationsTab } from "./components/product-adjudications-tab";
+import { ProductTabs } from "./components/product-tabs";
 
-export default function ProductDetailPage() {
-  const params = useParams();
-  const router = useRouter();
-  const idParam = Array.isArray(params.id) ? params.id[0] : params.id;
-  const id = parseInt(idParam as string);
+interface PageProps {
+  params: Promise<{ id: string }>;
+}
 
-  const {
-    product,
-    quotationHistory,
-    adjudicationHistory,
-    loading,
-    error,
-  } = useProductDetail(id);
+export default async function ProductDetailPage({ params }: PageProps) {
+  const { id: idParam } = await params;
+  const id = parseInt(idParam);
 
-  if (loading) {
-    return <ProductDetailSkeleton />;
-  }
+  try {
+    // Parallel fetching on the server - Eliminates Waterfalls
+    const [product, quotationHistory, adjData] = await Promise.all([
+      productsService.getById(id),
+      cotizacionesService.getByProductId(id),
+      adjudicacionesService.getByProductId(id)
+    ]);
 
-  if (error || !product) {
+    // Handle adjudication history structure
+    let adjudicationHistory = [];
+    if (Array.isArray(adjData)) {
+      adjudicationHistory = adjData;
+    } else if (adjData && typeof adjData === 'object' && 'data' in adjData && Array.isArray((adjData as any).data)) {
+      adjudicationHistory = (adjData as any).data;
+    }
+
+    if (!product) {
+      return <ErrorState message="No se encontró el producto solicitado." />;
+    }
+
     return (
-      <div className="flex flex-col items-center justify-center p-8 h-[60vh] text-center">
-        <div className="bg-red-50 p-4 rounded-full mb-4">
-          <AlertCircle className="h-12 w-12 text-red-500" />
-        </div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Error</h2>
-        <p className="text-muted-foreground mb-6 max-w-md">
-          {error || "No pudimos encontrar el producto que estás buscando. Puede que haya sido eliminado o el ID sea incorrecto."}
-        </p>
-        <div className="flex gap-3">
-          <Button variant="outline" onClick={() => router.back()}>
-            Volver
-          </Button>
-          <Button onClick={() => window.location.reload()}>
-            Reintentar
-          </Button>
+      <div className="space-y-8 pb-8">
+        {/* Header */}
+        <FadeIn direction="none">
+          <ProductHeader product={product} />
+        </FadeIn>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          {/* Left Column: Image, Inventory & Providers */}
+          <div className="lg:col-span-4 space-y-6">
+            <FadeIn delay={100}>
+              <ProductImageCard product={product} />
+            </FadeIn>
+
+            <FadeIn delay={200}>
+              <ProductInventoryCard product={product} />
+            </FadeIn>
+
+            <FadeIn delay={300}>
+              <ProductProvidersCard providers={product.providers || []} />
+            </FadeIn>
+          </div>
+
+          {/* Right Column: Info & History Tabs */}
+          <div className="lg:col-span-8 space-y-8">
+            <FadeIn delay={400}>
+              <ProductInfoCard product={product} />
+            </FadeIn>
+
+            <FadeIn delay={500}>
+              <Suspense fallback={<Skeleton className="h-[400px] w-full" />}>
+                <ProductTabs 
+                  productId={id}
+                  quotationHistory={Array.isArray(quotationHistory) ? quotationHistory : []} 
+                  adjudicationHistory={adjudicationHistory} 
+                />
+              </Suspense>
+            </FadeIn>
+          </div>
         </div>
       </div>
     );
+  } catch (error) {
+    console.error("Error loading product detail on server:", error);
+    return <ErrorState message="Ocurrió un error al cargar los datos del producto." />;
   }
-
-  return (
-    <div className="space-y-8 pb-8">
-      {/* Header */}
-      <FadeIn direction="none">
-        <ProductHeader product={product} />
-      </FadeIn>
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Left Column: Image, Inventory & Providers */}
-        <div className="lg:col-span-4 space-y-6">
-          <FadeIn delay={100}>
-            <ProductImageCard product={product} />
-          </FadeIn>
-
-          <FadeIn delay={200}>
-            <ProductInventoryCard product={product} />
-          </FadeIn>
-
-          <FadeIn delay={300}>
-            <ProductProvidersCard providers={product.providers} />
-          </FadeIn>
-        </div>
-
-        {/* Right Column: Info & History Tabs */}
-        <div className="lg:col-span-8 space-y-8">
-          <FadeIn delay={400}>
-            <ProductInfoCard product={product} />
-          </FadeIn>
-
-          <FadeIn delay={500}>
-            <Tabs defaultValue="quotations" className="w-full">
-              <TabsList className="w-full grid grid-cols-2 bg-muted/50 p-1 h-auto mb-6 border">
-                <TabsTrigger 
-                  value="quotations" 
-                  className="data-[state=active]:bg-background py-2 transition-all font-bold"
-                >
-                  Cotizaciones ({quotationHistory.length})
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="adjudications"
-                  className="data-[state=active]:bg-background py-2 transition-all font-bold"
-                >
-                  Adjudicaciones ({adjudicationHistory.length})
-                </TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="quotations" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
-                <ProductQuotationsTab quotations={quotationHistory} productId={id} />
-              </TabsContent>
-
-              <TabsContent value="adjudications" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
-                <ProductAdjudicationsTab adjudications={adjudicationHistory} />
-              </TabsContent>
-            </Tabs>
-          </FadeIn>
-        </div>
-      </div>
-    </div>
-  );
 }
 
-function ProductDetailSkeleton() {
+function ErrorState({ message }: { message: string }) {
   return (
-    <div className="space-y-8 animate-pulse">
-      {/* Header Skeleton */}
-      <div className="flex items-center gap-4">
-        <Skeleton className="h-10 w-10 rounded-full" />
-        <div className="space-y-2">
-          <Skeleton className="h-8 w-64" />
-          <Skeleton className="h-4 w-32" />
-        </div>
+    <div className="flex flex-col items-center justify-center p-8 h-[60vh] text-center">
+      <div className="bg-red-50 p-4 rounded-full mb-4">
+        <AlertCircle className="h-12 w-12 text-red-500" />
       </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left Column Skeleton */}
-        <div className="lg:col-span-4 space-y-6">
-          <Skeleton className="h-[400px] w-full rounded-xl" />
-          <Skeleton className="h-[120px] w-full rounded-xl" />
-          <Skeleton className="h-[200px] w-full rounded-xl" />
-        </div>
-
-        {/* Right Column Skeleton */}
-        <div className="lg:col-span-8 space-y-8">
-          <Skeleton className="h-[300px] w-full rounded-xl" />
-          <div className="space-y-4">
-            <Skeleton className="h-12 w-full rounded-lg" />
-            <Skeleton className="h-[400px] w-full rounded-xl" />
-          </div>
-        </div>
+      <h2 className="text-2xl font-bold text-gray-900 mb-2">Error</h2>
+      <p className="text-muted-foreground mb-6 max-w-md">{message}</p>
+      <div className="flex gap-3">
+        <Button asChild variant="outline">
+          <a href="/dashboard/productos">Volver al listado</a>
+        </Button>
       </div>
     </div>
   );
