@@ -44,8 +44,6 @@ export default function ManualesPage() {
     const [editingManual, setEditingManual] = useState<Manual | null>(null)
 
     useEffect(() => {
-        console.log(1);
-
         fetchManuales(currentPage, debouncedSearch)
     }, [currentPage, debouncedSearch, fetchManuales])
 
