@@ -5,7 +5,7 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
-import { BarChart3, Calculator, ChevronDown, ChevronUp, FileText, Gavel, Home, LogOut, Package, Settings, Ship, Tag, Truck, User, Users } from "lucide-react";
+import { BookOpen, Calculator, ChevronDown, ChevronUp, FileText, Gavel, Home, LogOut, Package, Settings, Ship, Tag, Truck, User, Users } from "lucide-react";
 import { featureFlags } from "@/lib/feature-flags";
 import {
   Sidebar,
@@ -108,9 +108,9 @@ const sidebarNavItems: NavItem[] = [
   ...(featureFlags.pdfs
     ? [
       {
-        title: "PDFs",
-        href: "/dashboard/pdf",
-        icon: BarChart3,
+        title: "Manuales",
+        href: "/dashboard/manuales",
+        icon: BookOpen,
       },
     ]
     : []),

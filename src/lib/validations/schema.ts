@@ -168,6 +168,12 @@ export const registerSchema = z.object({
   path: ['confirmPassword']
 })
 
+// Esquema de validación para Manuales
+export const manualSchema = z.object({
+  nombre: z.string().min(1, 'El nombre es obligatorio'),
+  descripcion: z.string().optional(),
+})
+
 // Tipos derivados de los esquemas
 export type ProveedorForm = z.infer<typeof proveedorSchema>
 export type ClienteForm = z.infer<typeof clienteSchema>
@@ -176,6 +182,7 @@ export type OfertaForm = z.infer<typeof ofertaSchema>
 export type LicitacionForm = z.infer<typeof licitacionSchema>
 export type CotizacionProductoForm = z.infer<typeof cotizacionProductoSchema>
 export type ImportacionForm = z.infer<typeof importacionSchema>
+export type ManualForm = z.infer<typeof manualSchema>
 export type SearchFilters = z.infer<typeof searchFiltersSchema>
 export type LoginForm = z.infer<typeof loginSchema>
 export type RegisterForm = z.infer<typeof registerSchema>
