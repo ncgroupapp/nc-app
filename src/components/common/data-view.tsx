@@ -23,8 +23,8 @@ interface DataViewProps<T> {
   // Search
   search?: {
     placeholder: string;
+    value: string;
     onSearch: (query: string) => void;
-    initialValue?: string;
   };
   // Actions
   action?: {
@@ -60,8 +60,8 @@ export function DataView<T>({
             <div className="w-full max-w-sm">
               <SearchInput
                 placeholder={search.placeholder}
-                onSearch={search.onSearch}
-                defaultValue={search.initialValue}
+                value={search.value}
+                onChange={search.onSearch}
               />
             </div>
           )}

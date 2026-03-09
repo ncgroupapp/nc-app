@@ -6,6 +6,8 @@ import { FadeIn } from "@/components/common/fade-in";
 import { productsService } from "@/services/products.service";
 import { cotizacionesService } from "@/services/cotizaciones.service";
 import { adjudicacionesService } from "@/services/adjudicaciones.service";
+import { offersService } from "@/services/offers.service";
+import Link from "next/link";
 
 // Local imports
 import { ProductHeader } from "./components/product-header";
@@ -25,19 +27,14 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
   try {
     // Parallel fetching on the server - Eliminates Waterfalls
-    const [product, quotationHistory, adjData] = await Promise.all([
+    const [product, quotationHistory, adjudicationHistory, offersData] = await Promise.all([
       productsService.getById(id),
       cotizacionesService.getByProductId(id),
-      adjudicacionesService.getByProductId(id)
+      adjudicacionesService.getByProductId(id),
+      offersService.getAll({ productId: id, limit: 100 })
     ]);
 
-    // Handle adjudication history structure
-    let adjudicationHistory = [];
-    if (Array.isArray(adjData)) {
-      adjudicationHistory = adjData;
-    } else if (adjData && typeof adjData === 'object' && 'data' in adjData && Array.isArray((adjData as any).data)) {
-      adjudicationHistory = (adjData as any).data;
-    }
+    const offersHistory = offersData?.data || [];
 
     if (!product) {
       return <ErrorState message="No se encontró el producto solicitado." />;
@@ -78,6 +75,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                   productId={id}
                   quotationHistory={Array.isArray(quotationHistory) ? quotationHistory : []} 
                   adjudicationHistory={adjudicationHistory} 
+                  offersHistory={offersHistory}
                 />
               </Suspense>
             </FadeIn>
@@ -101,7 +99,7 @@ function ErrorState({ message }: { message: string }) {
       <p className="text-muted-foreground mb-6 max-w-md">{message}</p>
       <div className="flex gap-3">
         <Button asChild variant="outline">
-          <a href="/dashboard/productos">Volver al listado</a>
+          <Link href="/dashboard/productos">Volver al listado</Link>
         </Button>
       </div>
     </div>

@@ -76,6 +76,7 @@ export interface AdjudicationFilters {
   status?: AdjudicationStatus;
   quotationId?: number;
   licitationId?: number;
+  productId?: number;
 }
 
 
@@ -128,8 +129,22 @@ export const adjudicacionesService = {
     if (filters.status) params.append('status', filters.status);
     if (filters.quotationId) params.append('quotationId', filters.quotationId.toString());
     if (filters.licitationId) params.append('licitationId', filters.licitationId.toString());
-    
+    if (filters.productId) params.append('productId', filters.productId.toString());
+
     const response = await api.get<PaginatedResponse<Adjudication>>(`/adjudications?${params.toString()}`);
+    return response.data;
+  },
+
+  getPaginatedByProductId: async (productId: number, filters: AdjudicationFilters = {}): Promise<PaginatedResponse<Adjudication>> => {
+    const params = new URLSearchParams();
+    if (filters.page) params.append('page', filters.page.toString());
+    if (filters.limit) params.append('limit', filters.limit.toString());
+    if (filters.search) params.append('search', filters.search);
+    if (filters.status) params.append('status', filters.status);
+    if (filters.quotationId) params.append('quotationId', filters.quotationId.toString());
+    if (filters.licitationId) params.append('licitationId', filters.licitationId.toString());
+
+    const response = await api.get<PaginatedResponse<Adjudication>>(`/adjudications/by-product/${productId}?${params.toString()}`);
     return response.data;
   },
 

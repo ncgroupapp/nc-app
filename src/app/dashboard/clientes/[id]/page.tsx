@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import Link from "next/link";
 import { AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -79,7 +80,7 @@ function ErrorState({ message }: { message: string }) {
       <h2 className="text-2xl font-bold text-gray-900 mb-2">Error</h2>
       <p className="text-muted-foreground mb-6 max-w-md">{message}</p>
       <Button asChild>
-        <a href="/dashboard/clientes">Volver al listado</a>
+        <Link href="/dashboard/clientes">Volver al listado</Link>
       </Button>
     </div>
   );
