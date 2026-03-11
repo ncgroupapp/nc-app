@@ -49,9 +49,8 @@ interface FileEntry {
     name: string
     type: 'existing' | 'pending'
     url?: string          // Firebase URL (existing entries)
-    file?: File           // original File object (new pending entries)
-    uploading: boolean
-    uploadedUrl?: string  // Firebase URL set after upload completes
+    file?: File           // original File object (new pending entries — not uploaded yet)
+    uploadedUrl?: string  // Firebase URL set after upload completes (only set at submit time)
     /** Blob URL (new images) or Firebase URL (existing images) — for thumbnail preview */
     previewUrl?: string
     isImage: boolean
@@ -63,6 +62,7 @@ export const ManualForm = forwardRef<ManualFormHandle, ManualFormProps>(
         const fileInputRef = useRef<HTMLInputElement>(null)
         const [fileEntries, setFileEntries] = useState<FileEntry[]>([])
         const [uploadError, setUploadError] = useState('')
+        const [isSubmitting, setIsSubmitting] = useState(false)
         const [toDeleteOnSave, setToDeleteOnSave] = useState<string[]>([])
 
         // Keep a ref so the cleanup effect (on unmount) sees the latest entries
@@ -105,7 +105,6 @@ export const ManualForm = forwardRef<ManualFormHandle, ManualFormProps>(
                         name: cleanFileName(raw),
                         type: 'existing',
                         url,
-                        uploading: false,
                         previewUrl: img ? url : undefined,
                         isImage: img,
                     }
@@ -119,7 +118,8 @@ export const ManualForm = forwardRef<ManualFormHandle, ManualFormProps>(
             setUploadError('')
         }, [initialData, form])
 
-        const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        // ── File selection — no upload, just store the File locally ──────────────
+        const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
             const files = Array.from(e.target.files || [])
             if (!files.length) return
 
@@ -131,45 +131,20 @@ export const ManualForm = forwardRef<ManualFormHandle, ManualFormProps>(
             }
             setUploadError('')
 
-            // Build entries with blob previews for images
+            // Build entries with blob previews for images — no upload yet
             const newEntries: FileEntry[] = files.map(file => {
                 const img = file.type.startsWith('image/')
                 return {
                     id: `pending-${Date.now()}-${Math.random()}`,
-                    name: file.name,           // new files already have clean names
+                    name: file.name,
                     type: 'pending',
                     file,
-                    uploading: true,
                     previewUrl: img ? URL.createObjectURL(file) : undefined,
                     isImage: img,
                 }
             })
 
             setFileEntries(prev => [...prev, ...newEntries])
-
-            await Promise.all(
-                newEntries.map(async (entry) => {
-                    try {
-                        const url = await uploadManualFile(entry.file!)
-                        setFileEntries(prev =>
-                            prev.map(e =>
-                                e.id === entry.id
-                                    ? { ...e, uploading: false, uploadedUrl: url }
-                                    : e
-                            )
-                        )
-                    } catch {
-                        setFileEntries(prev =>
-                            prev.map(e =>
-                                e.id === entry.id
-                                    ? { ...e, uploading: false, error: 'Error al subir' }
-                                    : e
-                            )
-                        )
-                    }
-                })
-            )
-
             e.target.value = ''
         }
 
@@ -177,13 +152,12 @@ export const ManualForm = forwardRef<ManualFormHandle, ManualFormProps>(
             const entry = fileEntries.find(e => e.id === id)
             if (!entry) return
 
-            // Schedule Firebase deletion (deferred until successful save)
-            const urlToSchedule = entry.type === 'existing' ? entry.url : entry.uploadedUrl
-            if (urlToSchedule) {
-                setToDeleteOnSave(prev => [...prev, urlToSchedule])
+            // Schedule Firebase deletion for existing entries (deferred until successful save)
+            if (entry.type === 'existing' && entry.url) {
+                setToDeleteOnSave(prev => [...prev, entry.url!])
             }
 
-            // Revoke blob URL if it was created for a new image
+            // Revoke blob URL if it was created for a new image preview
             if (entry.previewUrl?.startsWith('blob:')) {
                 URL.revokeObjectURL(entry.previewUrl)
             }
@@ -191,32 +165,38 @@ export const ManualForm = forwardRef<ManualFormHandle, ManualFormProps>(
             setFileEntries(prev => prev.filter(e => e.id !== id))
         }
 
-        const isAnyUploading = fileEntries.some(e => e.uploading)
-
+        // ── Submit — upload pending files to Firebase, then call onSubmit ────────
         const handleFormSubmit = async (values: ManualFormType) => {
-            const urls: string[] = fileEntries
-                .filter(e => !e.error)
-                .map(e => (e.type === 'existing' ? e.url! : e.uploadedUrl ?? ''))
-                .filter(Boolean)
+            const pendingEntries = fileEntries.filter(e => e.type === 'pending' && e.file)
+            const existingUrls = fileEntries
+                .filter(e => e.type === 'existing' && e.url)
+                .map(e => e.url!)
 
-            if (urls.length === 0) {
+            if (pendingEntries.length === 0 && existingUrls.length === 0) {
                 setUploadError('Debe agregar al menos un archivo')
                 return
             }
-            if (isAnyUploading) {
-                setUploadError('Espere a que terminen de subirse todos los archivos')
-                return
-            }
 
-            const manualData = {
-                name: values.nombre,
-                description: values.descripcion || undefined,
-                fileUrls: urls,
-            }
+            setIsSubmitting(true)
+            setUploadError('')
 
             try {
+                // Upload all pending files now
+                const uploadedUrls = await Promise.all(
+                    pendingEntries.map(entry => uploadManualFile(entry.file!))
+                )
+
+                const allUrls = [...existingUrls, ...uploadedUrls]
+
+                const manualData = {
+                    name: values.nombre,
+                    description: values.descripcion || undefined,
+                    fileUrls: allUrls,
+                }
+
                 await onSubmit(manualData)
-                // ✅ Save succeeded → now delete removed files from Firebase
+
+                // ✅ Save succeeded → delete removed existing files from Firebase
                 if (toDeleteOnSave.length > 0) {
                     Promise.allSettled(
                         toDeleteOnSave.map(url =>
@@ -227,28 +207,16 @@ export const ManualForm = forwardRef<ManualFormHandle, ManualFormProps>(
                     )
                     setToDeleteOnSave([])
                 }
-            } catch {
-                // ❌ Save failed → keep toDeleteOnSave intact, don't touch Firebase
+            } catch (err) {
+                console.error('Error al guardar el manual:', err)
+                setUploadError('Ocurrió un error al subir los archivos. Intentá de nuevo.')
+            } finally {
+                setIsSubmitting(false)
             }
         }
 
         const handleCancel = () => {
-            // Delete newly uploaded files that were never saved to the DB
-            const orphans = fileEntries
-                .filter(e => e.type === 'pending' && e.uploadedUrl)
-                .map(e => e.uploadedUrl!)
-
-            if (orphans.length > 0) {
-                Promise.allSettled(
-                    orphans.map(url =>
-                        deleteManualPdf(url).catch(err =>
-                            console.error('Error eliminando archivo huérfano:', err)
-                        )
-                    )
-                )
-            }
-
-            // Revoke all remaining blob URLs
+            // Revoke all remaining blob URLs (pending files were never uploaded, nothing to delete from Firebase)
             fileEntries.forEach(e => {
                 if (e.previewUrl?.startsWith('blob:')) URL.revokeObjectURL(e.previewUrl)
             })
@@ -262,6 +230,8 @@ export const ManualForm = forwardRef<ManualFormHandle, ManualFormProps>(
         useImperativeHandle(ref, () => ({
             triggerCancel: handleCancel,
         }))
+
+        const isBusy = isLoading || isSubmitting
 
         return (
             <Form {...form}>
@@ -343,33 +313,30 @@ export const ManualForm = forwardRef<ManualFormHandle, ManualFormProps>(
                                             {/* Name + status */}
                                             <div className="flex-1 min-w-0">
                                                 <p className="text-sm font-medium truncate">{entry.name}</p>
-                                                {entry.uploading && (
-                                                    <p className="text-xs text-muted-foreground">Subiendo...</p>
-                                                )}
                                                 {entry.error && (
                                                     <p className="text-xs text-destructive">{entry.error}</p>
                                                 )}
-                                                {!entry.uploading && !entry.error && (
+                                                {!entry.error && (
                                                     <p className="text-xs text-muted-foreground">
-                                                        {entry.isImage ? 'Imagen' : 'Documento PDF'}
+                                                        {entry.type === 'existing'
+                                                            ? (entry.isImage ? 'Imagen' : 'Documento PDF')
+                                                            : <span className="text-amber-500">Pendiente de subir</span>
+                                                        }
                                                     </p>
                                                 )}
                                             </div>
 
-                                            {/* Spinner or remove */}
-                                            {entry.uploading ? (
-                                                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground shrink-0" />
-                                            ) : (
-                                                <Button
-                                                    type="button"
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive shrink-0"
-                                                    onClick={() => handleRemoveEntry(entry.id)}
-                                                >
-                                                    <X className="h-4 w-4" />
-                                                </Button>
-                                            )}
+                                            {/* Remove button */}
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive shrink-0"
+                                                onClick={() => handleRemoveEntry(entry.id)}
+                                                disabled={isBusy}
+                                            >
+                                                <X className="h-4 w-4" />
+                                            </Button>
                                         </div>
                                     ))}
                                 </div>
@@ -381,13 +348,10 @@ export const ManualForm = forwardRef<ManualFormHandle, ManualFormProps>(
                                 variant="outline"
                                 className="w-full gap-2 border-dashed"
                                 onClick={() => fileInputRef.current?.click()}
-                                disabled={isAnyUploading}
+                                disabled={isBusy}
                             >
-                                {isAnyUploading
-                                    ? <Loader2 className="h-4 w-4 animate-spin" />
-                                    : <Upload className="h-4 w-4" />
-                                }
-                                {isAnyUploading ? 'Subiendo archivos...' : 'Agregar archivos'}
+                                <Upload className="h-4 w-4" />
+                                Agregar archivos
                             </Button>
 
                             {uploadError && (
@@ -398,8 +362,14 @@ export const ManualForm = forwardRef<ManualFormHandle, ManualFormProps>(
 
                     <FormActionButtons
                         onCancel={handleCancel}
-                        isLoading={isLoading || isAnyUploading}
-                        submitText={initialData ? 'Actualizar Manual' : 'Crear Manual'}
+                        isLoading={isBusy}
+                        submitText={
+                            isSubmitting
+                                ? 'Subiendo archivos...'
+                                : initialData
+                                    ? 'Actualizar Manual'
+                                    : 'Crear Manual'
+                        }
                     />
                 </form>
             </Form>
