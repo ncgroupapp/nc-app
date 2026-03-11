@@ -14,10 +14,11 @@ import {
 } from '@/components/ui/dialog'
 import { useManualesStore } from '@/stores/manuales/manualesStore'
 import { Manual, CreateManualForm } from '@/types'
-import { BookOpen, FileText, Plus, Search } from 'lucide-react'
+import { BookOpen, Plus, Search } from 'lucide-react'
 import { deleteManualPdf } from '@/lib/firebase'
-import { useEffect, useState } from 'react'
-import { ManualForm } from '@/components/manuales/manual-form'
+import { useEffect, useRef, useState } from 'react'
+import { ManualForm, ManualFormHandle } from '@/components/manuales/manual-form'
+import { ManualFilesCell } from '@/components/manuales/manual-files-cell'
 import { SearchInput } from '@/components/common/search-input'
 import { useConfirm } from '@/hooks/use-confirm'
 import { useDebounce } from '@/hooks/use-debounce'
@@ -42,6 +43,7 @@ export default function ManualesPage() {
     const [currentPage, setCurrentPage] = useState(1)
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
     const [editingManual, setEditingManual] = useState<Manual | null>(null)
+    const formRef = useRef<ManualFormHandle>(null)
 
     useEffect(() => {
         fetchManuales(currentPage, debouncedSearch)
@@ -73,16 +75,18 @@ export default function ManualesPage() {
             variant: 'destructive'
         })) {
             try {
-                // Find the manual to get its fileUrl before deleting
+                // Find the manual to get its fileUrls before deleting
                 const manual = manuales.find((m) => m.id.toString() === id)
                 await deleteManual(id)
-                // Delete the PDF from Firebase Storage after the record is removed
-                if (manual?.fileUrl) {
-                    try {
-                        await deleteManualPdf(manual.fileUrl)
-                    } catch (firebaseError) {
-                        console.error('Error deleting PDF from Firebase:', firebaseError)
-                    }
+                // Delete all files from Firebase Storage after the record is removed
+                if (manual?.fileUrls?.length) {
+                    await Promise.allSettled(
+                        manual.fileUrls.map(url =>
+                            deleteManualPdf(url).catch(e =>
+                                console.error('Error deleting file from Firebase:', e)
+                            )
+                        )
+                    )
                 }
             } catch (error) {
                 console.error('Error deleting manual:', error)
@@ -105,20 +109,9 @@ export default function ManualesPage() {
                 : <span className="text-muted-foreground/50 italic text-xs">Sin descripción</span>,
         },
         {
-            key: 'fileUrl',
-            header: 'Archivo',
-            render: (row) => (
-                <a
-                    href={row.fileUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-1.5 text-primary hover:underline text-sm"
-                    onClick={(e) => e.stopPropagation()}
-                >
-                    <FileText className="h-3.5 w-3.5" />
-                    Ver PDF
-                </a>
-            ),
+            key: 'fileUrls',
+            header: 'Archivos',
+            render: (row) => <ManualFilesCell urls={row.fileUrls ?? []} />,
         },
         {
             key: 'created_at',
@@ -153,8 +146,12 @@ export default function ManualesPage() {
     ]
 
     const handleDialogChange = (open: boolean) => {
-        setIsCreateDialogOpen(open)
-        if (!open) { setTimeout(() => setEditingManual(null), 300) }
+        if (!open) {
+            // Route through the form's cancel so cleanup logic always runs
+            formRef.current?.triggerCancel()
+        } else {
+            setIsCreateDialogOpen(true)
+        }
     }
 
     return (
@@ -181,9 +178,13 @@ export default function ManualesPage() {
                                 </DialogDescription>
                             </DialogHeader>
                             <ManualForm
+                                ref={formRef}
                                 initialData={editingManual}
                                 onSubmit={handleFormSubmit}
-                                onCancel={() => setIsCreateDialogOpen(false)}
+                                onCancel={() => {
+                                    setIsCreateDialogOpen(false)
+                                    setTimeout(() => setEditingManual(null), 300)
+                                }}
                                 isLoading={isLoading}
                             />
                         </DialogContent>

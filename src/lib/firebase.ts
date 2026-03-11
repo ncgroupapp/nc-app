@@ -40,8 +40,13 @@ export const uploadInvoiceFile = async (file: File): Promise<string> => {
   return downloadURL;
 };
 
-// Helper function to upload manual PDFs
+// Helper function to upload manual PDFs (kept for backward compat)
 export const uploadManualPdf = async (file: File): Promise<string> => {
+  return uploadManualFile(file);
+};
+
+// Helper function to upload any manual file (PDF or image)
+export const uploadManualFile = async (file: File): Promise<string> => {
   const timestamp = Date.now();
   const filename = `${timestamp}_${file.name}`;
   const storageRef = ref(storage, `manuals/${filename}`);
@@ -52,7 +57,7 @@ export const uploadManualPdf = async (file: File): Promise<string> => {
   return downloadURL;
 };
 
-// Helper function to delete a manual PDF from Firebase Storage
+// Helper function to delete a manual file from Firebase Storage
 // Accepts the full Firebase download URL and extracts the storage path
 export const deleteManualPdf = async (fileUrl: string): Promise<void> => {
   // Firebase download URLs encode the path between /o/ and ?alt=media
