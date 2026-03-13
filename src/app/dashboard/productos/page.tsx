@@ -101,9 +101,12 @@ export default function ProductosPage() {
       }
       setIsCreateDialogOpen(false)
       setEditingProduct(null)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving product:', error)
-      showSnackbar('Error al guardar el producto', 'error')
+      showSnackbar(
+        `${error.response?.data?.data}`,
+        'error',
+      );
     }
   }
 

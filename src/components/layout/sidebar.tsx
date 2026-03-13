@@ -69,11 +69,6 @@ const sidebarNavItems = [
     href: "/dashboard/pdf",
     icon: BarChart3,
   }] : []),
-  ...(featureFlags.configuracion ? [{
-    title: "Configuración",
-    href: "/dashboard/configuracion",
-    icon: Settings,
-  }] : []),
 ];
 
 type SidebarProps = React.HTMLAttributes<HTMLDivElement>
