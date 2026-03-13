@@ -27,6 +27,7 @@ export interface NonAwardedItem {
   productId?: number;
   competitorName?: string;
   competitorRut?: string;
+  quantity?: number;
   competitorPrice?: number;
   competitorBrand?: string;
 }
@@ -185,6 +186,8 @@ export const adjudicacionesService = {
 
   create: async (data: CreateAdjudicationDto): Promise<Adjudication> => {
     const response = await api.post<ApiResponse<Adjudication>>('/adjudications', data);
+    console.log('return create adjudication', response.data.data);
+    
     return response.data.data;
   },
 

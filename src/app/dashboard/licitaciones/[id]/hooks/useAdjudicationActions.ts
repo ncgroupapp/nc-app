@@ -10,6 +10,7 @@ export interface CompetitorData {
   winnerPrice: number;
   notes: string;
   winnerRut: string;
+  quantity?: number;
 }
 
 export interface UseAdjudicationActionsReturn {
@@ -140,7 +141,8 @@ export const useAdjudicationActions = (
           competitorName: competitorData.winnerName,
           competitorRut: competitorData.winnerRut || 'N/A',
           competitorPrice: competitorData.winnerPrice,
-          competitorBrand: 'N/A'
+          competitorBrand: 'N/A',
+          quantity: competitorData.quantity || rejectingItem.quantity
         }]
       };
       

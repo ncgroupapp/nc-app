@@ -185,6 +185,11 @@ export function ProductForm({ initialData, onSubmit, onCancel, isLoading }: Prod
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
+    if (!formData.code || formData.code.trim() === '') {
+      showSnackbar('El código del producto es obligatorio', 'error')
+      return
+    }
+
     if (imagePreviews.length === 0) {
       showSnackbar('Al menos una imagen del producto es obligatoria', 'error')
       return
@@ -287,7 +292,7 @@ export function ProductForm({ initialData, onSubmit, onCancel, isLoading }: Prod
                 searchPlaceholder="Buscar proveedor..."
                 emptyMessage="No se encontraron proveedores."
                 searchValue={providerSearch}
-                onSearchValueChange={setProviderSearch} 
+                onSearchValueChange={setProviderSearch}
                 shouldFilter={false}
               />
             </div>
@@ -295,11 +300,16 @@ export function ProductForm({ initialData, onSubmit, onCancel, isLoading }: Prod
 
           {/* Image Upload */}
           <div className="space-y-2">
-            <Label htmlFor="image">Imágenes del Producto <span className="text-red-500">*</span></Label>
+            <Label htmlFor="image">
+              Imágenes del Producto <span className="text-red-500">*</span>
+            </Label>
             <div className="space-y-4">
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                 {imagePreviews.map((preview, index) => (
-                  <div key={index} className="relative aspect-square border rounded-md overflow-hidden group">
+                  <div
+                    key={index}
+                    className="relative aspect-square border rounded-md overflow-hidden group"
+                  >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={preview}
@@ -310,37 +320,53 @@ export function ProductForm({ initialData, onSubmit, onCancel, isLoading }: Prod
                       type="button"
                       onClick={() => {
                         // Check if it's an existing URL or a new file preview
-                        const isExisting = preview.startsWith('http') || preview.startsWith('https');
-                        
+                        const isExisting =
+                          preview.startsWith("http") ||
+                          preview.startsWith("https");
+
                         if (isExisting) {
-                           // Just remove from previews
-                           setImagePreviews(prev => prev.filter((_, i) => i !== index));
+                          // Just remove from previews
+                          setImagePreviews((prev) =>
+                            prev.filter((_, i) => i !== index),
+                          );
                         } else {
-                           // If it's a data URL, we need to find which file it corresponds to in imageFiles.
-                           // Since we append files, and previews are [existing, ...new], 
-                           // we can calculate the index in imageFiles.
-                           const existingCount = imagePreviews.filter(p => p.startsWith('http') || p.startsWith('https')).length;
-                           // But wait, if I delete an existing one, existingCount changes.
-                           // This index logic is fragile if we mix deletions.
-                           
-                           // Robust way: Store objects { type: 'url' | 'file', content: string | File, id: string }
-                           // But I don't want to refactor everything.
-                           
-                           // Hacky way: Assume we don't mix reordering much. 
-                           // Actually, let's look at `index`. 
-                           // `imagePreviews` contains ALL images.
-                           // `imageFiles` contains ONLY new files.
-                           
-                           // If I delete item at `index`, I remove it from `imagePreviews`.
-                           // If it was a new file, I also need to remove it from `imageFiles`.
-                           // Which file was it?
-                           
-                           // Let's filter `imagePreviews` to see how many non-http strings were BEFORE this index.
-                           // That count gives the index in `imageFiles`.
-                           
-                           const nonHttpBefore = imagePreviews.slice(0, index).filter(p => !p.startsWith('http') && !p.startsWith('https')).length;
-                           setImageFiles(prev => prev.filter((_, i) => i !== nonHttpBefore));
-                           setImagePreviews(prev => prev.filter((_, i) => i !== index));
+                          // If it's a data URL, we need to find which file it corresponds to in imageFiles.
+                          // Since we append files, and previews are [existing, ...new],
+                          // we can calculate the index in imageFiles.
+                          const existingCount = imagePreviews.filter(
+                            (p) =>
+                              p.startsWith("http") || p.startsWith("https"),
+                          ).length;
+                          // But wait, if I delete an existing one, existingCount changes.
+                          // This index logic is fragile if we mix deletions.
+
+                          // Robust way: Store objects { type: 'url' | 'file', content: string | File, id: string }
+                          // But I don't want to refactor everything.
+
+                          // Hacky way: Assume we don't mix reordering much.
+                          // Actually, let's look at `index`.
+                          // `imagePreviews` contains ALL images.
+                          // `imageFiles` contains ONLY new files.
+
+                          // If I delete item at `index`, I remove it from `imagePreviews`.
+                          // If it was a new file, I also need to remove it from `imageFiles`.
+                          // Which file was it?
+
+                          // Let's filter `imagePreviews` to see how many non-http strings were BEFORE this index.
+                          // That count gives the index in `imageFiles`.
+
+                          const nonHttpBefore = imagePreviews
+                            .slice(0, index)
+                            .filter(
+                              (p) =>
+                                !p.startsWith("http") && !p.startsWith("https"),
+                            ).length;
+                          setImageFiles((prev) =>
+                            prev.filter((_, i) => i !== nonHttpBefore),
+                          );
+                          setImagePreviews((prev) =>
+                            prev.filter((_, i) => i !== index),
+                          );
                         }
                       }}
                       className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -349,7 +375,7 @@ export function ProductForm({ initialData, onSubmit, onCancel, isLoading }: Prod
                     </button>
                   </div>
                 ))}
-                
+
                 <div className="flex items-center justify-center aspect-square border-2 border-dashed rounded-md hover:bg-slate-50 cursor-pointer relative">
                   <Input
                     id="image"
@@ -359,25 +385,30 @@ export function ProductForm({ initialData, onSubmit, onCancel, isLoading }: Prod
                     onChange={(e) => {
                       const files = Array.from(e.target.files || []);
                       if (files.length > 0) {
-                        setImageFiles(prev => [...prev, ...files]);
-                        
+                        setImageFiles((prev) => [...prev, ...files]);
+
                         // Generate previews
-                        files.forEach(file => {
+                        files.forEach((file) => {
                           const reader = new FileReader();
                           reader.onloadend = () => {
-                            setImagePreviews(prev => [...prev, reader.result as string]);
+                            setImagePreviews((prev) => [
+                              ...prev,
+                              reader.result as string,
+                            ]);
                           };
                           reader.readAsDataURL(file);
                         });
                       }
                       // Reset value to allow selecting same files again if needed
-                      e.target.value = ''; 
+                      e.target.value = "";
                     }}
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                   />
                   <div className="text-center p-2">
                     <Upload className="h-6 w-6 mx-auto text-slate-400 mb-1" />
-                    <span className="text-xs text-slate-500">Subir imágenes</span>
+                    <span className="text-xs text-slate-500">
+                      Subir imágenes
+                    </span>
                   </div>
                 </div>
               </div>
@@ -408,9 +439,7 @@ export function ProductForm({ initialData, onSubmit, onCancel, isLoading }: Prod
                     model: "",
                   }));
                   // Fetch models for this brand
-                  const brandObj = brands.find(
-                    (b) => b.name === brandName,
-                  );
+                  const brandObj = brands.find((b) => b.name === brandName);
                   if (brandObj) {
                     fetchBrandById(brandObj.id);
                   }
@@ -431,7 +460,8 @@ export function ProductForm({ initialData, onSubmit, onCancel, isLoading }: Prod
               <Label htmlFor="model">Modelo</Label>
               <MultiSelectSearch
                 single={true}
-                options={models.map((m) => ({
+                options={
+                  models.map((m) => ({
                     id: m.name,
                     label: m.name,
                   })) || []
@@ -463,7 +493,9 @@ export function ProductForm({ initialData, onSubmit, onCancel, isLoading }: Prod
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="code">Código</Label>
+              <Label htmlFor="code">
+                Código <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="code"
                 value={formData.code || ""}
@@ -474,12 +506,11 @@ export function ProductForm({ initialData, onSubmit, onCancel, isLoading }: Prod
                   }))
                 }
                 placeholder="Código principal"
+                required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="equivalentCodes">
-                Códigos Equivalentes
-              </Label>
+              <Label htmlFor="equivalentCodes">Códigos Equivalentes</Label>
               <Input
                 id="equivalentCodes"
                 value={formData.equivalentCodes?.join(", ") || ""}
@@ -617,14 +648,18 @@ export function ProductForm({ initialData, onSubmit, onCancel, isLoading }: Prod
         </div>
       </ScrollArea>
       <DialogFooter className="mt-4">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onCancel}
-        >
+        <Button type="button" variant="outline" onClick={onCancel}>
           Cancelar
         </Button>
-        <Button type="submit" disabled={isLoading || isUploadingImage || !formData.name || imagePreviews.length === 0}>
+        <Button
+          type="submit"
+          disabled={
+            isLoading ||
+            isUploadingImage ||
+            !formData.name ||
+            imagePreviews.length === 0
+          }
+        >
           {isUploadingImage ? (
             <>
               <Upload className="mr-2 h-4 w-4 animate-spin" />
@@ -638,5 +673,5 @@ export function ProductForm({ initialData, onSubmit, onCancel, isLoading }: Prod
         </Button>
       </DialogFooter>
     </form>
-  )
+  );
 }

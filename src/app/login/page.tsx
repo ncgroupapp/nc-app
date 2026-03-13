@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -108,6 +109,16 @@ export default function LoginPage() {
     <main id="main-content" className="flex min-h-screen w-full items-center justify-center bg-zinc-50/50 p-4 dark:bg-zinc-900" tabIndex={-1}>
       <Card className="w-full max-w-sm shadow-2xl border-0 sm:border">
         <CardHeader className="space-y-2 text-center">
+          <div className="flex justify-center mb-4">
+            <Image 
+              src="/logo/logo.png" 
+              alt="Logo" 
+              width={120} 
+              height={120} 
+              priority
+              className="object-contain"
+            />
+          </div>
           <CardTitle className="text-2xl font-bold tracking-tight">Iniciar Sesión</CardTitle>
           <CardDescription>
             Ingresa tus credenciales para acceder al sistema

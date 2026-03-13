@@ -114,15 +114,6 @@ const sidebarNavItems: NavItem[] = [
       },
     ]
     : []),
-  ...(featureFlags.configuracion
-    ? [
-      {
-        title: "Configuración",
-        href: "/dashboard/configuracion",
-        icon: Settings,
-      },
-    ]
-    : []),
 ];
 
 export function AppSidebar() {
@@ -152,7 +143,7 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild className="hover:bg-transparent">
               <Link href="/dashboard">
-                <div className="flex aspect-square size-10 items-center justify-center rounded-lg bg-transparent">
+                <div className="flex aspect-square size-10 items-center justify-center rounded-full bg-white p-1">
                   <Image
                     src="/logo/logo.png"
                     alt="Logo"
@@ -264,13 +255,6 @@ export function AppSidebar() {
                 align="end"
                 sideOffset={4}
               >
-                <DropdownMenuItem asChild className="cursor-pointer">
-                  <Link href="/dashboard/configuracion">
-                    <Settings className="mr-2 h-4 w-4" />
-                    Configuración
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={handleLogout}
                   className="cursor-pointer"

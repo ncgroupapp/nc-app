@@ -16,6 +16,7 @@ export interface Offer {
   price: number;
   quantity: number;
   origin?: string;
+  delivery?: number; // Days for delivery
   deliveryDate?: string;
   createdAt: string;
   updatedAt: string;
@@ -25,8 +26,8 @@ export interface OfferFilters {
   page?: number;
   limit?: number;
   search?: string;
-  productId?: number;
-  providerId?: number;
+  productId?: number | number[];
+  providerId?: number | number[];
 }
 
 export interface CreateOfferDto {
@@ -36,6 +37,7 @@ export interface CreateOfferDto {
   price: number;
   quantity: number;
   origin?: string;
+  delivery?: number;
   deliveryDate?: string;
 }
 
@@ -47,8 +49,22 @@ export const offersService = {
     if (filters.page) params.append('page', filters.page.toString());
     if (filters.limit) params.append('limit', filters.limit.toString());
     if (filters.search) params.append('search', filters.search);
-    if (filters.productId) params.append('productId', filters.productId.toString());
-    if (filters.providerId) params.append('providerId', filters.providerId.toString());
+    
+    if (filters.productId) {
+      if (Array.isArray(filters.productId)) {
+        filters.productId.forEach(id => params.append('productId', id.toString()));
+      } else {
+        params.append('productId', filters.productId.toString());
+      }
+    }
+
+    if (filters.providerId) {
+      if (Array.isArray(filters.providerId)) {
+        filters.providerId.forEach(id => params.append('providerId', id.toString()));
+      } else {
+        params.append('providerId', filters.providerId.toString());
+      }
+    }
     
     const response = await api.get<PaginatedResponse<Offer>>(`/offers?${params.toString()}`);
     return response.data;

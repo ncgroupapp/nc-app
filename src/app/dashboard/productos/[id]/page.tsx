@@ -27,12 +27,15 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
   try {
     // Parallel fetching on the server - Eliminates Waterfalls
-    const [product, quotationHistory, adjudicationHistory, offersData] = await Promise.all([
+    const [product, quotationHistory, adjudicationHistory, offersData, winnersHistory] = await Promise.all([
       productsService.getById(id),
       cotizacionesService.getByProductId(id),
       adjudicacionesService.getByProductId(id),
-      offersService.getAll({ productId: id, limit: 100 })
+      offersService.getAll({ productId: id, limit: 100 }),
+      productsService.getAdjudicationHistory(id)
     ]);
+    console.log('winners page', winnersHistory);
+    
 
     const offersHistory = offersData?.data || [];
 
@@ -73,9 +76,10 @@ export default async function ProductDetailPage({ params }: PageProps) {
               <Suspense fallback={<Skeleton className="h-[400px] w-full" />}>
                 <ProductTabs 
                   productId={id}
+                  offersHistory={offersHistory}
                   quotationHistory={Array.isArray(quotationHistory) ? quotationHistory : []} 
                   adjudicationHistory={adjudicationHistory} 
-                  offersHistory={offersHistory}
+                  winnersHistory={winnersHistory}
                 />
               </Suspense>
             </FadeIn>
