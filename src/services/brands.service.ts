@@ -1,6 +1,6 @@
 import api from '@/lib/axios';
-import { Brand, Model, ResponseBrand } from '@/types/brand';
 import { PaginatedResponse } from '@/types/api';
+import { Brand, ResponseBrand } from '@/types/brand';
 
 export const brandsService = {
   // Brand Endpoints

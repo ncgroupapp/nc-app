@@ -16,12 +16,12 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { useMarcasStore } from '@/stores/brands/brandsStore'
-import { Brand, CreateBrandDto } from '@/services/brands.service'
 import { MarcaForm } from '@/components/marcas/marca-form'
 import { showSnackbar } from '@/components/ui/snackbar'
 import { useConfirm } from '@/hooks/use-confirm'
 import { useDebounce } from '@/hooks/use-debounce'
 import { FadeIn } from '@/components/common/fade-in'
+import { Brand, CreateBrandDto } from '@/types/brand'
 
 export default function MarcasPage() {
   const { 
@@ -99,8 +99,8 @@ export default function MarcasPage() {
 
   const columns: DataTableColumn<Brand>[] = [
     { key: 'name', header: 'Nombre', accessorKey: 'name', className: 'font-medium' },
-    { key: 'description', header: 'Descripción', accessorKey: 'description' },
-    { key: 'originCountry', header: 'Origen', accessorKey: 'originCountry' },
+    { key: 'description', header: 'Descripción' },
+    { key: 'originCountry', header: 'Origen' },
     { key: 'actions', header: 'Acciones', className: 'text-right', render: (row) => (<ActionCell row={row} onEdit={handleEdit} onDelete={(p) => handleDelete(p.id)} />) }
   ]
 

@@ -53,7 +53,17 @@ export default function ClientesPage() {
   const handleFormSubmit = async (data: CreateClienteForm) => {
     try {
       if (editingCliente) {
-        await updateCliente(editingCliente.id, data)
+        // Ensure contacts have required 'name' property
+        const fixedData = {
+          ...data,
+          contacts: data.contacts?.map(contact => ({
+            name: contact.name ?? '',
+            email: contact.email,
+            phone: contact.phone,
+            address: contact.address,
+          }))
+        };
+        await updateCliente(editingCliente.id, fixedData)
       } else {
         await createCliente(data)
       }

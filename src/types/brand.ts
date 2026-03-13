@@ -19,3 +19,8 @@ export interface Model {
   createdAt?: string
   updatedAt?: string
 }
+
+export interface CreateBrandDto {
+  name: string
+  models?: { name: string }[]
+}
