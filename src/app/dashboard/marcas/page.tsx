@@ -2,30 +2,42 @@
 
 import { useEffect, useState } from 'react'
 import { Badge } from "@/components/ui/badge";
-import { useRouter } from 'next/navigation'
-import { Package, Plus, Search } from 'lucide-react'
+import { Package, Plus, Search } from "lucide-react";
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { DataTable, DataTableColumn } from '@/components/ui/data-table'
 import { ActionCell } from '@/components/ui/data-table-cells'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { useBrandsStore } from '@/stores/brands/brandsStore'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { useMarcasStore } from '@/stores/brands/brandsStore'
+import { Brand, CreateBrandDto } from '@/services/brands.service'
 import { MarcaForm } from '@/components/marcas/marca-form'
+import { showSnackbar } from '@/components/ui/snackbar'
 import { useConfirm } from '@/hooks/use-confirm'
-import { Brand } from '@/types'
 import { useDebounce } from '@/hooks/use-debounce'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { toast } from 'sonner'
+import { FadeIn } from '@/components/common/fade-in'
 
 export default function MarcasPage() {
-  const router = useRouter()
-  const { brands, isLoading, total, fetchBrands, createBrand, updateBrand, deleteBrand } = useBrandsStore()
+  const { 
+    brands, 
+    isLoading, 
+    pagination, 
+    fetchBrands, 
+    createBrand, 
+    updateBrand, 
+    deleteBrand 
+  } = useMarcasStore()
+  
   const { confirm } = useConfirm()
-
   const [searchTerm, setSearchTerm] = useState('')
-  const debouncedSearch = useDebounce(searchTerm, 500)
+  const debouncedSearch = useDebounce(searchTerm, 300)
   const [currentPage, setCurrentPage] = useState(1)
-
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingBrand, setEditingBrand] = useState<Brand | null>(null)
 
@@ -33,147 +45,118 @@ export default function MarcasPage() {
     fetchBrands(currentPage, debouncedSearch)
   }, [currentPage, debouncedSearch, fetchBrands])
 
-  const handleCreate = async (data: { name: string; models?: { name: string; id?: number }[] }) => {
+  const handleCreate = async (data: CreateBrandDto) => {
     try {
       await createBrand(data)
-      toast.success("Marca creada exitosamente")
+      showSnackbar('Marca creada correctamente', 'success')
       setIsDialogOpen(false)
     } catch (error) {
       console.error('Error creating brand:', error)
-      toast.error('Error al crear la marca')
+      showSnackbar('Error al crear la marca', 'error')
     }
   }
 
-  const handleUpdate = async (data: { name: string; models?: { name: string; id?: number }[] }) => {
-    if (editingBrand) {
-      try {
-        await updateBrand(editingBrand.id, data)
-        toast.success("Marca actualizada exitosamente")
-        setEditingBrand(null)
-        setIsDialogOpen(false)
-      } catch (error) {
-        console.error('Error updating brand:', error)
-        toast.error('Error al actualizar la marca')
-      }
+  const handleUpdate = async (data: CreateBrandDto) => {
+    if (!editingBrand) return
+    try {
+      await updateBrand(editingBrand.id, data)
+      showSnackbar('Marca actualizada correctamente', 'success')
+      setIsDialogOpen(false)
+      setEditingBrand(null)
+    } catch (error) {
+      console.error('Error updating brand:', error)
+      showSnackbar('Error al actualizar la marca', 'error')
     }
   }
 
-  const handleDelete = async (brand: Brand) => {
-    const confirmed = await confirm({
-      title: "Eliminar Marca",
-      message: `¿Estás seguro de que deseas eliminar la marca "${brand.name}"?`,
-      confirmText: "Eliminar",
-      cancelText: "Cancelar",
-      variant: "destructive",
-    });
-
-    if (confirmed) {
+  const handleDelete = async (id: number) => {
+    if (await confirm({ 
+      title: 'Eliminar Marca', 
+      message: '¿Está seguro que desea eliminar esta marca?',
+      variant: 'destructive'
+    })) {
       try {
-        await deleteBrand(brand.id)
-        toast.success("Marca eliminada exitosamente")
+        await deleteBrand(id)
+        showSnackbar('Marca eliminada correctamente', 'success')
       } catch (error) {
         console.error('Error deleting brand:', error)
-        toast.error('Error al eliminar la marca')
+        showSnackbar('Error al eliminar la marca', 'error')
       }
+    }
+  }
+
+  const handleEdit = (brand: Brand) => {
+    setEditingBrand(brand)
+    setIsDialogOpen(true)
+  }
+
+  const handleDialogChange = (open: boolean) => {
+    setIsDialogOpen(open)
+    if (!open) {
+      setTimeout(() => setEditingBrand(null), 300)
     }
   }
 
   const columns: DataTableColumn<Brand>[] = [
-    { key: 'name', header: 'Nombre', accessorKey: 'name' },
-    {
-      key: 'actions',
-      header: 'Acciones',
-      className: 'w-[100px]',
-      render: (brand) => (
-        <ActionCell
-          row={brand}
-          onView={() => router.push(`/dashboard/marcas/${brand.id}`)}
-          onEdit={() => {
-            setEditingBrand(brand)
-            setIsDialogOpen(true)
-          }}
-          onDelete={() => handleDelete(brand)}
-        />
-      ),
-    },
+    { key: 'name', header: 'Nombre', accessorKey: 'name', className: 'font-medium' },
+    { key: 'description', header: 'Descripción', accessorKey: 'description' },
+    { key: 'originCountry', header: 'Origen', accessorKey: 'originCountry' },
+    { key: 'actions', header: 'Acciones', className: 'text-right', render: (row) => (<ActionCell row={row} onEdit={handleEdit} onDelete={(p) => handleDelete(p.id)} />) }
   ]
 
   return (
-    <div className="space-y-6 pt-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Marcas</h1>
-        <Button
-          onClick={() => {
-            setEditingBrand(null);
-            setIsDialogOpen(true);
-          }}
-        >
-          <Plus className="mr-2 h-4 w-4" /> Nueva Marca
-        </Button>
-      </div>
+    <div className="space-y-6">
+      <FadeIn direction="none">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Marcas</h1>
+            <p className="text-muted-foreground">Gestión de marcas de productos.</p>
+          </div>
+          <Button onClick={() => { setEditingBrand(null); setIsDialogOpen(true); }}><Plus className="mr-2 h-4 w-4" /> Nueva Marca</Button>
+        </div>
+      </FadeIn>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Filtros y Búsqueda</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-4">
-            <div className="flex-1">
-              <div className='relative'>
+      <FadeIn delay={100}>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Search className="h-5 w-5" /> Filtros y Búsqueda
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex gap-4 items-center">
+              <div className="flex-1 relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input
-                  placeholder="Buscar marcas..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
+                <Input placeholder="Buscar por nombre o descripción..." className="pl-10" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
               </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </FadeIn>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Package className="h-5 w-5" />
-            <span>Listado de Marcas</span>
-            <Badge variant="outline">{brands.length} marcas</Badge>
-          </CardTitle>
-          <CardDescription>Gestione el inventario de marcas del sistema</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <DataTable
-            data={brands}
-            columns={columns}
-            isLoading={isLoading}
-            pagination={{
-              page: currentPage,
-              limit: 10,
-              total: total,
-              totalPages: Math.ceil(total / 10),
-              onPageChange: setCurrentPage,
-            }}
-          />
-        </CardContent>
-      </Card>
+      <FadeIn delay={200}>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Package className="h-5 w-5" />
+              <span>Listado de Marcas</span>
+              <Badge variant="outline">{pagination.total} marcas</Badge>
+            </CardTitle>
+            <CardDescription>Gestione las marcas de productos del sistema</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <DataTable columns={columns} data={brands} isLoading={isLoading} pagination={{ page: pagination.page, limit: pagination.limit, total: pagination.total, totalPages: pagination.lastPage, onPageChange: setCurrentPage, }} emptyMessage="No se encontraron marcas" />
+          </CardContent>
+        </Card>
+      </FadeIn>
 
-      <Dialog
-        open={isDialogOpen}
-        onOpenChange={(open) => !open && setIsDialogOpen(false)}
-      >
-        <DialogContent>
+      <Dialog open={isDialogOpen} onOpenChange={handleDialogChange}>
+        <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>
-              {editingBrand ? "Editar Marca" : "Nueva Marca"}
-            </DialogTitle>
+            <DialogTitle>{editingBrand ? 'Editar Marca' : 'Nueva Marca'}</DialogTitle>
+            <DialogDescription>{editingBrand ? 'Modifique los datos de la marca.' : 'Complete la información para registrar una nueva marca.'}</DialogDescription>
           </DialogHeader>
-          <MarcaForm
-            initialData={editingBrand}
-            onSubmit={editingBrand ? handleUpdate : handleCreate}
-            onCancel={() => setIsDialogOpen(false)}
-            isLoading={isLoading}
-          />
+          <MarcaForm initialData={editingBrand} onSubmit={editingBrand ? handleUpdate : handleCreate} onCancel={() => setIsDialogOpen(false)} isLoading={isLoading} />
         </DialogContent>
       </Dialog>
     </div>

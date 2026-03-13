@@ -13,17 +13,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { MultiSelectSearch } from "@/components/ui/multi-select-search";
 import { offersService, Offer, CreateOfferDto } from "@/services/offers.service";
 import { productsService, Product } from "@/services/products.service";
 import { proveedoresService } from "@/services/proveedores.service";
-import { Proveedor } from "@/types";
+import { format } from "date-fns";
+import { Proveedor } from "@/types/proveedor";
+import { useDebounce } from "@/hooks/use-debounce";
 
 type CreateOfferDialogProps = {
   open: boolean;
@@ -52,31 +48,21 @@ export function CreateOfferDialog({
     deliveryDate: "",
   });
   
+  const [deliveryDays, setDeliveryDays] = useState<number | "">("");
+  
   // Options for selects
   const [products, setProducts] = useState<Product[]>([]);
   const [providers, setProviders] = useState<Proveedor[]>([]);
-  const [loadingOptions, setLoadingOptions] = useState(false);
+  
+  const [productSearch, setProductSearch] = useState("");
+  const debouncedProductSearch = useDebounce(productSearch, 300);
 
-  // Load products and providers when dialog opens
+  const [providerSearch, setProviderSearch] = useState("");
+  const debouncedProviderSearch = useDebounce(providerSearch, 300);
+
+  // Reset form when dialog opens
   useEffect(() => {
     if (open) {
-      const loadOptions = async () => {
-        setLoadingOptions(true);
-        try {
-          const [productsRes, providersRes] = await Promise.all([
-            productsService.getAll({ limit: 100 }),
-            proveedoresService.getAll({ limit: 100 }),
-          ]);
-          setProducts(productsRes.data || []);
-          setProviders(providersRes.data || []);
-        } catch (err) {
-          console.error("Error loading options:", err);
-        } finally {
-          setLoadingOptions(false);
-        }
-      };
-      loadOptions();
-      
       // Reset form with initial productId
       setFormData({
         name: "",
@@ -87,9 +73,48 @@ export function CreateOfferDialog({
         origin: "",
         deliveryDate: "",
       });
+      setDeliveryDays("");
+      setProductSearch("");
+      setProviderSearch("");
       setError(null);
     }
   }, [open, initialProductId]);
+
+  // Dynamically load products
+  useEffect(() => {
+    if (!open) return;
+    const fetchProducts = async () => {
+      try {
+        const isSearching = debouncedProductSearch.trim().length > 0;
+        const productsRes = await productsService.getAll({ 
+          search: isSearching ? debouncedProductSearch : undefined, 
+          limit: isSearching ? 20 : 5 
+        });
+        setProducts(productsRes.data || []);
+      } catch (err) {
+        console.error("Error loading products:", err);
+      }
+    };
+    fetchProducts();
+  }, [open, debouncedProductSearch]);
+
+  // Dynamically load providers
+  useEffect(() => {
+    if (!open) return;
+    const fetchProviders = async () => {
+      try {
+        const isSearching = debouncedProviderSearch.trim().length > 0;
+        const providersRes = await proveedoresService.getAll({ 
+          search: isSearching ? debouncedProviderSearch : undefined, 
+          limit: isSearching ? 20 : 5 
+        });
+        setProviders(providersRes.data || []);
+      } catch (err) {
+        console.error("Error loading providers:", err);
+      }
+    };
+    fetchProviders();
+  }, [open, debouncedProviderSearch]);
 
   const handleSubmit = async () => {
     // Validation
@@ -109,15 +134,23 @@ export function CreateOfferDialog({
       setError("La cantidad debe ser al menos 1");
       return;
     }
-    if (!formData.deliveryDate) {
-      setError("Seleccione una fecha de entrega");
+    if (deliveryDays === "" || deliveryDays < 0) {
+      setError("Ingrese un plazo de entrega válido en días");
       return;
     }
 
     try {
       setLoading(true);
       setError(null);
-      const newOffer = await offersService.create(formData);
+      
+      const df = new Date();
+      df.setDate(df.getDate() + Number(deliveryDays));
+      const submitData = {
+        ...formData,
+        deliveryDate: format(df, "yyyy-MM-dd"),
+      };
+      
+      const newOffer = await offersService.create(submitData);
       onOfferCreated(newOffer);
       onOpenChange(false);
     } catch (err) {
@@ -128,7 +161,7 @@ export function CreateOfferDialog({
     }
   };
 
-  const isValid = formData.productId > 0 && formData.providerId > 0 && formData.price > 0 && formData.quantity >= 1 && !!formData.deliveryDate;
+  const isValid = formData.productId > 0 && formData.providerId > 0 && formData.price > 0 && formData.quantity >= 1 && deliveryDays !== "" && deliveryDays >= 0;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -140,13 +173,7 @@ export function CreateOfferDialog({
           </DialogDescription>
         </DialogHeader>
 
-        {loadingOptions ? (
-          <div className="py-8 text-center">
-            <Loader2 className="h-8 w-8 animate-spin mx-auto text-blue-950" />
-            <p className="text-sm text-blue-950 mt-2">Cargando opciones...</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
+        <div className="space-y-4">
             {error && (
               <div className="p-3 bg-destructive/10 text-destructive text-sm rounded-md">
                 {error}
@@ -166,11 +193,13 @@ export function CreateOfferDialog({
             {/* Delivery Date & Origin */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Fecha de Entrega *</Label>
+                <Label>Plazo de Entrega (días) *</Label>
                 <Input
-                  type="date"
-                  value={formData.deliveryDate ? new Date(formData.deliveryDate).toISOString().split('T')[0] : ''}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, deliveryDate: e.target.value }))}
+                  type="number"
+                  min="0"
+                  value={deliveryDays}
+                  onChange={(e) => setDeliveryDays(e.target.value === "" ? "" : Number(e.target.value))}
+                  placeholder="Ej: 15"
                 />
               </div>
               <div className="space-y-2">
@@ -186,41 +215,39 @@ export function CreateOfferDialog({
             {/* Product */}
             <div className="space-y-2">
               <Label>Producto *</Label>
-              <Select
-                value={formData.productId ? formData.productId.toString() : ""}
-                onValueChange={(value) => setFormData((prev) => ({ ...prev, productId: parseInt(value) }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleccionar producto..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {products.map((product) => (
-                    <SelectItem key={product.id} value={product.id.toString()}>
-                      {product.name} {product.brand ? `(${product.brand})` : ""}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <MultiSelectSearch
+                options={products.map(p => ({
+                  id: p.id,
+                  label: `${p.name} ${p.brand ? `(${p.brand})` : ""}`
+                }))}
+                selectedValues={formData.productId ? [formData.productId] : []}
+                onSelect={(id) => setFormData(prev => ({ ...prev, productId: id as number }))}
+                onRemove={() => setFormData(prev => ({ ...prev, productId: 0 }))}
+                placeholder="Buscar producto..."
+                searchValue={productSearch}
+                onSearchValueChange={setProductSearch}
+                shouldFilter={false} // Let the backend do the filtering
+                single={true}
+              />
             </div>
 
             {/* Provider */}
             <div className="space-y-2">
               <Label>Proveedor *</Label>
-              <Select
-                value={formData.providerId ? formData.providerId.toString() : ""}
-                onValueChange={(value) => setFormData((prev) => ({ ...prev, providerId: parseInt(value) }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleccionar proveedor..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {providers.map((provider) => (
-                    <SelectItem key={provider.id} value={provider.id.toString()}>
-                      {provider.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <MultiSelectSearch
+                options={providers.map(p => ({
+                  id: p.id,
+                  label: p.name
+                }))}
+                selectedValues={formData.providerId ? [formData.providerId] : []}
+                onSelect={(id) => setFormData(prev => ({ ...prev, providerId: id as number }))}
+                onRemove={() => setFormData(prev => ({ ...prev, providerId: 0 }))}
+                placeholder="Buscar proveedor..."
+                searchValue={providerSearch}
+                onSearchValueChange={setProviderSearch}
+                shouldFilter={false} // Let the backend do the filtering
+                single={true}
+              />
             </div>
 
             {/* Price and Quantity */}
@@ -248,13 +275,12 @@ export function CreateOfferDialog({
               </div>
             </div>
           </div>
-        )}
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
             Cancelar
           </Button>
-          <Button onClick={handleSubmit} disabled={loading || !isValid || loadingOptions}>
+          <Button onClick={handleSubmit} disabled={loading || !isValid}>
             {loading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

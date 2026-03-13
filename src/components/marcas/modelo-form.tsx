@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { DialogFooter } from '@/components/ui/dialog'
-import { Model } from '@/types'
+import { Model } from '@/types/brand'
 
 interface ModeloFormProps {
   initialData?: Model | null

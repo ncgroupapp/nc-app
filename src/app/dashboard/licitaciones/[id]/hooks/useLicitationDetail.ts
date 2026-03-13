@@ -13,7 +13,7 @@ export interface UseLicitationDetailReturn {
   error: string | null;
   setQuotation: React.Dispatch<React.SetStateAction<Quotation | null>>;
   setError: React.Dispatch<React.SetStateAction<string | null>>;
-  loadData: () => Promise<void>;
+  loadData: (silent?: boolean) => Promise<void>;
 }
 
 export const useLicitationDetail = (licitationId: number): UseLicitationDetailReturn => {
@@ -23,9 +23,9 @@ export const useLicitationDetail = (licitationId: number): UseLicitationDetailRe
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       setError(null);
       
       // Load licitation
@@ -61,7 +61,7 @@ export const useLicitationDetail = (licitationId: number): UseLicitationDetailRe
       console.error('Error loading data:', err);
       setError('Error al cargar la licitación');
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [licitationId]);
 

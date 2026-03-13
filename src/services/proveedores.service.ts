@@ -1,5 +1,6 @@
 import api from '@/lib/axios';
-import { Proveedor, CreateProveedorForm, ApiResponse, PaginatedResponse } from '@/types';
+import { Proveedor, CreateProveedorForm } from '@/types/proveedor';
+import { ApiResponse, PaginatedResponse } from '@/types/api';
 
 export interface ProviderFilters {
   page?: number;

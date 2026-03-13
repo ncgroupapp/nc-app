@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Edit, Trash2, Eye } from "lucide-react"
+import { Edit, Eye, Trash2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,

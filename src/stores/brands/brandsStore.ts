@@ -1,14 +1,15 @@
 import { create } from 'zustand';
-import { Brand, Model } from '@/types';
+import { Brand, Model } from '@/types/brand';
+import { PaginationMeta } from '@/types/api';
 import { brandsService } from '@/services/brands.service';
 
-interface BrandsState {
+interface MarcasState {
   brands: Brand[];
   models: Model[];
   selectedBrand: Brand | null;
   isLoading: boolean;
   isModelsLoading: boolean;
-  total: number;
+  pagination: PaginationMeta;
 
   fetchBrands: (page?: number, search?: string) => Promise<void>;
   fetchBrandById: (id: number) => Promise<void>;
@@ -17,19 +18,33 @@ interface BrandsState {
   deleteBrand: (id: number) => Promise<void>;
 }
 
-export const useBrandsStore = create<BrandsState>((set, get) => ({
+const DEFAULT_PAGINATION: PaginationMeta = {
+  total: 0,
+  page: 1,
+  lastPage: 1,
+  limit: 10,
+};
+
+export const useMarcasStore = create<MarcasState>((set, get) => ({
   brands: [],
   models: [],
   selectedBrand: null,
   isLoading: false,
   isModelsLoading: false,
-  total: 0,
+  pagination: DEFAULT_PAGINATION,
 
   fetchBrands: async (page = 1, search = '') => {
     set({ isLoading: true });
     try {
       const res = await brandsService.getAll({ page, search });
-      set({ brands: res.data, total: (res as any).meta?.total || (res as any).total || 0 });
+      set({ 
+        brands: res.data, 
+        pagination: res.meta || {
+          ...DEFAULT_PAGINATION,
+          total: (res as any).total || 0,
+          page: page
+        }
+      });
     } catch (error) {
       console.error('Error fetching brands:', error);
     } finally {
@@ -52,12 +67,12 @@ export const useBrandsStore = create<BrandsState>((set, get) => ({
 
   createBrand: async (data) => {
     await brandsService.create(data);
-    get().fetchBrands();
+    get().fetchBrands(get().pagination.page);
   },
 
   updateBrand: async (id, data) => {
     await brandsService.update(id, data);
-    get().fetchBrands();
+    get().fetchBrands(get().pagination.page);
     // Si editamos la marca actual, recargarla
     if (get().selectedBrand?.id === id) {
       get().fetchBrandById(id);
@@ -66,6 +81,6 @@ export const useBrandsStore = create<BrandsState>((set, get) => ({
 
   deleteBrand: async (id) => {
     await brandsService.delete(id);
-    get().fetchBrands();
+    get().fetchBrands(1);
   },
 }));

@@ -5,8 +5,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { DialogFooter } from '@/components/ui/dialog'
-import { Brand } from '@/types'
-import { Plus, Trash2 } from 'lucide-react'
+import { Brand } from '@/types/brand'
+import { Plus, Trash2 } from "lucide-react";
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { useConfirm } from "@/hooks/use-confirm";
 

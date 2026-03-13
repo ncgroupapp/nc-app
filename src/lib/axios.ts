@@ -7,10 +7,25 @@ const api = axios.create({
   },
 });
 
-// Interceptor para agregar el token a las peticiones
+// Interceptor para añadir el token a las peticiones
 api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("backend_token");
+  async (config) => {
+    let token = null;
+
+    if (typeof window !== 'undefined') {
+      // Client-side
+      token = localStorage.getItem('backend_token');
+    } else {
+      // Server-side
+      try {
+        const { cookies } = await import('next/headers');
+        const cookieStore = await cookies();
+        token = cookieStore.get('backend_token')?.value;
+      } catch (error) {
+        console.error('Error accessing cookies in axios interceptor:', error);
+      }
+    }
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }

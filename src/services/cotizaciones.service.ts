@@ -1,5 +1,10 @@
 import api from '@/lib/axios';
-import { PaginatedResponse, ApiResponse, QuotationStatus, QuotationAwardStatus, Currency } from '@/types';
+import { PaginatedResponse, ApiResponse } from '@/types/api';
+import { QuotationStatus, QuotationAwardStatus, Currency } from '@/types/enums';
+
+// Re-export enums so consumers can import them from this module
+export { QuotationStatus, QuotationAwardStatus, Currency } from '@/types/enums';
+
 
 // Types matching backend entities
 export interface ProviderQuotationHistory {
@@ -124,8 +129,10 @@ export interface QuotationTotals {
 export interface QuotationFilters {
   page?: number;
   limit?: number;
+  search?: string;
   status?: QuotationStatus;
   clientId?: number;
+  productId?: number;
 }
 
 
@@ -153,10 +160,24 @@ export const cotizacionesService = {
     const params = new URLSearchParams();
     if (filters.page) params.append('page', filters.page.toString());
     if (filters.limit) params.append('limit', filters.limit.toString());
+    if (filters.search) params.append('search', filters.search);
     if (filters.status) params.append('status', filters.status);
     if (filters.clientId) params.append('clientId', filters.clientId.toString());
-    
+    if (filters.productId) params.append('productId', filters.productId.toString());
+
     const response = await api.get<PaginatedResponse<Quotation>>(`/quotation?${params.toString()}`);
+    return response.data;
+  },
+
+  getPaginatedByProductId: async (productId: number, filters: QuotationFilters = {}): Promise<PaginatedResponse<Quotation>> => {
+    const params = new URLSearchParams();
+    if (filters.page) params.append('page', filters.page.toString());
+    if (filters.limit) params.append('limit', filters.limit.toString());
+    if (filters.search) params.append('search', filters.search);
+    if (filters.status) params.append('status', filters.status);
+    if (filters.clientId) params.append('clientId', filters.clientId.toString());
+
+    const response = await api.get<PaginatedResponse<Quotation>>(`/quotation/by-product/${productId}?${params.toString()}`);
     return response.data;
   },
 

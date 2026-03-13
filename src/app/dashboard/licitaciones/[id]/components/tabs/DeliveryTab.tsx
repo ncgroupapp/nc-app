@@ -36,7 +36,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Truck, Package, FileText, Loader2, Pencil } from "lucide-react";
+import { FileText, Loader2, Package, Pencil, Plus, Truck, Upload } from "lucide-react";
 import { LicitationStatus } from "@/services/licitaciones.service";
 import {
   entregasService,
@@ -46,6 +46,10 @@ import {
   DeliveryStatus,
   UpdateDeliveryItemDto,
 } from "@/services/entregas.service";
+import { DatePicker } from "@/components/ui/date-picker";
+import { format } from "date-fns";
+import { uploadInvoiceFile } from "@/lib/firebase";
+import { showSnackbar } from "@/components/ui/snackbar";
 
 interface DeliveryTabProps {
   licitationId: number;
@@ -60,10 +64,10 @@ const statusLabels: Record<DeliveryItemStatus, string> = {
 };
 
 const statusColors: Record<DeliveryItemStatus, string> = {
-  [DeliveryItemStatus.PENDING]: "bg-yellow-100 text-yellow-800",
-  [DeliveryItemStatus.ON_WAY]: "bg-blue-100 text-blue-800",
-  [DeliveryItemStatus.DELIVERED]: "bg-green-100 text-green-800",
-  [DeliveryItemStatus.ISSUE]: "bg-red-100 text-red-800",
+  [DeliveryItemStatus.PENDING]: "bg-yellow-500/10 text-yellow-500 border border-yellow-500/20",
+  [DeliveryItemStatus.ON_WAY]: "bg-blue-500/10 text-blue-500 border border-blue-500/20",
+  [DeliveryItemStatus.DELIVERED]: "bg-green-500/10 text-green-500 border border-green-500/20",
+  [DeliveryItemStatus.ISSUE]: "bg-red-500/10 text-red-500 border border-red-500/20",
 };
 
 const deliveryStatusLabels: Record<DeliveryStatus, string> = {
@@ -74,10 +78,10 @@ const deliveryStatusLabels: Record<DeliveryStatus, string> = {
 };
 
 const deliveryStatusColors: Record<DeliveryStatus, string> = {
-  [DeliveryStatus.PENDING]: "bg-yellow-100 text-yellow-800",
-  [DeliveryStatus.PARTIAL]: "bg-blue-100 text-blue-800",
-  [DeliveryStatus.COMPLETED]: "bg-green-100 text-green-800",
-  [DeliveryStatus.ISSUE]: "bg-red-100 text-red-800",
+  [DeliveryStatus.PENDING]: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
+  [DeliveryStatus.PARTIAL]: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+  [DeliveryStatus.COMPLETED]: "bg-green-500/10 text-green-500 border-green-500/20",
+  [DeliveryStatus.ISSUE]: "bg-red-500/10 text-red-500 border-red-500/20",
 };
 
 export const DeliveryTab = ({ licitationId, licitationStatus }: DeliveryTabProps) => {
@@ -90,15 +94,22 @@ export const DeliveryTab = ({ licitationId, licitationStatus }: DeliveryTabProps
   const [editingItem, setEditingItem] = useState<DeliveryItem | null>(null);
   const [editForm, setEditForm] = useState<UpdateDeliveryItemDto>({});
 
-  const loadDelivery = useCallback(async () => {
+  // Estado del diálogo de factura
+  const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
+  const [isUploadingInvoice, setIsUploadingInvoice] = useState(false);
+  const [invoiceNumber, setInvoiceNumber] = useState("");
+  const [invoiceDate, setInvoiceDate] = useState("");
+  const [invoiceFile, setInvoiceFile] = useState<File | null>(null);
+
+  const loadDelivery = useCallback(async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const data = await entregasService.getByLicitation(licitationId);
       setDelivery(data);
     } catch (error) {
       console.error("Error loading delivery:", error);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [licitationId]);
 
@@ -106,13 +117,43 @@ export const DeliveryTab = ({ licitationId, licitationStatus }: DeliveryTabProps
     loadDelivery();
   }, [loadDelivery]);
 
+  const handleUploadInvoice = async () => {
+    if (!delivery || !invoiceFile || !invoiceNumber || !invoiceDate) return;
+
+    try {
+      setIsUploadingInvoice(true);
+      const fileUrl = await uploadInvoiceFile(invoiceFile);
+      
+      await entregasService.addInvoice(delivery.id, {
+        invoiceNumber,
+        issueDate: invoiceDate,
+        fileName: invoiceFile.name,
+        fileUrl,
+      });
+
+      await loadDelivery(true);
+      showSnackbar("Factura subida exitosamente", "success");
+      
+      // Reset form
+      setInvoiceDialogOpen(false);
+      setInvoiceNumber("");
+      setInvoiceDate("");
+      setInvoiceFile(null);
+    } catch (error) {
+      console.error("Error uploading invoice:", error);
+      showSnackbar("Error al subir la factura", "error");
+    } finally {
+      setIsUploadingInvoice(false);
+    }
+  };
+
   const handleStatusChange = async (item: DeliveryItem, newStatus: DeliveryItemStatus) => {
     if (!delivery) return;
 
     try {
       setUpdatingItemId(item.id);
       await entregasService.updateItemStatus(delivery.id, item.id, { status: newStatus });
-      await loadDelivery();
+      await loadDelivery(true);
     } catch (error) {
       console.error("Error updating item status:", error);
     } finally {
@@ -137,7 +178,7 @@ export const DeliveryTab = ({ licitationId, licitationStatus }: DeliveryTabProps
     try {
       setUpdatingItemId(editingItem.id);
       await entregasService.updateItemStatus(delivery.id, editingItem.id, editForm);
-      await loadDelivery();
+      await loadDelivery(true);
       setEditDialogOpen(false);
       setEditingItem(null);
     } catch (error) {
@@ -173,7 +214,7 @@ export const DeliveryTab = ({ licitationId, licitationStatus }: DeliveryTabProps
               </CardDescription>
             </div>
             {delivery && (
-              <Badge className={deliveryStatusColors[delivery.calculatedStatus]}>
+              <Badge variant="outline" className={deliveryStatusColors[delivery.calculatedStatus]}>
                 {deliveryStatusLabels[delivery.calculatedStatus]}
               </Badge>
             )}
@@ -207,7 +248,7 @@ export const DeliveryTab = ({ licitationId, licitationStatus }: DeliveryTabProps
                 </TableHeader>
                 <TableBody>
                   {delivery.items.map((item) => (
-                    <TableRow key={item.id}>
+                    <TableRow key={item.id} className="hover:bg-muted/50 transition-colors">
                       <TableCell className="font-mono text-sm">
                         {item.productCode}
                       </TableCell>
@@ -238,7 +279,7 @@ export const DeliveryTab = ({ licitationId, licitationStatus }: DeliveryTabProps
                             <SelectContent>
                               {Object.entries(statusLabels).map(([value, label]) => (
                                 <SelectItem key={value} value={value}>
-                                  <span className={`px-2 py-1 rounded text-xs ${statusColors[value as DeliveryItemStatus]}`}>
+                                  <span className={`px-2 py-1 rounded flex w-fit items-center font-semibold text-xs ${statusColors[value as DeliveryItemStatus]}`}>
                                     {label}
                                   </span>
                                 </SelectItem>
@@ -264,10 +305,16 @@ export const DeliveryTab = ({ licitationId, licitationStatus }: DeliveryTabProps
 
               {/* Sección de Facturas */}
               <div className="border-t pt-4">
-                <h4 className="font-medium flex items-center gap-2 mb-4">
-                  <FileText className="h-4 w-4" />
-                  Facturas
-                </h4>
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="font-medium flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    Facturas
+                  </h4>
+                  <Button size="sm" onClick={() => setInvoiceDialogOpen(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Subir Factura
+                  </Button>
+                </div>
                 {delivery.invoices && delivery.invoices.length > 0 ? (
                   <div className="space-y-2">
                     {delivery.invoices.map((invoice) => (
@@ -340,11 +387,9 @@ export const DeliveryTab = ({ licitationId, licitationStatus }: DeliveryTabProps
             </div>
             <div className="grid gap-2">
               <Label htmlFor="actualDate">Fecha Real de Entrega</Label>
-              <Input
-                id="actualDate"
-                type="date"
-                value={editForm.actualDate || ''}
-                onChange={(e) => setEditForm({ ...editForm, actualDate: e.target.value || undefined })}
+              <DatePicker
+                date={editForm.actualDate ? new Date(editForm.actualDate + "T12:00:00") : undefined}
+                setDate={(date) => setEditForm({ ...editForm, actualDate: date ? format(date, "yyyy-MM-dd") : undefined })}
               />
             </div>
             <div className="grid gap-2">
@@ -369,6 +414,70 @@ export const DeliveryTab = ({ licitationId, licitationStatus }: DeliveryTabProps
                 </>
               ) : (
                 'Guardar Cambios'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Diálogo de Factura */}
+      <Dialog open={invoiceDialogOpen} onOpenChange={(open) => {
+        if (!open) {
+          setInvoiceNumber("");
+          setInvoiceDate("");
+          setInvoiceFile(null);
+        }
+        setInvoiceDialogOpen(open);
+      }}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Subir Factura</DialogTitle>
+            <DialogDescription>
+              Adjunte una factura relacionada a esta entrega.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="invoiceNumber">Número de Factura *</Label>
+              <Input
+                id="invoiceNumber"
+                value={invoiceNumber}
+                onChange={(e) => setInvoiceNumber(e.target.value)}
+                placeholder="Ej: A-001-123456"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="invoiceDate">Fecha de Emisión *</Label>
+              <DatePicker
+                date={invoiceDate ? new Date(invoiceDate + "T12:00:00") : undefined}
+                setDate={(date) => setInvoiceDate(date ? format(date, "yyyy-MM-dd") : "")}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="invoiceFile">Archivo (PDF/Imagen) *</Label>
+              <Input
+                id="invoiceFile"
+                type="file"
+                accept=".pdf,image/*"
+                onChange={(e) => setInvoiceFile(e.target.files?.[0] || null)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setInvoiceDialogOpen(false)} disabled={isUploadingInvoice}>
+              Cancelar
+            </Button>
+            <Button onClick={handleUploadInvoice} disabled={isUploadingInvoice || !invoiceFile || !invoiceNumber || !invoiceDate}>
+              {isUploadingInvoice ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Subiendo...
+                </>
+              ) : (
+                <>
+                  <Upload className="h-4 w-4 mr-2" />
+                  Subir Factura
+                </>
               )}
             </Button>
           </DialogFooter>

@@ -1,44 +1,54 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
+import { useForm, useFieldArray } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { Plus, Trash2 } from "lucide-react";
+import { Cliente } from '@/types/cliente'
+import { useConfirm } from "@/hooks/use-confirm";
+import { clienteSchema, ClienteForm as ClienteFormType } from '@/lib/validations/schema'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { DialogFooter } from '@/components/ui/dialog'
-import { Plus, Trash2, Loader2 } from 'lucide-react'
-import { Cliente } from '@/types'
-import { useConfirm } from "@/hooks/use-confirm";
-
-
-interface ClientFormData {
-  nombre: string
-  identificador: string
-  contactos: {
-    nombre: string
-    email: string
-    telefono: string
-    direccion: string
-  }[]
-}
+import { Textarea } from '@/components/ui/textarea'
+import { 
+  Form, 
+  FormControl, 
+  FormField, 
+  FormItem, 
+  FormLabel, 
+  FormMessage 
+} from '@/components/ui/form'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { FormGrid } from '@/components/common/form-helpers'
+import { FormActionButtons } from '@/components/common/form-action-buttons'
 
 interface ClientFormProps {
   initialData?: Cliente | null
-  onSubmit: (data: unknown) => Promise<void>
+  onSubmit: (data: any) => Promise<void>
   onCancel: () => void
   isLoading?: boolean
 }
 
 export function ClientForm({ initialData, onSubmit, onCancel, isLoading = false }: ClientFormProps) {
-  const [formData, setFormData] = useState<ClientFormData>({
-    nombre: '',
-    identificador: '',
-    contactos: [{ nombre: '', email: '', telefono: '', direccion: '' }]
-  })
   const { confirm } = useConfirm()
+
+  const form = useForm<ClienteFormType>({
+    resolver: zodResolver(clienteSchema),
+    defaultValues: {
+      nombre: '',
+      identificador: '',
+      contactos: [{ nombre: '', email: '', telefono: '', direccion: '' }]
+    }
+  })
+
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "contactos"
+  })
 
   useEffect(() => {
     if (initialData) {
-      setFormData({
+      form.reset({
         nombre: initialData.name,
         identificador: initialData.identifier,
         contactos: initialData.contacts && initialData.contacts.length > 0
@@ -50,23 +60,15 @@ export function ClientForm({ initialData, onSubmit, onCancel, isLoading = false 
           }))
           : [{ nombre: '', email: '', telefono: '', direccion: '' }]
       })
-    } else {
-      setFormData({
-        nombre: '',
-        identificador: '',
-        contactos: [{ nombre: '', email: '', telefono: '', direccion: '' }]
-      })
     }
-  }, [initialData])
+  }, [initialData, form])
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
+  const handleFormSubmit = async (values: ClienteFormType) => {
     // Transform back to API format
     const clientData = {
-      name: formData.nombre,
-      identifier: formData.identificador,
-      contacts: formData.contactos.map(c => ({
+      name: values.nombre,
+      identifier: values.identificador,
+      contacts: values.contactos?.map(c => ({
         name: c.nombre,
         email: c.email,
         phone: c.telefono,
@@ -78,190 +80,163 @@ export function ClientForm({ initialData, onSubmit, onCancel, isLoading = false 
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div className="grid gap-4 py-4">
-        <div className="space-y-2">
-          <Label htmlFor="nombre">
-            Nombre del Cliente <span className="text-red-500">*</span>
-          </Label>
-          <Input
-            id="nombre"
-            value={formData.nombre}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, nombre: e.target.value }))
-            }
-            placeholder="Ej: Empresa XYZ S.A."
-            required
-          />
-        </div>
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
+        <div className="space-y-4 py-4">
+          <FormGrid>
+            <FormField
+              control={form.control}
+              name="nombre"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nombre del Cliente <span className="text-red-500">*</span></FormLabel>
+                  <FormControl>
+                    <Input placeholder="Ej: Empresa XYZ S.A." {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <div className="space-y-2">
-          <Label htmlFor="identificador">
-            Identificador/RUT <span className="text-red-500">*</span>
-          </Label>
-          <Input
-            id="identificador"
-            value={formData.identificador}
-            onChange={(e) =>
-              setFormData((prev) => ({
-                ...prev,
-                identificador: e.target.value,
-              }))
-            }
-            placeholder="Ej: 987654321098"
-            required
-          />
-        </div>
+            <FormField
+              control={form.control}
+              name="identificador"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Identificador/RUT <span className="text-red-500">*</span></FormLabel>
+                  <FormControl>
+                    <Input placeholder="Ej: 987654321098" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </FormGrid>
 
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <Label>Contactos</Label>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() =>
-                setFormData((prev) => ({
-                  ...prev,
-                  contactos: [
-                    ...prev.contactos,
-                    { nombre: "", email: "", telefono: "", direccion: "" },
-                  ],
-                }))
-              }
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Agregar Contacto
-            </Button>
-          </div>
-
-          <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2">
-            {formData.contactos.map((contacto, index) => (
-              <div
-                key={index}
-                className="relative grid gap-3 p-4 border rounded-lg bg-muted/20"
+          <div className="space-y-4">
+            <div className="flex justify-between items-center border-b pb-2">
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                Contactos
+              </h3>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => append({ nombre: "", email: "", telefono: "", direccion: "" })}
               >
-                {formData.contactos.length > 1 && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute top-2 right-2 text-red-500 hover:text-red-700"
-                    onClick={async () => {
-                      const confirmed = await confirm({
-                        title: "Eliminar Contacto",
-                        message: `¿Estás seguro de que deseas eliminar el Contacto?`,
-                        confirmText: "Eliminar",
-                        cancelText: "Cancelar",
-                        variant: "destructive",
-                      });
-                      if (confirmed) {
-                        setFormData((prev) => ({
-                          ...prev,
-                          contactos: prev.contactos.filter(
-                            (_, i) => i !== index,
-                          ),
-                        }));
-                      }
-                    }}
+                <Plus className="h-4 w-4 mr-2" />
+                Agregar Contacto
+              </Button>
+            </div>
+
+            <ScrollArea className="h-[300px] pr-4">
+              <div className="space-y-6">
+                {fields.map((field, index) => (
+                  <div
+                    key={field.id}
+                    className="relative grid gap-4 p-4 border rounded-lg bg-muted/10"
                   >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                )}
+                    <div className="flex justify-between items-start">
+                      <span className="text-xs font-bold text-muted-foreground uppercase">
+                        Contacto #{index + 1}
+                      </span>
+                      {fields.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                          onClick={async () => {
+                            const confirmed = await confirm({
+                              title: "Eliminar Contacto",
+                              message: `¿Estás seguro de que deseas eliminar este contacto?`,
+                              confirmText: "Eliminar",
+                              cancelText: "Cancelar",
+                              variant: "destructive",
+                            });
+                            if (confirmed) {
+                              remove(index);
+                            }
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor={`contact-name-${index}`}>
-                    Nombre del Contacto <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id={`contact-name-${index}`}
-                    value={contacto.nombre}
-                    onChange={(e) => {
-                      const newContactos = [...formData.contactos];
-                      newContactos[index].nombre = e.target.value;
-                      setFormData((prev) => ({
-                        ...prev,
-                        contactos: newContactos,
-                      }));
-                    }}
-                    placeholder="Ej: Juan Pérez"
-                    required
-                  />
-                </div>
+                    <FormField
+                      control={form.control}
+                      name={`contactos.${index}.nombre`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Nombre <span className="text-red-500">*</span></FormLabel>
+                          <FormControl>
+                            <Input placeholder="Ej: Juan Pérez" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor={`contact-email-${index}`}>Email</Label>
-                    <Input
-                      id={`contact-email-${index}`}
-                      type="email"
-                      value={contacto.email}
-                      onChange={(e) => {
-                        const newContactos = [...formData.contactos];
-                        newContactos[index].email = e.target.value;
-                        setFormData((prev) => ({
-                          ...prev,
-                          contactos: newContactos,
-                        }));
-                      }}
-                      placeholder="Ej: contacto@cliente.com"
+                    <FormGrid>
+                      <FormField
+                        control={form.control}
+                        name={`contactos.${index}.email`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Email</FormLabel>
+                            <FormControl>
+                              <Input type="email" placeholder="ejemplo@correo.com" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name={`contactos.${index}.telefono`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Teléfono</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Ej: +598 99 123 456" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </FormGrid>
+
+                    <FormField
+                      control={form.control}
+                      name={`contactos.${index}.direccion`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Dirección</FormLabel>
+                          <FormControl>
+                            <Textarea 
+                              placeholder="Dirección del contacto..." 
+                              className="min-h-[80px]"
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor={`contact-phone-${index}`}>Teléfono</Label>
-                    <Input
-                      id={`contact-phone-${index}`}
-                      value={contacto.telefono}
-                      onChange={(e) => {
-                        const newContactos = [...formData.contactos];
-                        newContactos[index].telefono = e.target.value;
-                        setFormData((prev) => ({
-                          ...prev,
-                          contactos: newContactos,
-                        }));
-                      }}
-                      placeholder="Ej: 24011234"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor={`contact-address-${index}`}>Dirección</Label>
-                  <textarea
-                    id={`contact-address-${index}`}
-                    className="w-full p-3 border rounded-md text-sm"
-                    rows={2}
-                    value={contacto.direccion}
-                    onChange={(e) => {
-                      const newContactos = [...formData.contactos];
-                      newContactos[index].direccion = e.target.value;
-                      setFormData((prev) => ({
-                        ...prev,
-                        contactos: newContactos,
-                      }));
-                    }}
-                    placeholder="Dirección del contacto..."
-                  />
-                </div>
+                ))}
               </div>
-            ))}
+            </ScrollArea>
           </div>
         </div>
-      </div>
-      <DialogFooter>
-        <Button type="button" variant="outline" onClick={onCancel}>
-          Cancelar
-        </Button>
-        <Button 
-          type="submit" 
-          disabled={isLoading || !formData.nombre.trim() || !formData.identificador.trim() || formData.contactos.some(c => !c.nombre.trim())}
-        >
-          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          {isLoading
-            ? "Guardando..."
-            : (initialData ? "Actualizar" : "Crear") + " Cliente"}
-        </Button>
-      </DialogFooter>
-    </form>
-  );
+
+        <FormActionButtons 
+          onCancel={onCancel}
+          isLoading={isLoading}
+          submitText={initialData ? "Actualizar Cliente" : "Crear Cliente"}
+        />
+      </form>
+    </Form>
+  )
 }
