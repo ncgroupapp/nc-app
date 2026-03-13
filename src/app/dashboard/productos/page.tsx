@@ -141,6 +141,7 @@ export default function ProductosPage() {
     {
       key: 'image',
       header: 'Imagen',
+      className: 'w-[80px]',
       render: (product) => (
         <div className="flex items-center justify-center w-12 h-12 rounded-md overflow-hidden border bg-muted/20">
           {product.images && product.images.length > 0 ? (
@@ -152,11 +153,12 @@ export default function ProductosPage() {
         </div>
       )
     },
-    { key: 'code', header: 'Código', accessorKey: 'code' },
-    { key: 'name', header: 'Nombre', accessorKey: 'name', className: 'font-medium' },
+    { key: 'code', header: 'Código', accessorKey: 'code', className: 'w-[120px] font-medium' },
+    { key: 'name', header: 'Nombre', accessorKey: 'name', className: 'min-w-[200px] font-medium' },
     { 
       key: 'brand_model', 
       header: 'Marca/Modelo', 
+      className: 'min-w-[150px]',
       render: (product) => (
         <span className="text-sm">
           {product.brand && product.model ? `${product.brand} ${product.model}` : product.brand || product.model || '-'}
@@ -166,15 +168,17 @@ export default function ProductosPage() {
     { 
       key: 'provider', 
       header: 'Proveedores', 
+      className: 'min-w-[200px] max-w-[300px]',
       render: (product) => (
-        <span className="text-sm text-muted-foreground line-clamp-1">
+        <div title={product.providers?.map(p => p.name).join(', ')} className="text-sm text-muted-foreground truncate max-w-[250px]">
           {product.providers?.map(p => p.name).join(', ') || '-'}
-        </span>
+        </div>
       ) 
     },
     { 
       key: 'stock', 
       header: 'Stock', 
+      className: 'w-[100px]',
       render: (product) => (
         <div className="flex items-center gap-2">
           <span className="font-medium">{product.stockQuantity ?? 0}</span>
@@ -187,6 +191,7 @@ export default function ProductosPage() {
     { 
       key: 'status', 
       header: 'Estado', 
+      className: 'w-[120px]',
       render: (product) => { 
         const status = getStockStatus(product.stockQuantity); 
         return <Badge variant={status.variant}>{status.label}</Badge>
@@ -195,14 +200,16 @@ export default function ProductosPage() {
     { 
       key: 'actions', 
       header: 'Acciones', 
-      className: 'text-right', 
+      className: 'text-right w-[100px]', 
       render: (product) => (
-        <ActionCell 
-          row={product} 
-          onView={handleView} 
-          onEdit={handleEdit} 
-          onDelete={(p) => handleDelete(p.id)} 
-        />
+        <div className="flex justify-end">
+          <ActionCell 
+            row={product} 
+            onView={handleView} 
+            onEdit={handleEdit} 
+            onDelete={(p) => handleDelete(p.id)} 
+          />
+        </div>
       ) 
     }
   ]
