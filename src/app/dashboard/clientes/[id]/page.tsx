@@ -23,10 +23,17 @@ export default async function ClientDetailPage({ params }: PageProps) {
 
   try {
     // Parallel fetching on the server - Eliminates Waterfalls
+    // We handle failures in secondary data fetches gracefully to allow the page to render
     const [clientRes, quotations, adjudications] = await Promise.all([
       clientesService.getById(id),
-      cotizacionesService.getByClientId(id),
-      adjudicacionesService.getByClientId(id)
+      cotizacionesService.getByClientId(id).catch(error => {
+        console.error("Error fetching quotations:", error);
+        return [];
+      }),
+      adjudicacionesService.getByClientId(id).catch(error => {
+        console.error("Error fetching adjudications:", error);
+        return [];
+      })
     ]);
 
     const client = clientRes.data;

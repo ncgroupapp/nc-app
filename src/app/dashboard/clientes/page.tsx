@@ -100,9 +100,24 @@ export default function ClientesPage() {
   const columns: DataTableColumn<Cliente>[] = [
     { key: 'name', header: 'Nombre', accessorKey: 'name', className: 'font-medium' },
     { key: 'identifier', header: 'Identificador', accessorKey: 'identifier' },
-    { key: 'email', header: 'Email', render: (row) => row.email ? (<div className="flex items-center gap-2"><Mail className="h-3 w-3 text-muted-foreground" />{row.email}</div>) : '-' },
-    { key: 'phone', header: 'Teléfono', render: (row) => row.phone ? (<div className="flex items-center gap-2"><Phone className="h-3 w-3 text-muted-foreground" />{row.phone}</div>) : '-' },
-    { key: 'address', header: 'Dirección', accessorKey: 'address' },
+    {
+      key: 'email', header: 'Email', render: (row) => {
+        const email = row.email || row.contacts?.[0]?.email;
+        return email ? (<div className="flex items-center gap-2"><Mail className="h-3 w-3 text-muted-foreground" />{email}</div>) : '-'
+      }
+    },
+    {
+      key: 'phone', header: 'Teléfono', render: (row) => {
+        const phone = row.phone || row.contacts?.[0]?.phone;
+        return phone ? (<div className="flex items-center gap-2"><Phone className="h-3 w-3 text-muted-foreground" />{phone}</div>) : '-'
+      }
+    },
+    {
+      key: 'address', header: 'Dirección', render: (row) => {
+        const address = row.address || row.contacts?.[0]?.address;
+        return address ? address : '-'
+      }
+    },
     { key: 'actions', header: 'Acciones', className: 'text-right', render: (row) => (<ActionCell row={row} onView={handleView} onEdit={handleEdit} onDelete={(p) => handleDelete(p.id)} />) }
   ]
 

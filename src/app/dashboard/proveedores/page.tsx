@@ -14,6 +14,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from '@/components/ui/dialog'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Building2, Plus, Search } from "lucide-react";
@@ -144,7 +145,9 @@ export default function ProveedoresPage() {
             <p className="text-muted-foreground">Gestión de proveedores y sus contactos.</p>
           </div>
           <Dialog open={isCreateDialogOpen} onOpenChange={handleDialogChange}>
-            <Button onClick={() => setEditingProveedor(null)}><Plus className="mr-2 h-4 w-4" /> Nuevo Proveedor</Button>
+            <DialogTrigger asChild>
+              <Button onClick={() => setEditingProveedor(null)}><Plus className="mr-2 h-4 w-4" /> Nuevo Proveedor</Button>
+            </DialogTrigger>
             <DialogContent className="sm:max-w-[600px]">
               <DialogHeader>
                 <DialogTitle>{editingProveedor ? "Editar Proveedor" : "Nuevo Proveedor"}</DialogTitle>
