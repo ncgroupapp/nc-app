@@ -4,7 +4,8 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { signOut } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
-import { cn } from '@/lib/utils'
+import { cn, removeClientCookie } from '@/lib/utils'
+import { removeAuthToken } from '@/lib/auth-actions'
 import { Button } from '@/components/ui/button'
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import {
@@ -61,7 +62,8 @@ export function Navbar() {
   const handleLogout = async () => {
     try {
       await signOut(auth)
-      localStorage.removeItem('backend_token')
+      removeClientCookie('backend_token')
+      await removeAuthToken()
       router.push('/')
     } catch (error) {
       console.error("Error signing out:", error)

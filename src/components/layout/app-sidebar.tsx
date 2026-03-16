@@ -5,6 +5,8 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
+import { removeClientCookie } from "@/lib/utils";
+import { removeAuthToken } from "@/lib/auth-actions";
 import { BookOpen, Calculator, ChevronDown, ChevronUp, FileText, Gavel, Home, LogOut, Package, Settings, Ship, Tag, Truck, User, Users } from "lucide-react";
 import { featureFlags } from "@/lib/feature-flags";
 import {
@@ -123,7 +125,8 @@ export function AppSidebar() {
   const handleLogout = async () => {
     try {
       await signOut(auth);
-      localStorage.removeItem("backend_token");
+      removeClientCookie("backend_token");
+      await removeAuthToken();
       router.push("/login");
     } catch (error) {
       console.error("Error signing out:", error);

@@ -1,20 +1,22 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 import { onAuthStateChanged } from "firebase/auth"
 import { auth } from "@/lib/firebase"
 import { Loader2 } from "lucide-react";
-import { isTokenExpired } from "@/lib/utils"
+import { isTokenExpired, getClientCookie, removeClientCookie } from "@/lib/utils"
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter()
+  const pathname = usePathname()
   const [loading, setLoading] = useState(true)
   const [authenticated, setAuthenticated] = useState(false)
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      const backendToken = localStorage.getItem('backend_token')
+
+    const checkAuth = (user: any) => {
+      const backendToken = getClientCookie('backend_token')
       const tokenExpired = backendToken ? isTokenExpired(backendToken) : true
 
       if (user && backendToken && !tokenExpired) {
@@ -24,14 +26,24 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
         setAuthenticated(false)
         setLoading(false)
         if (backendToken && tokenExpired) {
-           localStorage.removeItem('backend_token')
+           removeClientCookie('backend_token')
         }
-        router.push("/login")
+        if (pathname !== '/login') {
+          router.push("/login")
+        }
       }
+    }
+
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      checkAuth(user)
     })
 
+    if (!loading) {
+      checkAuth(auth.currentUser)
+    }
+
     return () => unsubscribe()
-  }, [router])
+  }, [router, pathname])
 
   if (loading) {
     return (
@@ -42,7 +54,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   }
 
   if (!authenticated) {
-    return null // O podrías retornar un fragmento vacío mientras redirige
+    return null
   }
 
   return <>{children}</>

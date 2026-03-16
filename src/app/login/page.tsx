@@ -10,7 +10,7 @@ import { signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth"
 import { auth } from "@/lib/firebase"
 import { loginSchema } from "@/lib/validations/schema"
 import api from "@/lib/axios"
-import { isTokenExpired } from "@/lib/utils"
+import { isTokenExpired, getClientCookie } from "@/lib/utils"
 import { setAuthToken } from "@/lib/auth-actions"
 
 import { Button } from "@/components/ui/button"
@@ -42,7 +42,7 @@ export default function LoginPage() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       // Solo redirigir si hay usuario Y hay token del backend Y NO ha expirado
-      const backendToken = localStorage.getItem('backend_token')
+      const backendToken = getClientCookie('backend_token')
       if (user && backendToken && !isTokenExpired(backendToken)) {
         router.push("/dashboard")
       }
@@ -75,7 +75,6 @@ export default function LoginPage() {
       // 3. Guardar token
       if (response.data && response.data.data.access_token) {
         const token = response.data.data.access_token
-        localStorage.setItem('backend_token', token)
         await setAuthToken(token)
       } else {
         throw new Error("No se recibió el token de acceso del servidor")

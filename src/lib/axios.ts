@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { getClientCookie, removeClientCookie } from './utils';
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000',
@@ -14,7 +15,7 @@ api.interceptors.request.use(
 
     if (typeof window !== 'undefined') {
       // Client-side
-      token = localStorage.getItem('backend_token');
+      token = getClientCookie('backend_token');
     } else {
       // Server-side
       try {
@@ -42,7 +43,7 @@ api.interceptors.response.use(
   (error) => {
     if (error.response && error.response.status === 401) {
       if (typeof window !== 'undefined') {
-        localStorage.removeItem('backend_token');
+        removeClientCookie('backend_token');
         // Solo redireccionar si no estamos ya en /login para evitar recargas infinitas
         if (window.location.pathname !== '/login') {
           window.location.href = '/login';

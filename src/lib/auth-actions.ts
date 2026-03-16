@@ -5,7 +5,7 @@ import { cookies } from 'next/headers'
 export async function setAuthToken(token: string) {
   const cookieStore = await cookies()
   cookieStore.set('backend_token', token, {
-    httpOnly: true,
+    httpOnly: false,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     path: '/',
