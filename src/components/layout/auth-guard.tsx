@@ -6,6 +6,7 @@ import { onAuthStateChanged } from "firebase/auth"
 import { auth } from "@/lib/firebase"
 import { Loader2 } from "lucide-react";
 import { isTokenExpired, getClientCookie, removeClientCookie } from "@/lib/utils"
+import { showSnackbar } from "@/components/ui/snackbar"
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter()
@@ -26,6 +27,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
         setAuthenticated(false)
         setLoading(false)
         if (backendToken && tokenExpired) {
+           showSnackbar("Su sesión ha expirado. Por favor, vuelva a iniciar sesión.", "warning")
            removeClientCookie('backend_token')
         }
         if (pathname !== '/login') {
