@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 import {
   Table,
   TableBody,
@@ -22,6 +23,43 @@ export interface TablePaginationProps {
   isLoading?: boolean
 }
 
+function getPaginationItems(page: number, totalPages: number): (number | 'ellipsis')[] {
+  if (totalPages <= 7) {
+    return Array.from({ length: totalPages }, (_, i) => i + 1)
+  }
+
+  const delta = 1
+  const left = page - delta
+  const right = page + delta
+
+  const items: (number | 'ellipsis')[] = []
+
+  // Always include first page
+  items.push(1)
+
+  // Only use ellipsis if it hides more than one page; otherwise just show the page
+  if (left > 3) {
+    items.push('ellipsis')
+  } else if (left === 3) {
+    items.push(2)
+  }
+
+  for (let p = Math.max(2, left); p <= Math.min(totalPages - 1, right); p++) {
+    items.push(p)
+  }
+
+  if (right < totalPages - 2) {
+    items.push('ellipsis')
+  } else if (right === totalPages - 2) {
+    items.push(totalPages - 1)
+  }
+
+  // Always include last page
+  items.push(totalPages)
+
+  return items
+}
+
 function TablePagination({
   page,
   limit,
@@ -30,6 +68,8 @@ function TablePagination({
   onPageChange,
   isLoading
 }: TablePaginationProps) {
+  const paginationItems = getPaginationItems(page, totalPages)
+
   return (
     <div className="flex items-center justify-between pt-4 border-t">
       <div className="text-sm text-muted-foreground">
@@ -47,10 +87,11 @@ function TablePagination({
         <Button
           variant="outline"
           size="sm"
+          className="w-10 h-10 p-0"
           onClick={() => onPageChange(page - 1)}
           disabled={page <= 1 || isLoading}
         >
-          Anterior
+          <ChevronLeft className="w-4 h-4" />
         </Button>
 
         <div className="flex gap-1">
@@ -59,28 +100,38 @@ function TablePagination({
               <Skeleton key={i} className="w-10 h-10" />
             ))
           ) : (
-            Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-              <Button
-                key={p}
-                variant={page === p ? 'default' : 'outline'}
-                size="sm"
-                className="w-10 h-10 p-0"
-                onClick={() => onPageChange(p)}
-                disabled={isLoading}
-              >
-                {p}
-              </Button>
-            ))
+            paginationItems.map((item, i) =>
+              item === 'ellipsis' ? (
+                <span
+                  key={`ellipsis-${i}`}
+                  className="w-5 h-10 flex items-center justify-center text-sm text-muted-foreground select-none"
+                >
+                  …
+                </span>
+              ) : (
+                <Button
+                  key={item}
+                  variant={page === item ? 'default' : 'outline'}
+                  size="sm"
+                  className="w-10 h-10 p-0"
+                  onClick={() => onPageChange(item)}
+                  disabled={isLoading}
+                >
+                  {item}
+                </Button>
+              )
+            )
           )}
         </div>
 
         <Button
           variant="outline"
           size="sm"
+          className="w-10 h-10 p-0"
           onClick={() => onPageChange(page + 1)}
           disabled={page >= totalPages || isLoading}
         >
-          Siguiente
+          <ChevronRight className="w-4 h-4" />
         </Button>
       </div>
     </div>
