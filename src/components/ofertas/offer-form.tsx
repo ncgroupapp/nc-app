@@ -128,7 +128,7 @@ export function OfferForm({ initialData, onSubmit, onCancel, isLoading = false }
     formData.price > 0 && 
     formData.quantity > 0 &&
     formData.deliveryDate !== '' &&
-    new Date(formData.deliveryDate + 'T12:00:00') >= new Date(new Date().setHours(0, 0, 0, 0));
+    (!!initialData || new Date(formData.deliveryDate + 'T12:00:00') >= new Date(new Date().setHours(0, 0, 0, 0)));
 
   return (
     <form onSubmit={handleSubmit}>
@@ -165,7 +165,7 @@ export function OfferForm({ initialData, onSubmit, onCancel, isLoading = false }
                 }))
               }
               disabled={(date) =>
-                date < new Date(new Date().setHours(0, 0, 0, 0))
+                !initialData && date < new Date(new Date().setHours(0, 0, 0, 0))
               }
             />
           </div>
