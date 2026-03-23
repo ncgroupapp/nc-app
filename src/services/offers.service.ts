@@ -14,6 +14,7 @@ export interface Offer {
   providerName?: string;
   provider?: Proveedor;
   price: number;
+  iva?: number;
   quantity: number;
   origin?: string;
   delivery?: number; // Days for delivery
@@ -35,6 +36,7 @@ export interface CreateOfferDto {
   productId: number;
   providerId: number;
   price: number;
+  iva?: number;
   quantity: number;
   origin?: string;
   delivery?: number;

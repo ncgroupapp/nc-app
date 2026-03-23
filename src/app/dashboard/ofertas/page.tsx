@@ -207,6 +207,16 @@ export default function OfertasPage() {
       render: (row) => row.product?.name,
     },
     {
+      key: "productCode",
+      header: "Número de Pieza",
+      render: (row) => row.product?.code || '-',
+    },
+    {
+      key: "productBrand",
+      header: "Marca",
+      render: (row) => row.product?.brand || '-',
+    },
+    {
       key: "providerName",
       header: "Proveedor",
       render: (row) => row.provider?.name,
@@ -214,14 +224,26 @@ export default function OfertasPage() {
     { key: "quantity", header: "Cantidad", accessorKey: "quantity" },
     {
       key: "price",
-      header: "Precio Unit. (IVA)",
+      header: "Precio Unit. (S/IVA)",
       render: (row) => `$${Number(row.price).toFixed(2)}`,
     },
     {
+      key: "priceWithIva",
+      header: "Precio Unit. (C/IVA)",
+      render: (row) => {
+        const iva = row.iva ?? 22;
+        const priceWithIva = Number(row.price) * (1 + iva / 100);
+        return `$${priceWithIva.toFixed(2)}`;
+      }
+    },
+    {
       key: "total",
-      header: "Total (IVA)",
-      render: (row) =>
-        `$${(Number(row.price) * Number(row.quantity)).toFixed(2)}`,
+      header: "Total (C/IVA)",
+      render: (row) => {
+        const iva = row.iva ?? 22;
+        const priceWithIva = Number(row.price) * (1 + iva / 100);
+        return `$${(priceWithIva * Number(row.quantity)).toFixed(2)}`;
+      },
       className: "font-bold",
     },
     {

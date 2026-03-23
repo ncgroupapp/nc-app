@@ -25,12 +25,15 @@ interface OfferFormProps {
   isLoading?: boolean;
 }
 
+type OfferFormState = CreateOfferDto & { iva: number };
+
 export function OfferForm({ initialData, onSubmit, onCancel, isLoading = false }: OfferFormProps) {
-  const [formData, setFormData] = useState<CreateOfferDto>({
+  const [formData, setFormData] = useState<OfferFormState>({
     name: '',
     productId: 0,
     providerId: 0,
     price: 0,
+    iva: 22,
     deliveryDate: '',
     quantity: 1,
     origin: '',
@@ -54,6 +57,7 @@ export function OfferForm({ initialData, onSubmit, onCancel, isLoading = false }
         productId: initialData.productId,
         providerId: initialData.providerId,
         price: initialData.price,
+        iva: initialData.iva ?? 22,
         deliveryDate: initialData.deliveryDate,
         quantity: initialData.quantity,
         delivery: initialData.delivery || 0,
@@ -67,6 +71,7 @@ export function OfferForm({ initialData, onSubmit, onCancel, isLoading = false }
         productId: 0,
         providerId: 0,
         price: 0,
+        iva: 22,
         deliveryDate: '',
         quantity: 1,
         delivery: 0,
@@ -138,8 +143,7 @@ export function OfferForm({ initialData, onSubmit, onCancel, isLoading = false }
               id="name"
               value={formData.name}
               onChange={(e) =>
-                setFormData((prev) => ({ ...prev, name: e.target.value }))
-              }
+                setFormData((prev) => ({ ...prev, name: e.target.value }))              }
               placeholder="Ej: CD-2024-001"
               required
             />
@@ -226,7 +230,7 @@ export function OfferForm({ initialData, onSubmit, onCancel, isLoading = false }
             />
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-3 gap-4">
           <div className="space-y-2">
             <Label htmlFor="quantity">
               Cantidad <span className="text-red-500">*</span>
@@ -247,7 +251,7 @@ export function OfferForm({ initialData, onSubmit, onCancel, isLoading = false }
           </div>
           <div className="space-y-2">
             <Label htmlFor="price">
-              Precio Unitario (IVA) <span className="text-red-500">*</span>
+              Precio Unit. (S/IVA) <span className="text-red-500">*</span>
             </Label>
             <div className="relative">
               <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -267,6 +271,24 @@ export function OfferForm({ initialData, onSubmit, onCancel, isLoading = false }
                 required
               />
             </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="iva">
+              IVA (%) <span className="text-red-500">*</span>
+            </Label>
+            <Input
+              id="iva"
+              type="number"
+              min="0"
+              value={formData.iva === undefined || isNaN(formData.iva) ? "" : formData.iva}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  iva: parseFloat(e.target.value),
+                }))
+              }
+              required
+            />
           </div>
         </div>
         <div className="grid grid-cols-2 gap-4">

@@ -22,8 +22,10 @@ import { useConfirm } from '@/hooks/use-confirm'
 import { useDebounce } from '@/hooks/use-debounce'
 import { FadeIn } from '@/components/common/fade-in'
 import { Brand, CreateBrandDto } from '@/types/brand'
+import { useRouter } from "next/navigation";
 
 export default function MarcasPage() {
+  const router = useRouter()
   const { 
     brands, 
     isLoading, 
@@ -98,11 +100,27 @@ export default function MarcasPage() {
   }
 
   const columns: DataTableColumn<Brand>[] = [
-    { key: 'name', header: 'Nombre', accessorKey: 'name', className: 'font-medium' },
-    { key: 'description', header: 'Descripción' },
-    { key: 'originCountry', header: 'Origen' },
-    { key: 'actions', header: 'Acciones', className: 'text-right', render: (row) => (<ActionCell row={row} onEdit={handleEdit} onDelete={(p) => handleDelete(p.id)} />) }
-  ]
+    {
+      key: "name",
+      header: "Nombre",
+      accessorKey: "name",
+      className: "font-medium",
+    },
+
+    {
+      key: "actions",
+      header: "Acciones",
+      className: "text-right",
+      render: (row) => (
+        <ActionCell
+          row={row}
+          onEdit={handleEdit}
+          onDelete={(p) => handleDelete(p.id)}
+          onView={() => router.push(`/dashboard/marcas/${row.id}`)}
+        />
+      ),
+    },
+  ];
 
   return (
     <div className="space-y-6">
@@ -127,7 +145,7 @@ export default function MarcasPage() {
             <div className="flex gap-4 items-center">
               <div className="flex-1 relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input placeholder="Buscar por nombre o descripción..." className="pl-10" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                <Input placeholder="Buscar por nombre" className="pl-10" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
               </div>
             </div>
           </CardContent>
