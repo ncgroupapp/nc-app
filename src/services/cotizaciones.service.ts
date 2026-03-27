@@ -133,6 +133,7 @@ export interface QuotationFilters {
   status?: QuotationStatus;
   clientId?: number;
   productId?: number;
+  closedOnly?: boolean;
 }
 
 
@@ -164,6 +165,7 @@ export const cotizacionesService = {
     if (filters.status) params.append('status', filters.status);
     if (filters.clientId) params.append('clientId', filters.clientId.toString());
     if (filters.productId) params.append('productId', filters.productId.toString());
+    if (filters.closedOnly) params.append('closedOnly', 'true');
 
     const response = await api.get<PaginatedResponse<Quotation>>(`/quotation?${params.toString()}`);
     return response.data;

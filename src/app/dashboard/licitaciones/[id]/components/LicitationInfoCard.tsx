@@ -4,8 +4,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Calendar, Clock, FileText, Mail, MapPin, Phone, User } from "lucide-react";
+import { Calendar, FileText, Mail, MapPin, Phone, User } from "lucide-react";
 import { Licitation } from "@/services/licitaciones.service";
 
 interface LicitationInfoCardProps {
@@ -44,11 +43,21 @@ export const LicitationInfoCard = ({ licitation }: LicitationInfoCardProps) => {
             <div className="pl-5.5 space-y-1.5">
               <div className="flex items-center space-x-2">
                 <span className="text-xs font-semibold text-muted-foreground min-w-[45px]">Inicio:</span>
-                <span className="text-xs font-bold">{new Date(licitation.startDate).toLocaleDateString()}</span>
+                <span className="text-xs font-bold">
+                  {new Date(licitation.startDate).toLocaleDateString()}
+                  <span className="text-muted-foreground ml-1">
+                    {new Date(licitation.startDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </span>
               </div>
               <div className="flex items-center space-x-2">
                 <span className="text-xs font-semibold text-muted-foreground min-w-[45px]">Límite:</span>
-                <span className="text-xs font-bold text-red-600">{new Date(licitation.deadlineDate).toLocaleDateString()}</span>
+                <span className="text-xs font-bold text-red-600">
+                  {new Date(licitation.deadlineDate).toLocaleDateString()}
+                  <span className="text-muted-foreground ml-1">
+                    {new Date(licitation.deadlineDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </span>
               </div>
             </div>
           </div>

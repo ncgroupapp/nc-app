@@ -8,6 +8,7 @@ export enum LicitationStatus {
   PARTIAL_ADJUDICATION = 'Partial Adjudication',
   NOT_ADJUDICATED = 'Not Adjudicated',
   TOTAL_ADJUDICATION = 'Total Adjudication',
+  CLOSED = 'Closed',
 }
 
 export interface LicitationProduct {
@@ -94,6 +95,8 @@ export interface LicitationFilters {
   status?: LicitationStatus;
   clientId?: number;
   clientIds?: string;
+  dateFrom?: string;
+  dateTo?: string;
 }
 
 export const licitacionesService = {
@@ -104,7 +107,9 @@ export const licitacionesService = {
     if (filters.status) params.append('status', filters.status);
     if (filters.clientId) params.append('clientId', filters.clientId.toString());
     if (filters.clientIds) params.append('clientIds', filters.clientIds);
-    
+    if (filters.dateFrom) params.append('dateFrom', filters.dateFrom);
+    if (filters.dateTo) params.append('dateTo', filters.dateTo);
+
     const response = await api.get<PaginatedResponse<Licitation>>(`/licitations?${params.toString()}`);
     return response.data;
   },
@@ -126,5 +131,10 @@ export const licitacionesService = {
 
   delete: async (id: number): Promise<void> => {
     await api.delete(`/licitations/${id}`);
+  },
+
+  close: async (id: number): Promise<Licitation> => {
+    const response = await api.patch<ApiResponse<Licitation>>(`/licitations/${id}/close`);
+    return response.data.data;
   },
 };

@@ -21,6 +21,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
@@ -40,6 +42,7 @@ export default function AdjudicacionesPage() {
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [closedOnly, setClosedOnly] = useState(false)
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 10,
@@ -47,7 +50,7 @@ export default function AdjudicacionesPage() {
     lastPage: 1
   })
 
-  const fetchAdjudicaciones = useCallback(async (page = 1, search = '', status = 'all') => {
+  const fetchAdjudicaciones = useCallback(async (page = 1, search = '', status = 'all', closedOnlyParam = false) => {
     try {
       setLoading(true)
       setError(null)
@@ -55,9 +58,10 @@ export default function AdjudicacionesPage() {
         page,
         limit: 10,
         search: search || undefined,
-        status: status !== 'all' ? status as AdjudicationStatus : undefined
+        status: status !== 'all' ? status as AdjudicationStatus : undefined,
+        closedOnly: closedOnlyParam
       })
-      
+
       // Data is in res.data array
       setAdjudicaciones(res.data || [])
       setPagination({
@@ -76,17 +80,21 @@ export default function AdjudicacionesPage() {
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      fetchAdjudicaciones(1, searchTerm, statusFilter)
+      fetchAdjudicaciones(1, searchTerm, statusFilter, closedOnly)
     }, 300)
     return () => clearTimeout(timeoutId)
-  }, [searchTerm, statusFilter, fetchAdjudicaciones])
+  }, [searchTerm, statusFilter, closedOnly, fetchAdjudicaciones])
 
   const handlePageChange = (newPage: number) => {
-    fetchAdjudicaciones(newPage, searchTerm, statusFilter)
+    fetchAdjudicaciones(newPage, searchTerm, statusFilter, closedOnly)
   }
 
   const handleStatusChange = (value: string) => {
     setStatusFilter(value)
+  }
+
+  const handleClosedOnlyChange = (checked: boolean) => {
+    setClosedOnly(checked)
   }
 
   const getStatusInfo = (status: AdjudicationStatus) => {
@@ -153,6 +161,16 @@ export default function AdjudicacionesPage() {
                     <SelectItem value={AdjudicationStatus.PARTIAL}>Parcial</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="flex items-center gap-2 px-2">
+                <Checkbox
+                  id="include-closed-adjud"
+                  checked={closedOnly}
+                  onCheckedChange={handleClosedOnlyChange}
+                />
+                <Label htmlFor="include-closed-adjud" className="text-sm cursor-pointer whitespace-nowrap">
+                  Solo licitaciones cerradas
+                </Label>
               </div>
             </div>
           </CardContent>

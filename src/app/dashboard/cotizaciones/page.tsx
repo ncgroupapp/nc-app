@@ -20,6 +20,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Select,
   SelectContent,
@@ -31,12 +32,14 @@ import { Calculator, Eye, FileDown, FileText, Hash, Loader2, Plus, Search } from
 import { cotizacionesService, Quotation, QuotationStatus } from '@/services/cotizaciones.service'
 import { Skeleton } from '@/components/ui/skeleton'
 import { FadeIn } from '@/components/common/fade-in'
+import { Label } from '@/components/ui/label'
 
 export default function CotizacionesPage() {
   const [cotizaciones, setCotizaciones] = useState<Quotation[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [closedOnly, setClosedOnly] = useState(false)
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 10,
@@ -44,14 +47,15 @@ export default function CotizacionesPage() {
     lastPage: 1
   })
 
-  const fetchCotizaciones = async (page = 1, search = '', status = 'all') => {
+  const fetchCotizaciones = async (page = 1, search = '', status = 'all', closedOnlyParam = false) => {
     try {
       setLoading(true)
       const res = await cotizacionesService.getAll({
         page,
         limit: 10,
         search: search || undefined,
-        status: status !== 'all' ? status as QuotationStatus : undefined
+        status: status !== 'all' ? status as QuotationStatus : undefined,
+        closedOnly: closedOnlyParam
       })
       setCotizaciones(res.data || [])
       setPagination({
@@ -69,17 +73,21 @@ export default function CotizacionesPage() {
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      fetchCotizaciones(1, searchTerm, statusFilter)
+      fetchCotizaciones(1, searchTerm, statusFilter, closedOnly)
     }, 300)
     return () => clearTimeout(timeoutId)
-  }, [searchTerm, statusFilter])
+  }, [searchTerm, statusFilter, closedOnly])
 
   const handlePageChange = (newPage: number) => {
-    fetchCotizaciones(newPage, searchTerm, statusFilter)
+    fetchCotizaciones(newPage, searchTerm, statusFilter, closedOnly)
   }
 
   const handleStatusChange = (value: string) => {
     setStatusFilter(value)
+  }
+
+  const handleClosedOnlyChange = (checked: boolean) => {
+    setClosedOnly(checked)
   }
 
   const getStatusBadge = (status: QuotationStatus) => {
@@ -126,6 +134,16 @@ export default function CotizacionesPage() {
                     <SelectItem value={QuotationStatus.FINALIZED}>Finalizada</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="flex items-center gap-2 px-2">
+                <Checkbox
+                  id="include-closed"
+                  checked={closedOnly}
+                  onCheckedChange={handleClosedOnlyChange}
+                />
+                <Label htmlFor="include-closed" className="text-sm cursor-pointer whitespace-nowrap">
+                  Solo licitaciones cerradas
+                </Label>
               </div>
             </div>
           </CardContent>

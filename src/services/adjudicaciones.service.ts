@@ -78,6 +78,7 @@ export interface AdjudicationFilters {
   quotationId?: number;
   licitationId?: number;
   productId?: number;
+  closedOnly?: boolean;
 }
 
 
@@ -131,6 +132,7 @@ export const adjudicacionesService = {
     if (filters.quotationId) params.append('quotationId', filters.quotationId.toString());
     if (filters.licitationId) params.append('licitationId', filters.licitationId.toString());
     if (filters.productId) params.append('productId', filters.productId.toString());
+    if (filters.closedOnly) params.append('closedOnly', 'true');
 
     const response = await api.get<PaginatedResponse<Adjudication>>(`/adjudications?${params.toString()}`);
     return response.data;
