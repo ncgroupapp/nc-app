@@ -165,6 +165,7 @@ export const DeliveryTab = ({ licitationId, licitationStatus }: DeliveryTabProps
     setEditingItem(item);
     setEditForm({
       status: item.status,
+      estimatedDate: item.estimatedDate ? item.estimatedDate.split('T')[0] : undefined,
       actualDate: item.actualDate ? item.actualDate.split('T')[0] : undefined,
       observations: item.observations || '',
       quantity: item.quantity,
@@ -331,7 +332,7 @@ export const DeliveryTab = ({ licitationId, licitationStatus }: DeliveryTabProps
                         {invoice.fileUrl && (
                           <Button variant="outline" size="sm" asChild>
                             <a href={invoice.fileUrl} target="_blank" rel="noopener noreferrer">
-                              Ver PDF
+                              Ver Documento
                             </a>
                           </Button>
                         )}
@@ -383,6 +384,13 @@ export const DeliveryTab = ({ licitationId, licitationStatus }: DeliveryTabProps
                 min="1"
                 value={editForm.quantity || ''}
                 onChange={(e) => setEditForm({ ...editForm, quantity: parseInt(e.target.value) || undefined })}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="estimatedDate">Fecha Estimada</Label>
+              <DatePicker
+                date={editForm.estimatedDate ? new Date(editForm.estimatedDate + "T12:00:00") : undefined}
+                setDate={(date) => setEditForm({ ...editForm, estimatedDate: date ? format(date, "yyyy-MM-dd") : undefined })}
               />
             </div>
             <div className="grid gap-2">

@@ -7,6 +7,7 @@ import { QuotationStatus } from "@/types/enums";
 import { FadeIn } from "@/components/common/fade-in";
 import { useQuotationActions } from "../hooks/useQuotationActions";
 import { useAdjudicationActions } from "../hooks/useAdjudicationActions";
+import { cotizacionesService } from "@/services/cotizaciones.service";
 import {
   RequestedProductsTab,
   QuotationTab,
@@ -36,11 +37,16 @@ export function LicitationDetailClient({
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("productos");
 
-  // Re-implement simplified loadData if needed for refresh
-  const loadData = async () => {
-    // In a real app, we might want to call a server action or use router.refresh()
-    // but here we keep it simple for the client actions to work
-    window.location.reload();
+  // Fetch quotation data from API without page reload (optimistic update support)
+  const loadData = async (silent: boolean = false) => {
+    try {
+      if (!silent) setError(null);
+      const updatedQuotation = await cotizacionesService.getById(quotation?.id || initialQuotation?.id);
+      setQuotation(updatedQuotation);
+    } catch (err) {
+      console.error('Error loading quotation data:', err);
+      if (!silent) setError('Error al cargar los datos');
+    }
   };
 
   // Quotation actions hook
@@ -58,7 +64,8 @@ export function LicitationDetailClient({
     licitationId,
     loadData,
     setError,
-    quotation?.status === QuotationStatus.FINALIZED
+    quotation?.status === QuotationStatus.FINALIZED,
+    setQuotation
   );
 
   return (
@@ -70,7 +77,7 @@ export function LicitationDetailClient({
           <button onClick={() => setError(null)} className="ml-2 underline">Cerrar</button>
         </div>
       )}
-      
+
       {/* Tabs */}
       <FadeIn delay={200}>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -108,9 +115,9 @@ export function LicitationDetailClient({
 
           {/* Tab: Entrega */}
           <TabsContent value="entregas" className="space-y-4">
-            <DeliveryTab 
+            <DeliveryTab
               licitationId={licitationId}
-              licitationStatus={licitation.status as LicitationStatus} 
+              licitationStatus={licitation.status as LicitationStatus}
             />
           </TabsContent>
         </Tabs>

@@ -235,6 +235,14 @@ export const cotizacionesService = {
     await api.delete(`/quotation/${id}`);
   },
 
+  // Actualizar estado de adjudicación de un item de cotización
+  updateItemAwardStatus: async (quotationId: number, itemId: number, awardStatus: QuotationAwardStatus, awardedQuantity?: number): Promise<void> => {
+    await api.patch(`/quotation/${quotationId}/item/${itemId}/award-status`, {
+      awardStatus,
+      awardedQuantity
+    });
+  },
+
   // Finalizar cotización (cambia estado a finalizada - irreversible)
   finalize: async (id: number): Promise<Quotation> => {
     return cotizacionesService.update(id, { status: QuotationStatus.FINALIZED });
