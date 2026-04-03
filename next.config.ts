@@ -36,6 +36,10 @@ const nextConfig: NextConfig = {
   // Do not expose source maps to end-users in production
   productionBrowserSourceMaps: false,
 
+  experimental: {
+    turbopackUseSystemTlsCerts: true,
+  },
+
   async headers() {
     return [
       {
