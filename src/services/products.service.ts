@@ -1,5 +1,5 @@
 import api from '@/lib/axios';
-import { PaginatedResponse, ApiResponse } from '@/types';
+import { ApiResponse, PaginatedResponse } from '@/types/api';
 
 // Product interface matching backend entity
 export interface Product {
@@ -7,6 +7,7 @@ export interface Product {
   name: string;
   origin?: string;
   image?: string;
+  images?: string[];
   providers?: Array<{
     id: number;
     name: string;
@@ -51,9 +52,20 @@ export interface Product {
   updatedAt: string;
 }
 
+export interface WinnerProduct {
+  competitorBrand: string;
+  competitorName: string;
+  competitorPrice: number;
+  competitorRut: string;
+  quantity: number;
+  date: string;
+  licitationId: number;
+}
+
 export interface CreateProductForm {
   name: string;
   image?: string;
+  images?: string[];
   providerIds?: number[];
   brand?: string;
   model?: string;
@@ -78,13 +90,18 @@ export interface ProductFilters {
 }
 
 export const productsService = {
-  getAll: async (filters: ProductFilters = {}): Promise<PaginatedResponse<Product>> => {
+  getAll: async (
+    filters: ProductFilters = {},
+  ): Promise<PaginatedResponse<Product>> => {
     const params = new URLSearchParams();
-    if (filters.page) params.append('page', filters.page.toString());
-    if (filters.limit) params.append('limit', filters.limit.toString());
-    if (filters.search) params.append('search', filters.search);
-    if (filters.providerId) params.append('providerIds', filters.providerId.toString());
-    const response = await api.get<PaginatedResponse<Product>>(`/products?${params.toString()}`);
+    if (filters.page) params.append("page", filters.page.toString());
+    if (filters.limit) params.append("limit", filters.limit.toString());
+    if (filters.search) params.append("search", filters.search);
+    if (filters.providerId)
+      params.append("providerIds", filters.providerId.toString());
+    const response = await api.get<PaginatedResponse<Product>>(
+      `/products?${params.toString()}`,
+    );
     return response.data;
   },
 
@@ -93,17 +110,31 @@ export const productsService = {
     return response.data.data;
   },
 
-  create: async (data: CreateProductForm): Promise<Product> => {
-    const response = await api.post<ApiResponse<Product>>('/products', data);
+  getAdjudicationHistory: async (id: number): Promise<WinnerProduct[]> => {
+    const response = await api.get<ApiResponse<WinnerProduct[]>>(
+      `/products/${id}/adjudication-history`,
+    );
+    console.log("winners", response.data);
     return response.data.data;
   },
 
-  update: async (id: number, data: Partial<CreateProductForm>): Promise<Product> => {
-    const response = await api.patch<ApiResponse<Product>>(`/products/${id}`, data);
+  create: async (data: CreateProductForm): Promise<Product> => {
+    const response = await api.post<ApiResponse<Product>>("/products", data);
+    return response.data.data;
+  },
+
+  update: async (
+    id: number,
+    data: Partial<CreateProductForm>,
+  ): Promise<Product> => {
+    const response = await api.patch<ApiResponse<Product>>(
+      `/products/${id}`,
+      data,
+    );
     return response.data.data;
   },
 
   delete: async (id: number): Promise<void> => {
     await api.delete(`/products/${id}`);
-  }
+  },
 };

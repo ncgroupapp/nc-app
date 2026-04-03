@@ -11,6 +11,8 @@ import {
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 
+import { Skeleton } from "@/components/ui/skeleton"
+
 export interface TablePaginationProps {
   page: number
   limit: number
@@ -31,7 +33,9 @@ function TablePagination({
   return (
     <div className="flex items-center justify-between pt-4 border-t">
       <div className="text-sm text-muted-foreground">
-        {total === 0 ? (
+        {isLoading ? (
+          <Skeleton className="h-4 w-[250px]" />
+        ) : total === 0 ? (
           "Sin resultados"
         ) : (
           <>
@@ -50,18 +54,24 @@ function TablePagination({
         </Button>
 
         <div className="flex gap-1">
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-            <Button
-              key={p}
-              variant={page === p ? 'default' : 'outline'}
-              size="sm"
-              className="w-10 h-10 p-0"
-              onClick={() => onPageChange(p)}
-              disabled={isLoading}
-            >
-              {p}
-            </Button>
-          ))}
+          {isLoading ? (
+            Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="w-10 h-10" />
+            ))
+          ) : (
+            Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+              <Button
+                key={p}
+                variant={page === p ? 'default' : 'outline'}
+                size="sm"
+                className="w-10 h-10 p-0"
+                onClick={() => onPageChange(p)}
+                disabled={isLoading}
+              >
+                {p}
+              </Button>
+            ))
+          )}
         </div>
 
         <Button
@@ -117,11 +127,15 @@ export function DataTable<T>({
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center">
-                  Cargando...
-                </TableCell>
-              </TableRow>
+              Array.from({ length: 5 }).map((_, rowIndex) => (
+                <TableRow key={rowIndex}>
+                  {columns.map((column) => (
+                    <TableCell key={column.key} className={column.className}>
+                      <Skeleton className="h-6 w-full" />
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
             ) : data.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={columns.length} className="h-24 text-center">

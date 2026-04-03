@@ -15,10 +15,10 @@ export interface NewItemData {
   productName: string;
   brand: string;
   origin: string;
-  quantity: number;
-  priceWithoutIVA: number;
-  ivaPercentage: number;
-  deliveryTime: number;
+  quantity: number | "";
+  priceWithoutIVA: number | "";
+  ivaPercentage: number | "";
+  deliveryTime: number | "";
   inStock: boolean;
   currency: Currency;
 }
@@ -165,7 +165,12 @@ export const useQuotationActions = (
     try {
       setSubmitting(true);
       
-      const priceWithIVA = newItemData.priceWithoutIVA * (1 + newItemData.ivaPercentage / 100);
+      const qty = Number(newItemData.quantity) || 1;
+      const priceNet = Number(newItemData.priceWithoutIVA) || 0;
+      const iva = Number(newItemData.ivaPercentage) || 0;
+      const dTime = Number(newItemData.deliveryTime) || 0;
+      
+      const priceWithIVA = priceNet * (1 + iva / 100);
       
       const newItem: QuotationItem = {
         productId: newItemData.productId ? parseInt(newItemData.productId) : undefined,
@@ -173,12 +178,12 @@ export const useQuotationActions = (
         brand: newItemData.brand,
         origin: newItemData.origin,
         inStock: newItemData.inStock,
-        quantity: newItemData.quantity,
-        priceWithoutIVA: newItemData.priceWithoutIVA,
+        quantity: qty,
+        priceWithoutIVA: priceNet,
         priceWithIVA: priceWithIVA,
-        ivaPercentage: newItemData.ivaPercentage,
+        ivaPercentage: iva,
         currency: newItemData.currency,
-        deliveryTime: newItemData.deliveryTime,
+        deliveryTime: dTime,
         awardStatus: QuotationAwardStatus.PENDING,
       };
       
@@ -219,7 +224,12 @@ export const useQuotationActions = (
     
     try {
       setSubmitting(true);
-      const priceWithIVA = newItemData.priceWithoutIVA * (1 + newItemData.ivaPercentage / 100);
+      const qty = Number(newItemData.quantity) || 1;
+      const priceNet = Number(newItemData.priceWithoutIVA) || 0;
+      const iva = Number(newItemData.ivaPercentage) || 0;
+      const dTime = Number(newItemData.deliveryTime) || 0;
+
+      const priceWithIVA = priceNet * (1 + iva / 100);
       
       const updatedItems = quotation.items.map(item => {
         if (item.id === editingItem.id) {
@@ -230,12 +240,12 @@ export const useQuotationActions = (
             brand: newItemData.brand,
             origin: newItemData.origin,
             inStock: newItemData.inStock,
-            quantity: newItemData.quantity,
-            priceWithoutIVA: newItemData.priceWithoutIVA,
-            priceWithIVA: newItemData.priceWithoutIVA * (1 + newItemData.ivaPercentage / 100),
-            ivaPercentage: newItemData.ivaPercentage,
+            quantity: qty,
+            priceWithoutIVA: priceNet,
+            priceWithIVA: priceWithIVA,
+            ivaPercentage: iva,
             currency: newItemData.currency,
-            deliveryTime: newItemData.deliveryTime,
+            deliveryTime: dTime,
           };
         }
         return item;

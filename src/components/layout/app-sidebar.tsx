@@ -5,19 +5,7 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
-import { ChevronDown, ChevronUp, Package, User, LogOut } from "lucide-react";
-import {
-  Home,
-  Users,
-  FileText,
-  Calculator,
-  Gavel,
-  Truck,
-  Ship,
-  BarChart3,
-  Settings,
-  Tag,
-} from "lucide-react";
+import { BookOpen, Calculator, ChevronDown, ChevronUp, FileText, Gavel, Home, LogOut, Package, Settings, Ship, Tag, Truck, User, Users } from "lucide-react";
 import { featureFlags } from "@/lib/feature-flags";
 import {
   Sidebar,
@@ -104,11 +92,6 @@ const sidebarNavItems: NavItem[] = [
             href: "/dashboard/adjudicaciones",
             icon: Gavel,
           },
-          {
-            title: "Entregas",
-            href: "/dashboard/entregas",
-            icon: Truck,
-          },
         ],
       },
     ]
@@ -125,18 +108,9 @@ const sidebarNavItems: NavItem[] = [
   ...(featureFlags.pdfs
     ? [
       {
-        title: "PDFs",
-        href: "/dashboard/pdf",
-        icon: BarChart3,
-      },
-    ]
-    : []),
-  ...(featureFlags.configuracion
-    ? [
-      {
-        title: "Configuración",
-        href: "/dashboard/configuracion",
-        icon: Settings,
+        title: "Manuales",
+        href: "/dashboard/manuales",
+        icon: BookOpen,
       },
     ]
     : []),
@@ -169,7 +143,7 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild className="hover:bg-transparent">
               <Link href="/dashboard">
-                <div className="flex aspect-square size-10 items-center justify-center rounded-lg bg-transparent">
+                <div className="flex aspect-square size-10 items-center justify-center rounded-full bg-white p-1">
                   <Image
                     src="/logo/logo.png"
                     alt="Logo"
@@ -281,13 +255,6 @@ export function AppSidebar() {
                 align="end"
                 sideOffset={4}
               >
-                <DropdownMenuItem asChild className="cursor-pointer">
-                  <Link href="/dashboard/configuracion">
-                    <Settings className="mr-2 h-4 w-4" />
-                    Configuración
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={handleLogout}
                   className="cursor-pointer"

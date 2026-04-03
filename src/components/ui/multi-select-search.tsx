@@ -1,5 +1,5 @@
 import * as React from "react"
-import { Check, ChevronsUpDown, X } from "lucide-react"
+import { Check, ChevronsUpDown, X } from "lucide-react";
 
 import { cn } from "@/lib/utils"
 import { Button, buttonVariants } from "@/components/ui/button"
@@ -56,6 +56,21 @@ export function MultiSelectSearch({
   single
 }: MultiSelectSearchProps) {
   const [open, setOpen] = React.useState(false)
+  const [labelsMap, setLabelsMap] = React.useState<Record<string | number, string>>({})
+
+  React.useEffect(() => {
+    setLabelsMap((prev) => {
+      let changed = false
+      const newMap = { ...prev }
+      options.forEach((opt) => {
+        if (newMap[opt.id] !== opt.label) {
+          newMap[opt.id] = opt.label
+          changed = true
+        }
+      })
+      return changed ? newMap : prev
+    })
+  }, [options])
 
   const handleUnselect = (item: string | number) => {
     onRemove(item)
@@ -78,19 +93,42 @@ export function MultiSelectSearch({
           <div className="flex flex-wrap gap-1 items-center">
             {selectedValues.length > 0 ? (
               single ? (
-                <span className="truncate w-32">
-                  {options.find((option) => option.id === selectedValues[0])?.label || selectedValues[0]}
-                </span>
+                <Badge
+                  variant="secondary"
+                  className="mr-1 mb-1 px-2 py-0.5 font-normal flex items-center gap-1"
+                >
+                  <span className="truncate max-w-32">
+                    {labelsMap[selectedValues[0]] || selectedValues[0]}
+                  </span>
+                  <button
+                    className="ml-1 ring-offset-background rounded-full outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        handleUnselect(selectedValues[0])
+                      }
+                    }}
+                    onMouseDown={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                    }}
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      handleUnselect(selectedValues[0])
+                    }}
+                  >
+                    <X className="h-3 w-3 text-black hover:text-foreground" />
+                  </button>
+                </Badge>
               ) : (
                 selectedValues.map((val) => {
-                  const option = options.find((o) => o.id === val)
                   return (
                     <Badge
                       key={val}
                       variant="secondary"
                       className="mr-1 mb-1 px-2 py-0.5 font-normal"
                     >
-                      {option ? option.label : val}
+                      {labelsMap[val] || val}
                       <button
                         className="ml-1 ring-offset-background rounded-full outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                         onKeyDown={(e) => {
@@ -125,8 +163,7 @@ export function MultiSelectSearch({
         <Command shouldFilter={shouldFilter}>
           <CommandInput
             placeholder={searchPlaceholder}
-            value={searchValue}
-            onValueChange={onSearchValueChange}
+            {...(searchValue !== undefined ? { value: searchValue, onValueChange: onSearchValueChange } : {})}
           />
           <CommandList>
             <CommandEmpty>{emptyMessage}</CommandEmpty>

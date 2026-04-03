@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Plus, Loader2 } from "lucide-react";
+import { Loader2, Plus } from "lucide-react";
 import { Licitation } from "@/services/licitaciones.service";
 import { Currency } from "@/types";
 import { CreateQuotationData } from "../../hooks/useQuotationActions";

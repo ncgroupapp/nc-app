@@ -5,19 +5,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Home,
-  Package,
-  Users,
-  FileText,
-  Calculator,
-  Gavel,
-  Truck,
-  Ship,
-  BarChart3,
-  Settings,
-  Tag,
-} from "lucide-react";
+import { BookOpen, Calculator, FileText, Gavel, Home, Package, Settings, Ship, Tag, Truck, Users } from "lucide-react";
 import { featureFlags } from "@/lib/feature-flags";
 
 const sidebarNavItems = [
@@ -26,31 +14,31 @@ const sidebarNavItems = [
     href: "/dashboard",
     icon: Home,
   },
-      {
-        title: "Productos",
-        href: "/dashboard/productos",
-        icon: Package,
-      },
-      {
-        title: "Proveedores",
-        href: "/dashboard/proveedores",
-        icon: Users,
-      },
-      {
-        title: "Clientes",
-        href: "/dashboard/clientes",
-        icon: Users,
-      },
-      {
-        title: "Marcas",
-        href: "/dashboard/marcas",
-        icon: Tag,
-      },
-      {
-        title: "Ofertas",
-        href: "/dashboard/ofertas",
-        icon: Tag,
-      },
+  {
+    title: "Productos",
+    href: "/dashboard/productos",
+    icon: Package,
+  },
+  {
+    title: "Proveedores",
+    href: "/dashboard/proveedores",
+    icon: Users,
+  },
+  {
+    title: "Clientes",
+    href: "/dashboard/clientes",
+    icon: Users,
+  },
+  {
+    title: "Marcas",
+    href: "/dashboard/marcas",
+    icon: Tag,
+  },
+  {
+    title: "Ofertas",
+    href: "/dashboard/ofertas",
+    icon: Tag,
+  },
   ...(featureFlags.licitaciones ? [{
     title: "Licitaciones",
     items: [
@@ -69,11 +57,6 @@ const sidebarNavItems = [
         href: "/dashboard/adjudicaciones",
         icon: Gavel,
       },
-      {
-        title: "Entregas",
-        href: "/dashboard/entregas",
-        icon: Truck,
-      },
     ],
   }] : []),
   ...(featureFlags.importaciones ? [{
@@ -82,14 +65,9 @@ const sidebarNavItems = [
     icon: Ship,
   }] : []),
   ...(featureFlags.pdfs ? [{
-    title: "PDFs",
-    href: "/dashboard/pdf",
-    icon: BarChart3,
-  }] : []),
-  ...(featureFlags.configuracion ? [{
-    title: "Configuración",
-    href: "/dashboard/configuracion",
-    icon: Settings,
+    title: "Manuales",
+    href: "/dashboard/manuales",
+    icon: BookOpen,
   }] : []),
 ];
 

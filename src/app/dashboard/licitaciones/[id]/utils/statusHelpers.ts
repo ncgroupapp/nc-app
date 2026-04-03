@@ -1,11 +1,4 @@
-import { 
-  Clock, 
-  CheckCircle, 
-  XCircle, 
-  AlertCircle,
-  FileText,
-  LucideIcon 
-} from "lucide-react";
+import { AlertCircle, CheckCircle, Clock, FileText, XCircle, LucideIcon } from "lucide-react";
 import { LicitationStatus } from "@/services/licitaciones.service";
 import { QuotationAwardStatus } from "@/types";
 

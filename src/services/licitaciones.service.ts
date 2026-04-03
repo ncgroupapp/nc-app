@@ -1,5 +1,5 @@
 import api from '@/lib/axios';
-import { PaginatedResponse, ApiResponse } from '@/types';
+import { ApiResponse, PaginatedResponse } from '@/types/api';
 
 // Types matching backend entity
 export enum LicitationStatus {
@@ -93,6 +93,7 @@ export interface LicitationFilters {
   search?: string;
   status?: LicitationStatus;
   clientId?: number;
+  clientIds?: string;
 }
 
 export const licitacionesService = {
@@ -102,6 +103,7 @@ export const licitacionesService = {
     if (filters.search) params.append('search', filters.search);
     if (filters.status) params.append('status', filters.status);
     if (filters.clientId) params.append('clientId', filters.clientId.toString());
+    if (filters.clientIds) params.append('clientIds', filters.clientIds);
     
     const response = await api.get<PaginatedResponse<Licitation>>(`/licitations?${params.toString()}`);
     return response.data;

@@ -1,8 +1,11 @@
 import api from '@/lib/axios';
-import { Cliente, CreateClienteForm, ApiResponse, PaginatedResponse, Licitacion, ClienteResponse } from '@/types';
+import { Cliente, CreateClienteForm, ClienteResponse } from '@/types/cliente';
+import { ApiResponse, PaginatedResponse } from '@/types/api';
+import { Licitacion } from '@/types/licitacion';
 
 export interface ClientFilters { 
   page?: number;
+  limit?: number;
   search?: string;
 }
 
@@ -13,6 +16,7 @@ export const clientesService = {
     const params = new URLSearchParams();
 
     if (filters.page) params.append('page', filters.page.toString());
+    if (filters.limit) params.append('limit', filters.limit.toString());
     if (filters.search) params.append('search', filters.search);
 
     const response = await api.get<PaginatedResponse<Cliente>>(`/clients?${params.toString()}`);

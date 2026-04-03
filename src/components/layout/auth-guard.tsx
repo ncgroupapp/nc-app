@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { onAuthStateChanged } from "firebase/auth"
 import { auth } from "@/lib/firebase"
-import { Loader2 } from "lucide-react"
+import { Loader2 } from "lucide-react";
 import { isTokenExpired } from "@/lib/utils"
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {

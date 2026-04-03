@@ -5,10 +5,10 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { DialogFooter } from '@/components/ui/dialog'
-import { Plus, Trash2 } from 'lucide-react'
-import { Proveedor } from '@/types'
+import { Plus, Trash2 } from "lucide-react";
+import { Proveedor } from '@/types/proveedor'
 import { useConfirm } from "@/hooks/use-confirm";
-import { useBrandsStore } from '@/stores/brands/brandsStore'
+import { useMarcasStore } from '@/stores/brands/brandsStore'
 import { MultiSelectSearch } from '@/components/ui/multi-select-search'
 import { useDebounce } from '@/hooks/use-debounce'
 import { toast } from "sonner"
@@ -26,6 +26,7 @@ interface ProveedorFormData {
   name: string
   rut: string
   country: string
+  website: string
   brand?: string
   contacts: ContactoData[]
 }
@@ -39,15 +40,16 @@ interface ProveedorFormProps {
 }
 
 export function ProveedorForm({ initialData, onSubmit, onCancel, isLoading = false }: ProveedorFormProps) {
-  const { brands, fetchBrands } = useBrandsStore()
+  const { brands, fetchBrands } = useMarcasStore()
   const [brandSearch, setBrandSearch] = useState('')
   const debouncedBrandSearch = useDebounce(brandSearch, 500)
-  const [selectedBrand, setSelectedBrand] = useState<string>("")
+  const [selectedBrands, setSelectedBrands] = useState<string[]>([])
 
   const [formData, setFormData] = useState<ProveedorFormData>({
     name: '',
     rut: '',
     country: '',
+    website: '',
     contacts: [{ name: '', email: '', phone: '', address: '' }]
   })
 
@@ -64,19 +66,20 @@ export function ProveedorForm({ initialData, onSubmit, onCancel, isLoading = fal
         ? initialData.brand 
         : (typeof initialData.brand === 'string' ? initialData.brand : undefined);
       
-      if (brandName) {
-        setSelectedBrand(brandName)
-      } else {
-        setSelectedBrand("")
-      }
+      const brandsList = initialData.brands && initialData.brands.length > 0
+        ? initialData.brands
+        : (brandName ? [brandName] : []);
+
+      setSelectedBrands(brandsList);
       
       setFormData({
         name: initialData.name || '',
         rut: initialData.rut || '',
         country: initialData.country || '',
+        website: initialData.website || '',
         brand: brandName || '',
         contacts: initialData.contacts && initialData.contacts.length > 0
-          ? initialData.contacts.map((c) => ({
+          ? initialData.contacts.map((c: any) => ({
               name: c.name || '',
               email: c.email || '',
               phone: c.phone || '',
@@ -85,11 +88,12 @@ export function ProveedorForm({ initialData, onSubmit, onCancel, isLoading = fal
           : [{ name: '', email: '', phone: '', address: '' }]
       })
     } else {
-      setSelectedBrand('')
+      setSelectedBrands([])
       setFormData({
         name: '',
         rut: '',
         country: '',
+        website: '',
         contacts: [{ name: '', email: '', phone: '', address: '' }]
       })
     }
@@ -131,10 +135,6 @@ export function ProveedorForm({ initialData, onSubmit, onCancel, isLoading = fal
       toast.error('El nombre es obligatorio')
       return
     }
-    if (!formData.rut.trim()) {
-      toast.error('El RUT es obligatorio')
-      return
-    }
     if (!formData.country.trim()) {
       toast.error('El país es obligatorio')
       return
@@ -144,7 +144,8 @@ export function ProveedorForm({ initialData, onSubmit, onCancel, isLoading = fal
       name: formData.name,
       rut: formData.rut,
       country: formData.country,
-      brand: selectedBrand || formData.brand || '',
+      website: formData.website,
+      brands: selectedBrands,
       contacts: formData.contacts.map(c => ({
         name: c.name,
         email: c.email,
@@ -156,12 +157,22 @@ export function ProveedorForm({ initialData, onSubmit, onCancel, isLoading = fal
     await onSubmit(payload)
   }
 
+  const isFormValid =
+    formData.name.trim() !== "" &&
+    formData.country.trim() !== "" &&
+    formData.contacts.every(
+      (c) =>
+        c.name.trim() !== "" && c.phone.trim() !== "" && c.address.trim() !== ""
+    );
+
   return (
     <form onSubmit={handleSubmit}>
       <div className="grid gap-4 py-4">
         {/* Basic Information */}
         <div className="space-y-2">
-          <Label htmlFor="nombre">Nombre <span className="text-red-500">*</span></Label>
+          <Label htmlFor="nombre">
+            Nombre <span className="text-red-500">*</span>
+          </Label>
           <Input
             id="nombre"
             value={formData.name}
@@ -174,7 +185,7 @@ export function ProveedorForm({ initialData, onSubmit, onCancel, isLoading = fal
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="rut">RUT <span className="text-red-500">*</span></Label>
+            <Label htmlFor="rut">RUT</Label>
             <Input
               id="rut"
               value={formData.rut}
@@ -182,12 +193,13 @@ export function ProveedorForm({ initialData, onSubmit, onCancel, isLoading = fal
                 setFormData((prev) => ({ ...prev, rut: e.target.value }))
               }
               placeholder="Ej: 76.543.210-K"
-              required
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="pais">País <span className="text-red-500">*</span></Label>
+            <Label htmlFor="pais">
+              País <span className="text-red-500">*</span>
+            </Label>
             <Input
               id="pais"
               value={formData.country}
@@ -201,42 +213,44 @@ export function ProveedorForm({ initialData, onSubmit, onCancel, isLoading = fal
         </div>
 
         <div className="space-y-2">
-            <Label htmlFor="brand">Marca</Label>
-            <MultiSelectSearch
-                single={true}
-                searchValue={brandSearch}
-                onSearchValueChange={setBrandSearch}
-                options={[
-                  ...brands.map((b) => ({
-                    id: b.name, // Use name as ID since we want to store and display the name
-                    label: b.name,
-                  })),
-                  ...(selectedBrand && !brands.some((b) => b.name === selectedBrand)
-                    ? [{ id: selectedBrand, label: selectedBrand }]
-                    : []),
-                ]}
-                selectedValues={formData.brand ? [formData.brand] : []}
-                onSelect={(value) => {
-                   const brandName = String(value);
-                   setSelectedBrand(brandName)
-                   setFormData((prev) => ({
-                    ...prev,
-                    brand: brandName,
-                  }));
-                }}
-                onRemove={() => {
-                   setSelectedBrand('')
-                   setFormData((prev) => {
-                       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                       const { brand, ...rest } = prev;
-                       return { ...rest, brand: undefined };
-                   });
-                }}
-                placeholder="Seleccionar marca..."
-                searchPlaceholder="Buscar marca..."
-                emptyMessage="No se encontraron marcas."
-            />
-          </div>
+          <Label htmlFor="website">Sitio Web</Label>
+          <Input
+            id="website"
+            value={formData.website}
+            onChange={(e) =>
+              setFormData((prev) => ({ ...prev, website: e.target.value }))
+            }
+            placeholder="Ej: www.proveedor.com"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="brand">Marcas</Label>
+          <MultiSelectSearch
+            searchValue={brandSearch}
+            onSearchValueChange={setBrandSearch}
+            options={[
+              ...brands.map((b) => ({
+                id: b.name, // Use name as ID since we want to store and display the name
+                label: b.name,
+              })),
+              ...selectedBrands
+                .filter((sb) => !brands.some((b) => b.name === sb))
+                .map((sb) => ({ id: sb, label: sb })),
+            ]}
+            selectedValues={selectedBrands}
+            onSelect={(value) => {
+              const brandName = String(value);
+              setSelectedBrands((prev) => [...prev, brandName]);
+            }}
+            onRemove={(value) => {
+              const brandName = String(value);
+              setSelectedBrands((prev) => prev.filter((b) => b !== brandName));
+            }}
+            placeholder="Seleccionar marcas..."
+            emptyMessage="No se encontraron marcas."
+          />
+        </div>
 
         {/* Dynamic Contacts List */}
         <div className="space-y-4">
@@ -271,7 +285,7 @@ export function ProveedorForm({ initialData, onSubmit, onCancel, isLoading = fal
 
                 <div className="space-y-2">
                   <Label htmlFor={`contact-name-${index}`}>
-                    Nombre del Contacto
+                    Nombre del Contacto <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id={`contact-name-${index}`}
@@ -285,6 +299,7 @@ export function ProveedorForm({ initialData, onSubmit, onCancel, isLoading = fal
                       }));
                     }}
                     placeholder="Ej: Juan Pérez"
+                    required
                   />
                 </div>
 
@@ -301,19 +316,24 @@ export function ProveedorForm({ initialData, onSubmit, onCancel, isLoading = fal
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs">Teléfono</Label>
+                    <Label className="text-xs">
+                      Teléfono <span className="text-red-500">*</span>
+                    </Label>
                     <Input
                       value={contact.phone}
                       onChange={(e) =>
                         handleContactChange(index, "phone", e.target.value)
                       }
+                      required
                       placeholder="+56 9..."
                       className="h-8"
                     />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor={`contact-address-${index}`}>Dirección</Label>
+                  <Label htmlFor={`contact-address-${index}`}>
+                    Dirección <span className="text-red-500">*</span>
+                  </Label>
                   <textarea
                     id={`contact-address-${index}`}
                     className="w-full p-3 border rounded-md text-sm"
@@ -328,6 +348,7 @@ export function ProveedorForm({ initialData, onSubmit, onCancel, isLoading = fal
                       }));
                     }}
                     placeholder="Dirección del contacto..."
+                    required
                   />
                 </div>
               </div>
@@ -340,7 +361,7 @@ export function ProveedorForm({ initialData, onSubmit, onCancel, isLoading = fal
         <Button type="button" variant="outline" onClick={onCancel}>
           Cancelar
         </Button>
-        <Button type="submit" disabled={isLoading}>
+        <Button type="submit" disabled={isLoading || !isFormValid}>
           {isLoading ? "Guardando..." : initialData ? "Actualizar" : "Guardar"}
         </Button>
       </DialogFooter>

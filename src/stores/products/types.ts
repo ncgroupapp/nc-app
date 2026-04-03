@@ -1,5 +1,5 @@
 import { Product, CreateProductForm } from '@/services/products.service';
-import { PaginationMeta } from '@/types';
+import { PaginationMeta } from '@/types/api';
 import { SearchFilters } from '@/lib/validations/schema';
 
 export interface ProductsState {
