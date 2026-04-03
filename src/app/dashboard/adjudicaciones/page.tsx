@@ -143,7 +143,7 @@ export default function AdjudicacionesPage() {
               <div className="flex-1 relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" aria-hidden="true" />
                 <Input
-                  placeholder="Buscar por ID..."
+                  placeholder="Buscar por nombre o ID..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-8"
@@ -234,7 +234,14 @@ export default function AdjudicacionesPage() {
                             #{adj.identifier || adj.id}
                           </TableCell>
                           <TableCell className="font-bold tracking-tight">
-                            {adj.licitation?.callNumber || `ID: ${adj.licitationId}`}
+                            <div className="flex flex-col">
+                              <span>{adj.licitation?.callNumber || `ID: ${adj.licitationId}`}</span>
+                              {adj.licitation?.internalNumber && (
+                                <span className="text-xs font-normal text-muted-foreground">
+                                  {adj.licitation.internalNumber}
+                                </span>
+                              )}
+                            </div>
                           </TableCell>
                           <TableCell className="font-medium text-muted-foreground">
                             {adj.licitation?.client?.name || '-'}
@@ -257,7 +264,7 @@ export default function AdjudicacionesPage() {
                                 variant="ghost"
                                 size="icon"
                                 className="group-hover:bg-primary/10 transition-colors"
-                                aria-label={`Ver licitación ${adj.licitation?.callNumber ?? adj.licitationId}`}
+                                aria-label={`Ver licitación ${adj.licitation?.callNumber || adj.licitation?.internalNumber || adj.licitationId}`}
                               >
                                 <Eye className="h-4 w-4" />
                               </Button>
