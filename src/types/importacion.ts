@@ -2,24 +2,67 @@ import { Proveedor } from './proveedor';
 import { Producto } from './producto';
 import { Licitacion } from './licitacion';
 
+// Backend Response Type (camelCase English) - this IS the main type
 export interface Importacion {
-  id: string
-  carpeta_folio: string
-  proveedor_id: string
-  transportista: string
-  arbitraje?: number
-  tipo_cambio: number
-  cantidad_bultos: number
-  peso_total: number
-  moneda_origen: 'EUR' | 'USD' | 'UYU'
-  fecha_importacion: string
-  estado: 'En Tránsito' | 'En Aduana' | 'Liberada' | 'Entregada'
-  created_at: string
-  updated_at: string
-  proveedor?: Proveedor
-  costos?: ImportacionCostos
-  productos?: ImportacionProducto[]
-  licitaciones?: Licitacion[]
+  id: number
+  folder: string
+  providerId: number
+  transport: string
+  arbitrage: string
+  exchangeRate: string | number
+  packageCount: number
+  totalWeight: string | number
+  originCurrency: string
+  importDate: string
+  status: string
+  fobOrigin: string | number
+  fobUsd: string | number
+  freightOrigin: string | number
+  freightUsd: string | number
+  insuranceOrigin: string | number
+  insuranceUsd: string | number
+  cif: string | number
+  advanceVatRate: string | number
+  advanceVat: string | number
+  transitGuideRate: string | number
+  transitGuide: string | number
+  imaduniRate: string | number
+  imaduni: string | number
+  vatRate: string | number
+  vat: string | number
+  surchargeRate: string | number
+  surcharge: string | number
+  consularFeesRate: string | number
+  consularFees: string | number
+  tcuRate: string | number
+  tcu: string | number
+  auriStampsRate: string | number
+  auriStamps: string | number
+  tsaRate: string | number
+  tsa: string | number
+  bankCharges: string | number
+  subtotalA: string | number
+  otherExemptPayments?: { otros_pagos_exentos: number }
+  subtotalB: string | number
+  dispatchExpensesRate: string | number
+  dispatchExpenses: string | number
+  customsSurchargeRate: string | number
+  customsSurcharge: string | number
+  feesRate: string | number
+  fees: string | number
+  externalFreightRate: string | number
+  externalFreight: string | number
+  insuranceTaxRate: string | number
+  insuranceTax: string | number
+  internalFreightRate: string | number
+  internalFreight: string | number
+  vatSubject: string | number
+  subtotalC: string | number
+  createdAt: string
+  updatedAt: string
+  provider?: Proveedor
+  products?: Producto[]
+  licitations?: Licitacion[]
 }
 
 export interface ImportacionCostos {
@@ -72,19 +115,41 @@ export interface ImportacionProducto {
 }
 
 export interface CreateImportacionForm {
-  carpeta_folio: string
-  proveedor_id: string
-  transportista: string
-  arbitraje?: number
-  tipo_cambio: number
-  cantidad_bultos: number
-  peso_total: number
-  moneda_origen: 'EUR' | 'USD' | 'UYU'
-  fecha_importacion: string
-  costos: Partial<ImportacionCostos>
-  productos: {
-    producto_id: string
-    cantidad: number
-    costo_unitario?: number
-  }[]
+  folder: string
+  providerId: number | string
+  transport: string
+  arbitrage?: string
+  exchangeRate: number | string
+  packageCount: number
+  totalWeight: number | string
+  originCurrency: 'EUR' | 'USD' | 'UYU'
+  importDate: string
+  status?: string
+  // Costs as flat structure (like backend)
+  fobOrigin?: number | string
+  fobUsd?: number | string
+  freightOrigin?: number | string
+  freightUsd?: number | string
+  insuranceOrigin?: number | string
+  insuranceUsd?: number | string
+  advanceVatRate: number | string
+  transitGuideRate: number | string
+  imaduniRate: number | string
+  vatRate: number | string
+  surchargeRate: number | string
+  consularFeesRate: number | string
+  tcuRate: number | string
+  auriStampsRate: number | string
+  tsaRate: number | string
+  bankCharges: number | string
+  otherExemptPayments?: { otros_pagos_exentos: number }
+  dispatchExpensesRate: number | string
+  customsSurchargeRate: number | string
+  feesRate: number | string
+  externalFreightRate: number | string
+  insuranceTaxRate: number | string
+  internalFreightRate: number | string
+  // Products
+  productIds: (string | number)[]
+  licitationIds?: (string | number)[]
 }
