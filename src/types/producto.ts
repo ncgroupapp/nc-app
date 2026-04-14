@@ -1,33 +1,53 @@
 import { Proveedor } from './proveedor';
 
 export interface Producto {
-  id: string
-  sku: string
-  nombre: string
+  id: string | number
+  sku?: string
+  nombre?: string
+  name?: string // Backend field
   imagen?: string
-  proveedor_id: string
+  image?: string // Backend field
+  images?: string[] // Backend field
+  proveedor_id?: string | number
+  providerId?: number // Backend field
   marca?: string
+  brand?: string // Backend field
   modelo?: string
-  cantidad_stock: number
+  model?: string // Backend field
+  cantidad_stock?: number
+  stock?: number
+  stockQuantity?: number
   detalles?: string
+  details?: string // Backend field
   observaciones?: string
+  observations?: string // Backend field
   chasis?: string
+  chassis?: string // Backend field
   motor?: string
-  created_at: string
-  updated_at: string
+  equipment?: string // Backend field
+  equivalentCodes?: string[]
+  code?: string
+  created_at?: string
+  createdAt?: string
+  updated_at?: string
+  updatedAt?: string
   proveedor?: Proveedor
+  provider?: Proveedor
   historial_cotizaciones?: Array<{
     id: string
     fecha: string
     monto: number
     estado: string
   }>
+  quotationHistory?: any
   historial_adjudicaciones?: Array<{
     id: string
     fecha: string
     monto: number
     proveedor_id: string
   }>
+  adjudicationHistory?: any
+  description?: string
 }
 
 export interface Oferta {
