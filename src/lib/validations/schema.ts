@@ -186,4 +186,3 @@ export type ManualForm = z.infer<typeof manualSchema>
 export type SearchFilters = z.infer<typeof searchFiltersSchema>
 export type LoginForm = z.infer<typeof loginSchema>
 export type RegisterForm = z.infer<typeof registerSchema>
-export type ImportacionForm = z.infer<typeof importacionSchema>
