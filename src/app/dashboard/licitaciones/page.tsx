@@ -618,7 +618,7 @@ export default function LicitacionesPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex gap-4 items-center flex-wrap md:flex-nowrap">
+            <div className="flex gap-4 items-center flex-wrap">
               <div className="flex-1 min-w-[200px]">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
