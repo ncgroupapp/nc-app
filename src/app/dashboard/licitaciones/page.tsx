@@ -52,6 +52,7 @@ import { Cliente } from "@/types";
 import { AlertCircle, CheckCircle, Clock, Eye, FileText, Loader2, Lock, Plus, Search, XCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { showSnackbar } from "@/components/ui/snackbar";
+import { handleActionError } from "@/lib/error-handler";
 import { DatePicker } from "@/components/ui/date-picker";
 import { TimePicker } from "@/components/ui/time-picker";
 import { format } from "date-fns";
@@ -88,6 +89,9 @@ export default function LicitacionesPage() {
   const [selectedClients, setSelectedClients] = useState<number[]>([]);
   const [clientSearch, setClientSearch] = useState("");
   const debouncedClientSearch = useDebounce(clientSearch, 300);
+  const [createClientSearch, setCreateClientSearch] = useState("");
+  const debouncedCreateClientSearch = useDebounce(createClientSearch, 300);
+  const [createClientResults, setCreateClientResults] = useState<Cliente[]>([]);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
   const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
@@ -131,7 +135,7 @@ export default function LicitacionesPage() {
         await fetchLicitaciones(currentPage, searchTerm, selectedEstado, selectedClients, dateFrom, dateTo);
       } catch (err) {
         console.error("Error closing licitation:", err);
-        showSnackbar("Error al cerrar la licitación. Por favor, intente nuevamente.", "error");
+        handleActionError(err, "Error al cerrar la licitación. Por favor, intente nuevamente.");
       } finally {
         setLoading(false);
       }
@@ -269,6 +273,23 @@ export default function LicitacionesPage() {
     fetchClients();
   }, [debouncedClientSearch]);
 
+  useEffect(() => {
+    if (!isCreateDialogOpen) return;
+    const fetchCreateClients = async () => {
+      try {
+        const isSearching = debouncedCreateClientSearch.trim().length > 0;
+        const response = await clientesService.getAll({
+          search: isSearching ? debouncedCreateClientSearch : undefined,
+          limit: 20,
+        });
+        setCreateClientResults(response.data || []);
+      } catch (error) {
+        console.error("Error searching clients for create dialog:", error);
+      }
+    };
+    fetchCreateClients();
+  }, [debouncedCreateClientSearch, isCreateDialogOpen]);
+
   const getEstadoInfo = (status: LicitationStatus) => {
     switch (status) {
       case LicitationStatus.PENDING:
@@ -394,7 +415,7 @@ export default function LicitacionesPage() {
       showSnackbar("Licitación creada correctamente", "success");
     } catch (err) {
       console.error("Error creating licitation:", err);
-      showSnackbar("Error al crear la licitación. Por favor, intente nuevamente.", "error");
+      handleActionError(err, "Error al crear la licitación. Por favor, intente nuevamente.");
     } finally {
       setSubmitting(false);
     }
@@ -418,7 +439,16 @@ export default function LicitacionesPage() {
               Gestión del ciclo completo de licitaciones
             </p>
           </div>
-          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+          <Dialog
+            open={isCreateDialogOpen}
+            onOpenChange={(open) => {
+              setIsCreateDialogOpen(open);
+              if (!open) {
+                setCreateClientSearch("");
+                setCreateClientResults([]);
+              }
+            }}
+          >
             <DialogTrigger asChild>
               <Button>
                 <Plus className="mr-2 h-4 w-4" />
@@ -463,14 +493,21 @@ export default function LicitacionesPage() {
                     <div className="space-y-2">
                       <Label htmlFor="clientId">Cliente *</Label>
                       <MultiSelectSearch
-                        options={clientes.map((c) => ({ id: c.id, label: `${c.name} (${c.identifier})` }))}
+                        options={createClientResults.map((c) => ({ id: c.id, label: `${c.name} (${c.identifier})` }))}
                         selectedValues={formData.clientId ? [parseInt(formData.clientId)] : []}
                         onSelect={(id) => {
-                          const client = clientes.find((c) => c.id === id);
+                          const client = createClientResults.find((c) => c.id === id);
                           if (client) { setFormData((prev) => ({ ...prev, clientId: client.id.toString() })); }
                         }}
                         onRemove={() => { setFormData((prev) => ({ ...prev, clientId: "" })); }}
-                        placeholder="Seleccionar cliente..." searchPlaceholder="Buscar cliente..." emptyMessage="No se encontraron clientes." hideTags={true} shouldFilter={true} single={true}
+                        placeholder="Seleccionar cliente..."
+                        searchPlaceholder="Buscar cliente por nombre o RUT..."
+                        emptyMessage="No se encontraron clientes."
+                        searchValue={createClientSearch}
+                        onSearchValueChange={setCreateClientSearch}
+                        hideTags={true}
+                        shouldFilter={false}
+                        single={true}
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
@@ -512,7 +549,7 @@ export default function LicitacionesPage() {
                     <div className="space-y-2">
                       <Label>Agregar Producto</Label>
                       <MultiSelectSearch
-                        options={searchResults.map((p) => ({ id: p.id, label: `${p.name} (Stock: ${p.stockQuantity || 0})` }))}
+                        options={searchResults.map((p) => ({ id: p.id, label: `${p.name} ${p.code ? `[${p.code}]` : ""} (Stock: ${p.stockQuantity || 0})` }))}
                         selectedValues={formData.productsWithQuantity.map((p) => p.product.id)}
                         onSelect={(id) => { const product = searchResults.find((p) => p.id === id); if (product) handleAddProduct(product); }}
                         onRemove={(id) => handleRemoveProduct(Number(id))}

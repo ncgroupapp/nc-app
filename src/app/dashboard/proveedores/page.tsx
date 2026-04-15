@@ -22,6 +22,7 @@ import { Proveedor, CreateProveedorForm } from '@/types/proveedor'
 import { useProveedoresStore } from '@/stores/proveedores/proveedoresStore'
 import { ProveedorForm } from '@/components/proveedores/proveedor-form'
 import { showSnackbar } from '@/components/ui/snackbar'
+import { handleActionError } from '@/lib/error-handler'
 import { useConfirm } from '@/hooks/use-confirm'
 import { FadeIn } from '@/components/common/fade-in'
 
@@ -75,7 +76,7 @@ export default function ProveedoresPage() {
       setIsCreateDialogOpen(false)
     } catch (error) {
       console.error('Error saving proveedor:', error)
-      showSnackbar('Error al guardar el proveedor', 'error')
+      handleActionError(error, 'Error al guardar el proveedor')
     }
   }
 
@@ -99,7 +100,7 @@ export default function ProveedoresPage() {
         showSnackbar('Proveedor eliminado correctamente', 'success')
       } catch (error) {
         console.error('Error deleting proveedor:', error)
-        showSnackbar('Error al eliminar el proveedor', 'error')
+        handleActionError(error, 'Error al eliminar el proveedor')
       }
     }
   }

@@ -18,6 +18,7 @@ import {
 import { useMarcasStore } from '@/stores/brands/brandsStore'
 import { MarcaForm } from '@/components/marcas/marca-form'
 import { showSnackbar } from '@/components/ui/snackbar'
+import { handleActionError } from '@/lib/error-handler'
 import { useConfirm } from '@/hooks/use-confirm'
 import { useDebounce } from '@/hooks/use-debounce'
 import { FadeIn } from '@/components/common/fade-in'
@@ -54,7 +55,7 @@ export default function MarcasPage() {
       setIsDialogOpen(false)
     } catch (error) {
       console.error('Error creating brand:', error)
-      showSnackbar('Error al crear la marca', 'error')
+      handleActionError(error, 'Error al crear la marca')
     }
   }
 
@@ -67,7 +68,7 @@ export default function MarcasPage() {
       setEditingBrand(null)
     } catch (error) {
       console.error('Error updating brand:', error)
-      showSnackbar('Error al actualizar la marca', 'error')
+      handleActionError(error, 'Error al actualizar la marca')
     }
   }
 
@@ -82,7 +83,7 @@ export default function MarcasPage() {
         showSnackbar('Marca eliminada correctamente', 'success')
       } catch (error) {
         console.error('Error deleting brand:', error)
-        showSnackbar('Error al eliminar la marca', 'error')
+        handleActionError(error, 'Error al eliminar la marca')
       }
     }
   }

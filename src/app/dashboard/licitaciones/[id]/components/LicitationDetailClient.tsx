@@ -49,6 +49,16 @@ export function LicitationDetailClient({
     }
   };
 
+  const handleRefreshLicitation = async () => {
+    try {
+      const updatedLicitation = await licitacionesService.getById(licitationId);
+      setLicitation(updatedLicitation);
+    } catch (err) {
+      console.error('Error refreshing licitation data:', err);
+      setError('Error al actualizar los datos de la licitación');
+    }
+  };
+
   // Quotation actions hook
   const quotationActions = useQuotationActions(
     licitation,
@@ -89,7 +99,13 @@ export function LicitationDetailClient({
 
           {/* Tab: Productos Solicitados */}
           <TabsContent value="productos" className="space-y-4">
-            <RequestedProductsTab licitationProducts={licitation.licitationProducts} />
+            <RequestedProductsTab 
+              licitationId={licitationId}
+              licitationProducts={licitation.licitationProducts} 
+              status={licitation.status as LicitationStatus}
+              hasQuotation={!!quotation}
+              onRefresh={handleRefreshLicitation}
+            />
           </TabsContent>
 
           {/* Tab: Cotización */}
