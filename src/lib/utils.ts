@@ -1,8 +1,30 @@
+import { format, isValid, parseISO } from 'date-fns'
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
+const ISO_CALENDAR_DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})(?:T.*)?$/
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
+}
+
+export function parseCalendarDate(value?: string): Date | undefined {
+  if (!value) return undefined
+
+  const calendarMatch = value.match(ISO_CALENDAR_DATE_PATTERN)
+  if (calendarMatch) {
+    const [, year, month, day] = calendarMatch
+    const parsed = new Date(Number(year), Number(month) - 1, Number(day))
+    return isValid(parsed) ? parsed : undefined
+  }
+
+  const parsed = parseISO(value)
+  return isValid(parsed) ? parsed : undefined
+}
+
+export function formatCalendarDate(value?: string, dateFormat = 'dd/MM/yyyy'): string {
+  const parsed = parseCalendarDate(value)
+  return parsed ? format(parsed, dateFormat) : '—'
 }
 
 export function isTokenExpired(token: string) {
