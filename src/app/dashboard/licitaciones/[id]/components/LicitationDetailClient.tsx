@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LicitationStatus } from "@/services/licitaciones.service";
+import { licitacionesService, LicitationStatus } from "@/services/licitaciones.service";
 import { QuotationStatus } from "@/types/enums";
 import { FadeIn } from "@/components/common/fade-in";
 import { useQuotationActions } from "../hooks/useQuotationActions";
