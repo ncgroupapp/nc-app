@@ -133,6 +133,7 @@ export interface QuotationFilters {
   status?: QuotationStatus;
   clientId?: number;
   productId?: number;
+  closedOnly?: boolean;
 }
 
 
@@ -164,6 +165,7 @@ export const cotizacionesService = {
     if (filters.status) params.append('status', filters.status);
     if (filters.clientId) params.append('clientId', filters.clientId.toString());
     if (filters.productId) params.append('productId', filters.productId.toString());
+    if (filters.closedOnly) params.append('closedOnly', 'true');
 
     const response = await api.get<PaginatedResponse<Quotation>>(`/quotation?${params.toString()}`);
     return response.data;
@@ -231,6 +233,14 @@ export const cotizacionesService = {
 
   delete: async (id: number): Promise<void> => {
     await api.delete(`/quotation/${id}`);
+  },
+
+  // Actualizar estado de adjudicación de un item de cotización
+  updateItemAwardStatus: async (quotationId: number, itemId: number, awardStatus: QuotationAwardStatus, awardedQuantity?: number): Promise<void> => {
+    await api.patch(`/quotation/${quotationId}/item/${itemId}/award-status`, {
+      awardStatus,
+      awardedQuantity
+    });
   },
 
   // Finalizar cotización (cambia estado a finalizada - irreversible)

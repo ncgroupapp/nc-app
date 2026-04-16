@@ -1,4 +1,4 @@
-import { AlertCircle, CheckCircle, Clock, FileText, XCircle, LucideIcon } from "lucide-react";
+import { AlertCircle, CheckCircle, Clock, FileText, Lock, XCircle, LucideIcon } from "lucide-react";
 import { LicitationStatus } from "@/services/licitaciones.service";
 import { QuotationAwardStatus } from "@/types";
 
@@ -31,6 +31,8 @@ export const getEstadoInfo = (status: LicitationStatus): EstadoInfo => {
       return { icon: XCircle, color: "text-red-500", bgColor: "bg-red-500/10 border border-red-500/20", label: "No Adjudicada" };
     case LicitationStatus.TOTAL_ADJUDICATION:
       return { icon: CheckCircle, color: "text-green-500", bgColor: "bg-green-500/10 border border-green-500/20", label: "Adjudicación Total" };
+    case LicitationStatus.CLOSED:
+      return { icon: Lock, color: "text-gray-500", bgColor: "bg-gray-500/10 border border-gray-500/20", label: "Cerrada" };
     default:
       return { icon: Clock, color: "text-muted-foreground", bgColor: "bg-muted border border-border", label: status };
   }

@@ -41,7 +41,7 @@ export const RejectDialog = ({
           <div className="space-y-2">
             <Label>Nombre del Ganador</Label>
             <Input
-              value={competitorData.winnerName}
+              value={competitorData.winnerName || ""}
               onChange={(e) =>
                 setCompetitorData((prev) => ({
                   ...prev,
@@ -53,7 +53,7 @@ export const RejectDialog = ({
           <div className="space-y-2">
             <Label>RUT del Ganador</Label>
             <Input
-              value={competitorData.winnerRut}
+              value={competitorData.winnerRut || ""}
               onChange={(e) =>
                 setCompetitorData((prev) => ({
                   ...prev,
@@ -66,7 +66,7 @@ export const RejectDialog = ({
             <Label>Precio Ganador</Label>
             <Input
               type="number"
-              value={competitorData.winnerPrice}
+              value={competitorData.winnerPrice ?? ""}
               onChange={(e) =>
                 setCompetitorData((prev) => ({
                   ...prev,
@@ -79,7 +79,7 @@ export const RejectDialog = ({
             <Label>Cantidad</Label>
             <Input
               type="number"
-              value={competitorData.quantity}
+              value={competitorData.quantity ?? ""}
               onChange={(e) =>
                 setCompetitorData((prev) => ({
                   ...prev,
@@ -91,7 +91,7 @@ export const RejectDialog = ({
           <div className="space-y-2">
             <Label>Notas / Motivo</Label>
             <Input
-              value={competitorData.notes}
+              value={competitorData.notes || ""}
               onChange={(e) =>
                 setCompetitorData((prev) => ({
                   ...prev,

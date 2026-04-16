@@ -52,6 +52,7 @@ export interface Delivery {
 
 export interface UpdateDeliveryItemDto {
   status?: DeliveryItemStatus;
+  estimatedDate?: string;
   actualDate?: string;
   observations?: string;
   quantity?: number;

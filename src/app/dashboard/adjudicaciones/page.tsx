@@ -21,6 +21,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
@@ -40,6 +42,7 @@ export default function AdjudicacionesPage() {
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [closedOnly, setClosedOnly] = useState(false)
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 10,
@@ -47,7 +50,7 @@ export default function AdjudicacionesPage() {
     lastPage: 1
   })
 
-  const fetchAdjudicaciones = useCallback(async (page = 1, search = '', status = 'all') => {
+  const fetchAdjudicaciones = useCallback(async (page = 1, search = '', status = 'all', closedOnlyParam = false) => {
     try {
       setLoading(true)
       setError(null)
@@ -55,9 +58,10 @@ export default function AdjudicacionesPage() {
         page,
         limit: 10,
         search: search || undefined,
-        status: status !== 'all' ? status as AdjudicationStatus : undefined
+        status: status !== 'all' ? status as AdjudicationStatus : undefined,
+        closedOnly: closedOnlyParam
       })
-      
+
       // Data is in res.data array
       setAdjudicaciones(res.data || [])
       setPagination({
@@ -76,17 +80,21 @@ export default function AdjudicacionesPage() {
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      fetchAdjudicaciones(1, searchTerm, statusFilter)
+      fetchAdjudicaciones(1, searchTerm, statusFilter, closedOnly)
     }, 300)
     return () => clearTimeout(timeoutId)
-  }, [searchTerm, statusFilter, fetchAdjudicaciones])
+  }, [searchTerm, statusFilter, closedOnly, fetchAdjudicaciones])
 
   const handlePageChange = (newPage: number) => {
-    fetchAdjudicaciones(newPage, searchTerm, statusFilter)
+    fetchAdjudicaciones(newPage, searchTerm, statusFilter, closedOnly)
   }
 
   const handleStatusChange = (value: string) => {
     setStatusFilter(value)
+  }
+
+  const handleClosedOnlyChange = (checked: boolean) => {
+    setClosedOnly(checked)
   }
 
   const getStatusInfo = (status: AdjudicationStatus) => {
@@ -135,7 +143,7 @@ export default function AdjudicacionesPage() {
               <div className="flex-1 relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" aria-hidden="true" />
                 <Input
-                  placeholder="Buscar por ID..."
+                  placeholder="Buscar por nombre o ID..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-8"
@@ -153,6 +161,16 @@ export default function AdjudicacionesPage() {
                     <SelectItem value={AdjudicationStatus.PARTIAL}>Parcial</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="flex items-center gap-2 px-2">
+                <Checkbox
+                  id="include-closed-adjud"
+                  checked={closedOnly}
+                  onCheckedChange={handleClosedOnlyChange}
+                />
+                <Label htmlFor="include-closed-adjud" className="text-sm cursor-pointer whitespace-nowrap">
+                  Solo licitaciones cerradas
+                </Label>
               </div>
             </div>
           </CardContent>
@@ -216,7 +234,14 @@ export default function AdjudicacionesPage() {
                             #{adj.identifier || adj.id}
                           </TableCell>
                           <TableCell className="font-bold tracking-tight">
-                            {adj.licitation?.callNumber || `ID: ${adj.licitationId}`}
+                            <div className="flex flex-col">
+                              <span>{adj.licitation?.callNumber || `ID: ${adj.licitationId}`}</span>
+                              {adj.licitation?.internalNumber && (
+                                <span className="text-xs font-normal text-muted-foreground">
+                                  {adj.licitation.internalNumber}
+                                </span>
+                              )}
+                            </div>
                           </TableCell>
                           <TableCell className="font-medium text-muted-foreground">
                             {adj.licitation?.client?.name || '-'}
@@ -239,7 +264,7 @@ export default function AdjudicacionesPage() {
                                 variant="ghost"
                                 size="icon"
                                 className="group-hover:bg-primary/10 transition-colors"
-                                aria-label={`Ver licitación ${adj.licitation?.callNumber ?? adj.licitationId}`}
+                                aria-label={`Ver licitación ${adj.licitation?.callNumber || adj.licitation?.internalNumber || adj.licitationId}`}
                               >
                                 <Eye className="h-4 w-4" />
                               </Button>

@@ -49,12 +49,15 @@ import {
 } from "@/services/licitaciones.service";
 import { Product, productsService } from "@/services/products.service";
 import { Cliente } from "@/types";
-import { AlertCircle, CheckCircle, Clock, Edit, Eye, FileText, Loader2, Plus, Search, XCircle } from "lucide-react";
+import { AlertCircle, CheckCircle, Clock, Eye, FileText, Loader2, Lock, Plus, Search, XCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { showSnackbar } from "@/components/ui/snackbar";
+import { handleActionError } from "@/lib/error-handler";
 import { DatePicker } from "@/components/ui/date-picker";
+import { TimePicker } from "@/components/ui/time-picker";
 import { format } from "date-fns";
 import { FadeIn } from "@/components/common/fade-in";
+import { useConfirm } from "@/hooks/use-confirm";
 
 // Map backend status to Spanish display labels
 const statusLabels: Record<LicitationStatus, string> = {
@@ -63,6 +66,7 @@ const statusLabels: Record<LicitationStatus, string> = {
   [LicitationStatus.NOT_ADJUDICATED]: "No Adjudicada",
   [LicitationStatus.TOTAL_ADJUDICATION]: "Adjudicación Total",
   [LicitationStatus.QUOTED]: "Cotizada",
+  [LicitationStatus.CLOSED]: "Cerrada",
 };
 
 // Interface para productos con cantidad
@@ -85,19 +89,25 @@ export default function LicitacionesPage() {
   const [selectedClients, setSelectedClients] = useState<number[]>([]);
   const [clientSearch, setClientSearch] = useState("");
   const debouncedClientSearch = useDebounce(clientSearch, 300);
+  const [createClientSearch, setCreateClientSearch] = useState("");
+  const debouncedCreateClientSearch = useDebounce(createClientSearch, 300);
+  const [createClientResults, setCreateClientResults] = useState<Cliente[]>([]);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
+  const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
 
   // Paginación
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
 
-  const [selectedClientName, setSelectedClientName] = useState("");
   const [dateError, setDateError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     startDate: "",
+    startTime: undefined as Date | undefined,
     deadlineDate: "",
+    deadlineTime: undefined as Date | undefined,
     clientId: "",
     callNumber: "",
     internalNumber: "",
@@ -106,11 +116,39 @@ export default function LicitacionesPage() {
 
   const estados = Object.values(LicitationStatus);
 
+  const { confirm } = useConfirm();
+
+  const handleClose = async (licitation: Licitation) => {
+    const confirmed = await confirm({
+      title: "Cerrar Licitación",
+      message: `¿Está seguro que desea cerrar la licitación ${licitation.callNumber}? Esta acción cambiará el estado a "Cerrada" y finalizará las cotizaciones relacionadas.`,
+      confirmText: "Cerrar",
+      cancelText: "Cancelar",
+      variant: "default",
+    });
+
+    if (confirmed) {
+      try {
+        setLoading(true);
+        await licitacionesService.close(licitation.id);
+        showSnackbar("Licitación cerrada correctamente", "success");
+        await fetchLicitaciones(currentPage, searchTerm, selectedEstado, selectedClients, dateFrom, dateTo);
+      } catch (err) {
+        console.error("Error closing licitation:", err);
+        handleActionError(err, "Error al cerrar la licitación. Por favor, intente nuevamente.");
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
   const fetchLicitaciones = async (
     page: number,
     search?: string,
     status?: string,
     clients?: number[],
+    from?: Date,
+    to?: Date,
   ) => {
     try {
       setLoading(true);
@@ -121,6 +159,8 @@ export default function LicitacionesPage() {
         search: search || undefined,
         status: status !== "all" ? (status as LicitationStatus) : undefined,
         clientIds: clients && clients.length > 0 ? clients.join(',') : undefined,
+        dateFrom: from ? format(from, "yyyy-MM-dd") : undefined,
+        dateTo: to ? format(to, "yyyy-MM-dd") : undefined,
       };
 
       const licitacionesRes = await licitacionesService.getAll(filters);
@@ -150,34 +190,55 @@ export default function LicitacionesPage() {
       }
     };
     loadInitialData();
-    fetchLicitaciones(1, "", "all", []).finally(() =>
+    fetchLicitaciones(1, "", "all", [], dateFrom, dateTo).finally(() =>
       setInitialLoading(false),
     );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       setCurrentPage(1);
-      fetchLicitaciones(1, searchTerm, selectedEstado, selectedClients);
+      fetchLicitaciones(1, searchTerm, selectedEstado, selectedClients, dateFrom, dateTo);
     }, 300);
     return () => clearTimeout(timeoutId);
-  }, [searchTerm]);
+  }, [searchTerm, selectedEstado, selectedClients, dateFrom, dateTo]);
 
   const handleEstadoChange = (value: string) => {
     setSelectedEstado(value);
     setCurrentPage(1);
-    fetchLicitaciones(1, searchTerm, value, selectedClients);
+    fetchLicitaciones(1, searchTerm, value, selectedClients, dateFrom, dateTo);
   };
 
   const handleClienteChange = (newClients: number[]) => {
     setSelectedClients(newClients);
     setCurrentPage(1);
-    fetchLicitaciones(1, searchTerm, selectedEstado, newClients);
+    fetchLicitaciones(1, searchTerm, selectedEstado, newClients, dateFrom, dateTo);
   };
 
   const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage);
-    fetchLicitaciones(newPage, searchTerm, selectedEstado, selectedClients);
+    fetchLicitaciones(newPage, searchTerm, selectedEstado, selectedClients, dateFrom, dateTo);
+  };
+
+  const handleDateFromChange = (date: Date | undefined) => {
+    if (dateTo && date && date > dateTo) {
+      showSnackbar("La fecha 'Desde' no puede ser posterior a 'Hasta'", "error");
+      return;
+    }
+    setDateFrom(date);
+    setCurrentPage(1);
+    fetchLicitaciones(1, searchTerm, selectedEstado, selectedClients, date, dateTo);
+  };
+
+  const handleDateToChange = (date: Date | undefined) => {
+    if (dateFrom && date && date < dateFrom) {
+      showSnackbar("La fecha 'Hasta' no puede ser anterior a 'Desde'", "error");
+      return;
+    }
+    setDateTo(date);
+    setCurrentPage(1);
+    fetchLicitaciones(1, searchTerm, selectedEstado, selectedClients, dateFrom, date);
   };
 
   useEffect(() => {
@@ -212,6 +273,23 @@ export default function LicitacionesPage() {
     fetchClients();
   }, [debouncedClientSearch]);
 
+  useEffect(() => {
+    if (!isCreateDialogOpen) return;
+    const fetchCreateClients = async () => {
+      try {
+        const isSearching = debouncedCreateClientSearch.trim().length > 0;
+        const response = await clientesService.getAll({
+          search: isSearching ? debouncedCreateClientSearch : undefined,
+          limit: 20,
+        });
+        setCreateClientResults(response.data || []);
+      } catch (error) {
+        console.error("Error searching clients for create dialog:", error);
+      }
+    };
+    fetchCreateClients();
+  }, [debouncedCreateClientSearch, isCreateDialogOpen]);
+
   const getEstadoInfo = (status: LicitationStatus) => {
     switch (status) {
       case LicitationStatus.PENDING:
@@ -224,13 +302,15 @@ export default function LicitacionesPage() {
         return { icon: XCircle, color: "text-red-600", bgColor: "bg-red-100", label: "No Adjudicada" };
       case LicitationStatus.TOTAL_ADJUDICATION:
         return { icon: CheckCircle, color: "text-green-600", bgColor: "bg-green-100", label: "Adjudicación Total" };
+      case LicitationStatus.CLOSED:
+        return { icon: Lock, color: "text-gray-600", bgColor: "bg-gray-100", label: "Cerrada" };
       default:
         return { icon: Clock, color: "text-gray-600", bgColor: "bg-gray-100", label: status };
     }
   };
 
-  const isVencida = (deadlineDate: string) => {
-    return new Date(deadlineDate) < new Date();
+  const isVencida = (deadlineDate: string, status: LicitationStatus) => {
+    return new Date(deadlineDate) < new Date() && status === LicitationStatus.PENDING;
   };
 
   const handleAddProduct = (product: Product) => {
@@ -283,10 +363,23 @@ export default function LicitacionesPage() {
       showSnackbar("Por favor complete todos los campos requeridos", "error");
       return;
     }
-    if (new Date(formData.deadlineDate) < new Date(formData.startDate)) {
+
+    // Combine date and time
+    const startDateTime = new Date(formData.startDate + "T00:00:00");
+    if (formData.startTime) {
+      startDateTime.setHours(formData.startTime.getHours(), formData.startTime.getMinutes(), 0, 0);
+    }
+
+    const deadlineDateTime = new Date(formData.deadlineDate + "T00:00:00");
+    if (formData.deadlineTime) {
+      deadlineDateTime.setHours(formData.deadlineTime.getHours(), formData.deadlineTime.getMinutes(), 0, 0);
+    }
+
+    if (deadlineDateTime <= startDateTime) {
       showSnackbar("La fecha límite no puede ser menor que la fecha de inicio", "error");
       return;
     }
+
     if (formData.productsWithQuantity.length === 0) {
       showSnackbar("Debe agregar al menos un producto", "error");
       return;
@@ -296,8 +389,8 @@ export default function LicitacionesPage() {
       setSubmitting(true);
       setError(null);
       const createData: CreateLicitationDto = {
-        startDate: formData.startDate,
-        deadlineDate: formData.deadlineDate,
+        startDate: startDateTime.toISOString(),
+        deadlineDate: deadlineDateTime.toISOString(),
         clientId: parseInt(formData.clientId),
         callNumber: formData.callNumber,
         internalNumber: formData.internalNumber,
@@ -307,14 +400,22 @@ export default function LicitacionesPage() {
         })),
       };
       await licitacionesService.create(createData);
-      setFormData({ startDate: "", deadlineDate: "", clientId: "", callNumber: "", internalNumber: "", productsWithQuantity: [] });
-      setSelectedClientName("");
+      setFormData({
+        startDate: "",
+        startTime: undefined,
+        deadlineDate: "",
+        deadlineTime: undefined,
+        clientId: "",
+        callNumber: "",
+        internalNumber: "",
+        productsWithQuantity: []
+      });
       setIsCreateDialogOpen(false);
-      await fetchLicitaciones(1, searchTerm, selectedEstado, selectedClients);
+      await fetchLicitaciones(1, searchTerm, selectedEstado, selectedClients, dateFrom, dateTo);
       showSnackbar("Licitación creada correctamente", "success");
     } catch (err) {
       console.error("Error creating licitation:", err);
-      showSnackbar("Error al crear la licitación. Por favor, intente nuevamente.", "error");
+      handleActionError(err, "Error al crear la licitación. Por favor, intente nuevamente.");
     } finally {
       setSubmitting(false);
     }
@@ -338,7 +439,16 @@ export default function LicitacionesPage() {
               Gestión del ciclo completo de licitaciones
             </p>
           </div>
-          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+          <Dialog
+            open={isCreateDialogOpen}
+            onOpenChange={(open) => {
+              setIsCreateDialogOpen(open);
+              if (!open) {
+                setCreateClientSearch("");
+                setCreateClientResults([]);
+              }
+            }}
+          >
             <DialogTrigger asChild>
               <Button>
                 <Plus className="mr-2 h-4 w-4" />
@@ -383,24 +493,54 @@ export default function LicitacionesPage() {
                     <div className="space-y-2">
                       <Label htmlFor="clientId">Cliente *</Label>
                       <MultiSelectSearch
-                        options={clientes.map((c) => ({ id: c.id, label: `${c.name} (${c.identifier})` }))}
+                        options={createClientResults.map((c) => ({ id: c.id, label: `${c.name} (${c.identifier})` }))}
                         selectedValues={formData.clientId ? [parseInt(formData.clientId)] : []}
                         onSelect={(id) => {
-                          const client = clientes.find((c) => c.id === id);
-                          if (client) { setFormData((prev) => ({ ...prev, clientId: client.id.toString() })); setSelectedClientName(client.name); }
+                          const client = createClientResults.find((c) => c.id === id);
+                          if (client) { setFormData((prev) => ({ ...prev, clientId: client.id.toString() })); }
                         }}
-                        onRemove={() => { setFormData((prev) => ({ ...prev, clientId: "" })); setSelectedClientName(""); }}
-                        placeholder="Seleccionar cliente..." searchPlaceholder="Buscar cliente..." emptyMessage="No se encontraron clientes." hideTags={true} shouldFilter={true} single={true}
+                        onRemove={() => { setFormData((prev) => ({ ...prev, clientId: "" })); }}
+                        placeholder="Seleccionar cliente..."
+                        searchPlaceholder="Buscar cliente por nombre o RUT..."
+                        emptyMessage="No se encontraron clientes."
+                        searchValue={createClientSearch}
+                        onSearchValueChange={setCreateClientSearch}
+                        hideTags={true}
+                        shouldFilter={false}
+                        single={true}
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="startDate">Fecha de Inicio *</Label>
-                        <DatePicker date={formData.startDate ? new Date(formData.startDate + "T12:00:00") : undefined} setDate={(date) => handleStartDateChange(date ? format(date, "yyyy-MM-dd") : "")} />
+                        <div className="flex gap-2">
+                          <DatePicker
+                            date={formData.startDate ? new Date(formData.startDate + "T12:00:00") : undefined}
+                            setDate={(date) => handleStartDateChange(date ? format(date, "yyyy-MM-dd") : "")}
+                            className="flex-1"
+                          />
+                          <TimePicker
+                            date={formData.startTime}
+                            setDate={(date) => setFormData((prev) => ({ ...prev, startTime: date }))}
+                            placeholder="Hora"
+                          />
+                        </div>
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="deadlineDate">Fecha Límite *</Label>
-                        <DatePicker date={formData.deadlineDate ? new Date(formData.deadlineDate + "T12:00:00") : undefined} setDate={(date) => handleDeadlineDateChange(date ? format(date, "yyyy-MM-dd") : "")} disabled={(date) => formData.startDate ? date < new Date(formData.startDate + "T00:00:00") : false} className={dateError ? "border-red-500" : ""} />
+                        <div className="flex gap-2">
+                          <DatePicker
+                            date={formData.deadlineDate ? new Date(formData.deadlineDate + "T12:00:00") : undefined}
+                            setDate={(date) => handleDeadlineDateChange(date ? format(date, "yyyy-MM-dd") : "")}
+                            disabled={(date) => formData.startDate ? date < new Date(formData.startDate + "T00:00:00") : false}
+                            className={dateError ? "border-red-500 flex-1" : "flex-1"}
+                          />
+                          <TimePicker
+                            date={formData.deadlineTime}
+                            setDate={(date) => setFormData((prev) => ({ ...prev, deadlineTime: date }))}
+                            placeholder="Hora"
+                          />
+                        </div>
                       </div>
                     </div>
                     {dateError && <p className="text-sm text-red-500 mt-2">{dateError}</p>}
@@ -409,7 +549,7 @@ export default function LicitacionesPage() {
                     <div className="space-y-2">
                       <Label>Agregar Producto</Label>
                       <MultiSelectSearch
-                        options={searchResults.map((p) => ({ id: p.id, label: `${p.name} (Stock: ${p.stockQuantity || 0})` }))}
+                        options={searchResults.map((p) => ({ id: p.id, label: `${p.name} ${p.code ? `[${p.code}]` : ""} (Stock: ${p.stockQuantity || 0})` }))}
                         selectedValues={formData.productsWithQuantity.map((p) => p.product.id)}
                         onSelect={(id) => { const product = searchResults.find((p) => p.id === id); if (product) handleAddProduct(product); }}
                         onRemove={(id) => handleRemoveProduct(Number(id))}
@@ -478,7 +618,7 @@ export default function LicitacionesPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex gap-4 items-center flex-wrap md:flex-nowrap">
+            <div className="flex gap-4 items-center flex-wrap">
               <div className="flex-1 min-w-[200px]">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -501,6 +641,23 @@ export default function LicitacionesPage() {
                   onSelect={(id) => handleClienteChange(selectedClients.includes(Number(id)) ? selectedClients : [...selectedClients, Number(id)])}
                   onRemove={(id) => handleClienteChange(selectedClients.filter(c => c !== Number(id)))}
                   placeholder="Filtrar por Cliente/s" searchPlaceholder="Buscar cliente..." searchValue={clientSearch} onSearchValueChange={setClientSearch} shouldFilter={true} single={false}
+                />
+              </div>
+              <div className="w-full md:w-[150px]">
+                <DatePicker
+                  date={dateFrom}
+                  setDate={handleDateFromChange}
+                  placeholder="Desde"
+                  className="w-full"
+                />
+              </div>
+              <div className="w-full md:w-[150px]">
+                <DatePicker
+                  date={dateTo}
+                  setDate={handleDateToChange}
+                  placeholder="Hasta"
+                  className="w-full"
+                  disabled={(date) => dateFrom ? date < dateFrom : false}
                 />
               </div>
             </div>
@@ -552,17 +709,51 @@ export default function LicitacionesPage() {
                 ) : (
                   licitaciones.map((licitacion) => {
                       const estadoInfo = getEstadoInfo(licitacion.status);
-                      const vencida = isVencida(licitacion.deadlineDate) && licitacion.status === LicitationStatus.PENDING;
+                      const vencida = isVencida(licitacion.deadlineDate, licitacion.status);
                       return (
                         <TableRow key={licitacion.id} className={vencida ? "bg-red-50" : "hover:bg-muted/30 transition-colors"}>
                           <TableCell>
                             <div><div className="font-medium">{licitacion.callNumber}</div><div className="text-sm text-muted-foreground">{licitacion.internalNumber}</div></div>
                           </TableCell>
                           <TableCell>{licitacion.client?.name}</TableCell>
-                          <TableCell>{new Date(licitacion.startDate).toLocaleDateString()}</TableCell>
-                          <TableCell><div className="flex items-center space-x-2"><span>{new Date(licitacion.deadlineDate).toLocaleDateString()}</span>{vencida && <Badge variant="destructive" className="text-xs">Vencida</Badge>}</div></TableCell>
+                          <TableCell>
+                            {new Date(licitacion.startDate).toLocaleDateString()}
+                            <span className="text-muted-foreground text-sm ml-1">
+                              {new Date(licitacion.startDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center space-x-2">
+                              <span>
+                                {new Date(licitacion.deadlineDate).toLocaleDateString()}
+                                <span className="text-muted-foreground text-sm ml-1">
+                                  {new Date(licitacion.deadlineDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </span>
+                              </span>
+                              {vencida && <Badge variant="destructive" className="text-xs">Vencida</Badge>}
+                            </div>
+                          </TableCell>
                           <TableCell><Badge className={`${estadoInfo.bgColor} ${estadoInfo.color} border-none`}><estadoInfo.icon className="mr-1 h-3 w-3" />{estadoInfo.label}</Badge></TableCell>
-                          <TableCell><div className="flex space-x-2"><Link href={`/dashboard/licitaciones/${licitacion.id}`}><Button variant="outline" size="sm"><Eye className="h-4 w-4" /></Button></Link><Button variant="outline" size="sm"><Edit className="h-4 w-4" /></Button></div></TableCell>
+                          <TableCell>
+                            <div className="flex space-x-2">
+                              <Link href={`/dashboard/licitaciones/${licitacion.id}`}>
+                                <Button variant="outline" size="sm">
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                              </Link>
+                              {licitacion.status !== LicitationStatus.CLOSED && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleClose(licitacion)}
+                                  className="text-gray-600 hover:text-gray-700"
+                                  title="Cerrar licitación"
+                                >
+                                  <Lock className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </div>
+                          </TableCell>
                         </TableRow>
                       );
                     })

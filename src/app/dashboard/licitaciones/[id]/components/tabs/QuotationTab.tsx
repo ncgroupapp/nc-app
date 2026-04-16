@@ -201,11 +201,17 @@ export const QuotationTab = ({
                             <TableCell className="text-right font-mono text-xs">
                               <div className="flex flex-col items-end">
                                 <span className="text-[10px] text-muted-foreground font-medium uppercase">{item.currency}</span>
-                                <span>${item.priceWithoutIVA.toLocaleString()}</span>
+                                <span>
+                                  ${item.awardStatus === QuotationAwardStatus.NOT_AWARDED
+                                    ? (item.competitorInfo?.winnerPrice || 0).toLocaleString()
+                                    : item.priceWithoutIVA.toLocaleString()}
+                                </span>
                               </div>
                             </TableCell>
                             <TableCell className="text-right font-bold text-sm text-primary">
-                              ${(item.priceWithIVA * item.quantity).toLocaleString()}
+                              ${item.awardStatus === QuotationAwardStatus.NOT_AWARDED
+                                ? ((item.competitorInfo?.winnerPrice || 0) * item.quantity).toLocaleString()
+                                : (item.priceWithoutIVA * item.quantity).toLocaleString()}
                             </TableCell>
                             <TableCell>
                               <div className="flex flex-col gap-1">

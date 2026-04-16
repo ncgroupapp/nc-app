@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Card,
   CardContent,
@@ -14,31 +15,57 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Package, Hash, Tag } from "lucide-react";
-import { LicitationProduct } from "@/services/licitaciones.service";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Package, Hash, Tag, Trash2, Search, Loader2 } from "lucide-react";
+import { LicitationProduct, licitacionesService, LicitationStatus } from "@/services/licitaciones.service";
+import { showSnackbar } from "@/components/ui/snackbar";
+import { handleActionError } from "@/lib/error-handler";
+import { useConfirm } from "@/hooks/use-confirm";
 
 interface RequestedProductsTabProps {
+  licitationId: number;
   licitationProducts: LicitationProduct[] | undefined;
+  status: LicitationStatus;
+  hasQuotation: boolean;
+  onRefresh: () => Promise<void>;
 }
 
-export const RequestedProductsTab = ({ licitationProducts }: RequestedProductsTabProps) => {
+export const RequestedProductsTab = ({ 
+  licitationId, 
+  licitationProducts, 
+  status,
+  hasQuotation,
+  onRefresh 
+}: RequestedProductsTabProps) => {
+  const canEdit = status !== LicitationStatus.CLOSED;
+
   return (
     <Card className="border shadow-sm bg-card overflow-hidden">
       <CardHeader className="px-6 pt-6 pb-4">
-        <CardTitle className="text-xl flex items-center justify-between">
-          <span className="flex items-center space-x-2">
-            <Package className="h-5 w-5 text-primary" />
-            <span>Productos Solicitados</span>
-          </span>
-          <Badge variant="secondary" className="font-bold">
-            {licitationProducts?.length || 0} items
-          </Badge>
-        </CardTitle>
-        <CardDescription>
-          Detalle de los productos requeridos en este proceso
-        </CardDescription>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <CardTitle className="text-xl flex items-center space-x-2">
+              <Package className="h-5 w-5 text-primary" />
+              <span>Productos Solicitados</span>
+              <Badge variant="secondary" className="font-bold ml-2">
+                {licitationProducts?.length || 0} items
+              </Badge>
+            </CardTitle>
+            <CardDescription>
+              Detalle de los productos requeridos en este proceso
+            </CardDescription>
+          </div>
+        </div>
       </CardHeader>
       <CardContent className="px-6 pb-6">
+        {hasQuotation && (
+          <div className="mb-4 p-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-md text-sm flex items-center gap-2">
+            <Tag className="h-4 w-4" />
+            Esta licitación ya tiene cotizaciones. No se pueden eliminar productos que formen parte de una cotización.
+          </div>
+        )}
+
         <div className="rounded-md border overflow-hidden bg-background">
           {licitationProducts && licitationProducts.length > 0 ? (
             <Table>
@@ -56,7 +83,14 @@ export const RequestedProductsTab = ({ licitationProducts }: RequestedProductsTa
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Package className="h-4 w-4 text-muted-foreground opacity-70" aria-hidden="true" />
-                        <span className="font-medium">{lp.product.name}</span>
+                        <div>
+                          <div className="font-medium">{lp.product.name}</div>
+                          {(lp.product as any).code && (
+                            <div className="text-[10px] text-muted-foreground font-mono">
+                              Código: {(lp.product as any).code}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell>

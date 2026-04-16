@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/dialog'
 import { MultiSelectSearch } from '@/components/ui/multi-select-search'
 import { showSnackbar } from '@/components/ui/snackbar'
+import { handleActionError } from '@/lib/error-handler'
 
 import { FadeIn } from '@/components/common/fade-in'
 import { PageHeader } from '@/components/common/page-header'
@@ -103,10 +104,7 @@ export default function ProductosPage() {
       setEditingProduct(null)
     } catch (error: any) {
       console.error('Error saving product:', error)
-      showSnackbar(
-        `${error.response?.data?.data}`,
-        'error',
-      );
+      handleActionError(error, 'Error al guardar el producto');
     }
   }
 
@@ -132,7 +130,7 @@ export default function ProductosPage() {
         showSnackbar('Producto eliminado correctamente', 'success')
       } catch (error) {
         console.error('Error deleting product:', error)
-        showSnackbar("Error al eliminar el producto", "error")
+        handleActionError(error, "Error al eliminar el producto");
       }
     }
   }
