@@ -103,9 +103,9 @@ export default function AdjudicacionesPage() {
   const formatCurrency = (amount: number | string) => {
     const numericAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
     if (isNaN(numericAmount)) return "-";
-    
-    return new Intl.NumberFormat('es-UY', { 
-      style: 'currency', 
+
+    return new Intl.NumberFormat('es-UY', {
+      style: 'currency',
       currency: 'UYU',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
@@ -253,9 +253,9 @@ export default function AdjudicacionesPage() {
       <FadeIn delay={200}>
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
               <CardTitle className="flex items-center gap-2"><Gavel className="h-5 w-5" /> Listado de Adjudicaciones</CardTitle>
-              <Badge variant="secondary">{pagination.total} registros</Badge>
+              <Badge variant="outline">{pagination.total} adjudicaciones</Badge>
             </div>
             <CardDescription>Seguimiento de procesos adjudicados y sus estados</CardDescription>
           </CardHeader>
