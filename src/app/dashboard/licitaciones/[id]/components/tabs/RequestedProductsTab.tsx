@@ -59,13 +59,6 @@ export const RequestedProductsTab = ({
         </div>
       </CardHeader>
       <CardContent className="px-6 pb-6">
-        {hasQuotation && (
-          <div className="mb-4 p-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-md text-sm flex items-center gap-2">
-            <Tag className="h-4 w-4" />
-            Esta licitación ya tiene cotizaciones. No se pueden eliminar productos que formen parte de una cotización.
-          </div>
-        )}
-
         <div className="rounded-md border overflow-hidden bg-background">
           {licitationProducts && licitationProducts.length > 0 ? (
             <Table>
