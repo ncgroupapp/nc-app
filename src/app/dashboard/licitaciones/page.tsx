@@ -30,14 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, DataTableColumn } from "@/components/ui/data-table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { clientesService } from "@/services/clientes.service";
 import { useDebounce } from "@/hooks/use-debounce";
@@ -429,6 +422,92 @@ export default function LicitacionesPage() {
     }));
   };
 
+  const columns: DataTableColumn<Licitation>[] = [
+    {
+      key: "callNumber",
+      header: "Número",
+      render: (licitacion) => (
+        <div>
+          <div className="font-medium">{licitacion.callNumber}</div>
+          <div className="text-sm text-muted-foreground">{licitacion.internalNumber}</div>
+        </div>
+      ),
+    },
+    {
+      key: "client",
+      header: "Cliente",
+      render: (licitacion) => licitacion.client?.name,
+    },
+    {
+      key: "startDate",
+      header: "Fecha Inicio",
+      render: (licitacion) => (
+        <>
+          {new Date(licitacion.startDate).toLocaleDateString()}
+          <span className="text-muted-foreground text-sm ml-1">
+            {new Date(licitacion.startDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </span>
+        </>
+      ),
+    },
+    {
+      key: "deadlineDate",
+      header: "Fecha Límite",
+      render: (licitacion) => {
+        const vencida = isVencida(licitacion.deadlineDate, licitacion.status);
+        return (
+          <div className="flex items-center space-x-2">
+            <span>
+              {new Date(licitacion.deadlineDate).toLocaleDateString()}
+              <span className="text-muted-foreground text-sm ml-1">
+                {new Date(licitacion.deadlineDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </span>
+            </span>
+            {vencida && <Badge variant="destructive" className="text-xs">Vencida</Badge>}
+          </div>
+        );
+      },
+    },
+    {
+      key: "status",
+      header: "Estado",
+      render: (licitacion) => {
+        const estadoInfo = getEstadoInfo(licitacion.status);
+        return (
+          <Badge className={`${estadoInfo.bgColor} ${estadoInfo.color} border-none`}>
+            <estadoInfo.icon className="mr-1 h-3 w-3" />
+            {estadoInfo.label}
+          </Badge>
+        );
+      },
+    },
+    {
+      key: "actions",
+      header: "Acciones",
+      className: "text-right",
+      render: (licitacion) => (
+        <div className="flex justify-end space-x-2">
+          <Link href={`/dashboard/licitaciones/${licitacion.id}`}>
+            <Button variant="outline" size="sm">
+              <Eye className="h-4 w-4" />
+            </Button>
+          </Link>
+          {licitacion.status !== LicitationStatus.CLOSED && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleClose(licitacion)}
+              className="text-gray-600 hover:text-gray-700"
+              title="Cerrar licitación"
+            >
+              <Lock className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+      ),
+    },
+  ];
+
   return (
     <div className="space-y-6">
       <FadeIn direction="none">
@@ -677,99 +756,19 @@ export default function LicitacionesPage() {
             <CardDescription>Gestione todas las licitaciones del sistema</CardDescription>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Número</TableHead>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead>Fecha Inicio</TableHead>
-                  <TableHead>Fecha Límite</TableHead>
-                  <TableHead>Estado</TableHead>
-                  <TableHead>Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading || initialLoading ? (
-                  Array.from({ length: 5 }).map((_, index) => (
-                    <TableRow key={index}>
-                      <TableCell><Skeleton className="h-10 w-full" /></TableCell>
-                      <TableCell><Skeleton className="h-6 w-full" /></TableCell>
-                      <TableCell><Skeleton className="h-6 w-full" /></TableCell>
-                      <TableCell><Skeleton className="h-6 w-[120px]" /></TableCell>
-                      <TableCell><Skeleton className="h-6 w-[140px]" /></TableCell>
-                      <TableCell><div className="flex space-x-2"><Skeleton className="h-8 w-9" /><Skeleton className="h-8 w-9" /></div></TableCell>
-                    </TableRow>
-                  ))
-                ) : licitaciones.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="h-24 text-center">
-                      <div className="py-8 text-muted-foreground">No hay licitaciones que coincidan con los filtros seleccionados.</div>
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  licitaciones.map((licitacion) => {
-                      const estadoInfo = getEstadoInfo(licitacion.status);
-                      const vencida = isVencida(licitacion.deadlineDate, licitacion.status);
-                      return (
-                        <TableRow key={licitacion.id} className={vencida ? "bg-red-50" : "hover:bg-muted/30 transition-colors"}>
-                          <TableCell>
-                            <div><div className="font-medium">{licitacion.callNumber}</div><div className="text-sm text-muted-foreground">{licitacion.internalNumber}</div></div>
-                          </TableCell>
-                          <TableCell>{licitacion.client?.name}</TableCell>
-                          <TableCell>
-                            {new Date(licitacion.startDate).toLocaleDateString()}
-                            <span className="text-muted-foreground text-sm ml-1">
-                              {new Date(licitacion.startDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center space-x-2">
-                              <span>
-                                {new Date(licitacion.deadlineDate).toLocaleDateString()}
-                                <span className="text-muted-foreground text-sm ml-1">
-                                  {new Date(licitacion.deadlineDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                </span>
-                              </span>
-                              {vencida && <Badge variant="destructive" className="text-xs">Vencida</Badge>}
-                            </div>
-                          </TableCell>
-                          <TableCell><Badge className={`${estadoInfo.bgColor} ${estadoInfo.color} border-none`}><estadoInfo.icon className="mr-1 h-3 w-3" />{estadoInfo.label}</Badge></TableCell>
-                          <TableCell>
-                            <div className="flex space-x-2">
-                              <Link href={`/dashboard/licitaciones/${licitacion.id}`}>
-                                <Button variant="outline" size="sm">
-                                  <Eye className="h-4 w-4" />
-                                </Button>
-                              </Link>
-                              {licitacion.status !== LicitationStatus.CLOSED && (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleClose(licitacion)}
-                                  className="text-gray-600 hover:text-gray-700"
-                                  title="Cerrar licitación"
-                                >
-                                  <Lock className="h-4 w-4" />
-                                </Button>
-                              )}
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })
-                )}
-              </TableBody>
-            </Table>
-            {!loading && !initialLoading && licitaciones.length > 0 && (
-              <div className="flex items-center justify-between mt-4 pt-4 border-t">
-                <span className="text-sm text-muted-foreground">Mostrando {licitaciones.length} de {totalItems} resultados</span>
-                <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm" disabled={currentPage === 1} onClick={() => handlePageChange(currentPage - 1)}>Anterior</Button>
-                  <span className="px-3 py-2 text-sm">Página {currentPage} de {totalPages}</span>
-                  <Button variant="outline" size="sm" disabled={currentPage === totalPages} onClick={() => handlePageChange(currentPage + 1)}>Siguiente</Button>
-                </div>
-              </div>
-            )}
+            <DataTable
+              columns={columns}
+              data={licitaciones}
+              isLoading={loading || initialLoading}
+              pagination={{
+                page: currentPage,
+                limit: 10,
+                total: totalItems,
+                totalPages: totalPages,
+                onPageChange: handlePageChange,
+              }}
+              emptyMessage="No hay licitaciones que coincidan con los filtros seleccionados."
+            />
           </CardContent>
         </Card>
       </FadeIn>

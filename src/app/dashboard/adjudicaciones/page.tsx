@@ -2,14 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+import { DataTable, DataTableColumn } from '@/components/ui/data-table'
 import {
   Card,
   CardContent,
@@ -33,7 +26,6 @@ import {
 import { AlertCircle, Eye, Gavel, Search, CheckCircle, Clock } from "lucide-react";
 import { adjudicacionesService, Adjudication } from '@/services/adjudicaciones.service'
 import { AdjudicationStatus } from '@/types'
-import { Skeleton } from '@/components/ui/skeleton'
 import { FadeIn } from '@/components/common/fade-in'
 
 export default function AdjudicacionesPage() {
@@ -120,6 +112,87 @@ export default function AdjudicacionesPage() {
     }).format(numericAmount);
   };
 
+  const columns: DataTableColumn<Adjudication>[] = [
+    {
+      key: "identifier",
+      header: "Identificador",
+      render: (adj) => (
+        <span className="font-mono text-xs font-bold text-muted-foreground">
+          #{adj.identifier || adj.id}
+        </span>
+      ),
+    },
+    {
+      key: "licitation",
+      header: "Licitación",
+      render: (adj) => (
+        <div className="flex flex-col">
+          <span className="font-bold tracking-tight">{adj.licitation?.callNumber || `ID: ${adj.licitationId}`}</span>
+          {adj.licitation?.internalNumber && (
+            <span className="text-xs font-normal text-muted-foreground">
+              {adj.licitation.internalNumber}
+            </span>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: "client",
+      header: "Cliente",
+      render: (adj) => (
+        <span className="font-medium text-muted-foreground">
+          {adj.licitation?.client?.name || '-'}
+        </span>
+      ),
+    },
+    {
+      key: "date",
+      header: "Fecha",
+      render: (adj) => new Date(adj.adjudicationDate || adj.createdAt).toLocaleDateString('es-CL'),
+    },
+    {
+      key: "totalPrice",
+      header: "Monto Total",
+      render: (adj) => (
+        <span className="font-bold text-green-700">
+          {formatCurrency(adj.totalPriceWithIVA)}
+        </span>
+      ),
+    },
+    {
+      key: "status",
+      header: "Estado",
+      render: (adj) => {
+        const statusInfo = getStatusInfo(adj.status);
+        return (
+          <Badge className={`${statusInfo.bgColor} ${statusInfo.color} border-none font-medium`}>
+            <statusInfo.icon className="mr-1 h-3 w-3" />
+            {statusInfo.label}
+          </Badge>
+        );
+      },
+    },
+    {
+      key: "actions",
+      header: "Acciones",
+      className: "text-right",
+      render: (adj) => (
+        <div className="flex justify-end">
+          <Link href={`/dashboard/licitaciones/${adj.licitationId}?tab=cotizaciones`}>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="hover:bg-primary/10 transition-colors"
+              aria-label={`Ver licitación ${adj.licitation?.callNumber || adj.licitation?.internalNumber || adj.licitationId}`}
+            >
+              <Eye className="h-4 w-4" />
+            </Button>
+          </Link>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <div className="space-y-6">
       <FadeIn direction="none">
@@ -193,113 +266,19 @@ export default function AdjudicacionesPage() {
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
-            <div className="rounded-md border overflow-hidden bg-background">
-              <Table>
-                <TableHeader className="bg-muted/50">
-                  <TableRow>
-                    <TableHead>Identificador</TableHead>
-                    <TableHead>Licitación</TableHead>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Fecha</TableHead>
-                    <TableHead>Monto Total</TableHead>
-                    <TableHead>Estado</TableHead>
-                    <TableHead className="text-right">Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {loading ? (
-                    Array.from({ length: 5 }).map((_, i) => (
-                      <TableRow key={i}>
-                        <TableCell><Skeleton className="h-6 w-24" /></TableCell>
-                        <TableCell><Skeleton className="h-6 w-32" /></TableCell>
-                        <TableCell><Skeleton className="h-6 w-40" /></TableCell>
-                        <TableCell><Skeleton className="h-6 w-24" /></TableCell>
-                        <TableCell><Skeleton className="h-6 w-24" /></TableCell>
-                        <TableCell><Skeleton className="h-6 w-20" /></TableCell>
-                        <TableCell className="text-right"><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
-                      </TableRow>
-                    ))
-                  ) : adjudicaciones.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
-                        No se encontraron adjudicaciones
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    adjudicaciones.map((adj) => {
-                      const statusInfo = getStatusInfo(adj.status);
-                      return (
-                        <TableRow key={adj.id} className="hover:bg-muted/30 transition-colors group">
-                          <TableCell className="font-mono text-xs font-bold text-muted-foreground">
-                            #{adj.identifier || adj.id}
-                          </TableCell>
-                          <TableCell className="font-bold tracking-tight">
-                            <div className="flex flex-col">
-                              <span>{adj.licitation?.callNumber || `ID: ${adj.licitationId}`}</span>
-                              {adj.licitation?.internalNumber && (
-                                <span className="text-xs font-normal text-muted-foreground">
-                                  {adj.licitation.internalNumber}
-                                </span>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell className="font-medium text-muted-foreground">
-                            {adj.licitation?.client?.name || '-'}
-                          </TableCell>
-                          <TableCell className="text-sm">
-                            {new Date(adj.adjudicationDate || adj.createdAt).toLocaleDateString('es-CL')}
-                          </TableCell>
-                          <TableCell className="font-bold text-green-700">
-                            {formatCurrency(adj.totalPriceWithIVA)}
-                          </TableCell>
-                          <TableCell>
-                            <Badge className={`${statusInfo.bgColor} ${statusInfo.color} border-none font-medium`}>
-                              <statusInfo.icon className="mr-1 h-3 w-3" />
-                              {statusInfo.label}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Link href={`/dashboard/licitaciones/${adj.licitationId}?tab=cotizaciones`}>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="group-hover:bg-primary/10 transition-colors"
-                                aria-label={`Ver licitación ${adj.licitation?.callNumber || adj.licitation?.internalNumber || adj.licitationId}`}
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                            </Link>
-                          </TableCell>
-                        </TableRow>
-                      )
-                    })
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-            <div className="flex items-center justify-between mt-4">
-              <p className="text-sm text-muted-foreground">Página {pagination.page} de {pagination.lastPage}</p>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handlePageChange(pagination.page - 1)}
-                  disabled={pagination.page === 1 || loading}
-                  aria-label="Página anterior"
-                >
-                  Anterior
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handlePageChange(pagination.page + 1)}
-                  disabled={pagination.page === pagination.lastPage || loading}
-                  aria-label="Página siguiente"
-                >
-                  Siguiente
-                </Button>
-              </div>
-            </div>
+            <DataTable
+              columns={columns}
+              data={adjudicaciones}
+              isLoading={loading}
+              pagination={{
+                page: pagination.page,
+                limit: pagination.limit,
+                total: pagination.total,
+                totalPages: pagination.lastPage,
+                onPageChange: handlePageChange,
+              }}
+              emptyMessage="No se encontraron adjudicaciones"
+            />
           </CardContent>
         </Card>
       </FadeIn>

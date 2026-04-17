@@ -1,18 +1,31 @@
+"use client";
+
+import { useState } from "react";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Calendar, FileText, Mail, MapPin, Phone, User } from "lucide-react";
+import { Calendar, FileText, Mail, MapPin, Phone, User, Copy, Check } from "lucide-react";
 import { Licitation } from "@/services/licitaciones.service";
+import { showSnackbar } from "@/components/ui/snackbar";
+import { Button } from "@/components/ui/button";
 
 interface LicitationInfoCardProps {
   licitation: Licitation;
 }
 
 export const LicitationInfoCard = ({ licitation }: LicitationInfoCardProps) => {
+  const [copied, setCopied] = useState(false);
   const contact = licitation.client?.contacts?.[0];
+
+  const handleCopyEmail = (email: string) => {
+    navigator.clipboard.writeText(email);
+    setCopied(true);
+    showSnackbar("Email copiado al portapapeles", "success");
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <Card className="border shadow-sm">
@@ -71,7 +84,16 @@ export const LicitationInfoCard = ({ licitation }: LicitationInfoCardProps) => {
               {contact?.email && (
                 <div className="flex items-center space-x-2">
                   <Mail className="h-3.5 w-3.5 text-muted-foreground" />
-                  <span className="text-xs font-medium truncate max-w-[150px]">{contact.email}</span>
+                  <span className="text-xs font-medium truncate max-w-[120px]">{contact.email}</span>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-6 w-6" 
+                    onClick={() => handleCopyEmail(contact.email!)}
+                    title="Copiar email"
+                  >
+                    {copied ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3" />}
+                  </Button>
                 </div>
               )}
               {contact?.phone ? (

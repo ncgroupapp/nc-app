@@ -2,14 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+import { DataTable, DataTableColumn } from '@/components/ui/data-table'
 import {
   Card,
   CardContent,
@@ -28,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Calculator, Eye, FileDown, FileText, Hash, Loader2, Plus, Search } from "lucide-react";
+import { Calculator, Eye, Search } from "lucide-react";
 import { cotizacionesService, Quotation, QuotationStatus } from '@/services/cotizaciones.service'
 import { Skeleton } from '@/components/ui/skeleton'
 import { FadeIn } from '@/components/common/fade-in'
@@ -101,6 +94,48 @@ export default function CotizacionesPage() {
     }
   }
 
+  const columns: DataTableColumn<Quotation>[] = [
+    {
+      key: "quotationIdentifier",
+      header: "Identificador",
+      render: (cot) => <span className="font-mono text-xs text-muted-foreground">{cot.quotationIdentifier || '-'}</span>,
+    },
+    {
+      key: "licitationId",
+      header: "Licitación (Nº Llamado)",
+      render: (cot) => <span className="font-medium">{cot.licitationId ? `#${cot.licitationId}` : '-'}</span>,
+    },
+    {
+      key: "clientName",
+      header: "Cliente",
+      accessorKey: "clientName",
+    },
+    {
+      key: "createdAt",
+      header: "Fecha",
+      render: (cot) => new Date(cot.createdAt).toLocaleDateString('es-CL'),
+    },
+    {
+      key: "status",
+      header: "Estado",
+      render: (cot) => getStatusBadge(cot.status),
+    },
+    {
+      key: "actions",
+      header: "Acciones",
+      className: "text-right",
+      render: (cot) => (
+        <div className="flex justify-end">
+          <Link href={`/dashboard/licitaciones/${cot.licitationId}?tab=cotizaciones`}>
+            <Button variant="ghost" size="icon" aria-label={`Ver licitación de cotización ${cot.quotationIdentifier}`}>
+              <Eye className="h-4 w-4" />
+            </Button>
+          </Link>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <div className="space-y-6">
       <FadeIn direction="none">
@@ -160,56 +195,19 @@ export default function CotizacionesPage() {
             <CardDescription>Historial de cotizaciones generadas para los distintos llamados</CardDescription>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Identificador</TableHead>
-                  <TableHead>Licitación (Nº Llamado)</TableHead>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead>Fecha</TableHead>
-                  <TableHead>Estado</TableHead>
-                  <TableHead className="text-right">Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  Array.from({ length: 5 }).map((_, i) => (
-                    <TableRow key={i}>
-                      <TableCell><Skeleton className="h-6 w-24" /></TableCell>
-                      <TableCell><Skeleton className="h-6 w-32" /></TableCell>
-                      <TableCell><Skeleton className="h-6 w-40" /></TableCell>
-                      <TableCell><Skeleton className="h-6 w-24" /></TableCell>
-                      <TableCell><Skeleton className="h-6 w-20" /></TableCell>
-                      <TableCell className="text-right"><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
-                    </TableRow>
-                  ))
-                ) : cotizaciones.length === 0 ? (
-                  <TableRow><TableCell colSpan={6} className="text-center py-10 text-muted-foreground">No se encontraron cotizaciones</TableCell></TableRow>
-                ) : (
-                  cotizaciones.map((cot) => (
-                    <TableRow key={cot.id} className="hover:bg-muted/30 transition-colors">
-                      <TableCell className="font-mono text-xs text-muted-foreground">{cot.quotationIdentifier || '-'}</TableCell>
-                      <TableCell className="font-medium">{cot.licitationId ? `#${cot.licitationId}` : '-'}</TableCell>
-                      <TableCell>{cot.clientName || '-'}</TableCell>
-                      <TableCell>{new Date(cot.createdAt).toLocaleDateString('es-CL')}</TableCell>
-                      <TableCell>{getStatusBadge(cot.status)}</TableCell>
-                      <TableCell className="text-right">
-                        <Link href={`/dashboard/licitaciones/${cot.licitationId}?tab=cotizaciones`}>
-                          <Button variant="ghost" size="icon" aria-label={`Ver licitación de cotización ${cot.quotationIdentifier}`}><Eye className="h-4 w-4" /></Button>
-                        </Link>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-            <div className="flex items-center justify-between mt-4">
-              <p className="text-sm text-muted-foreground">Página {pagination.page} de {pagination.lastPage}</p>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={() => handlePageChange(pagination.page - 1)} disabled={pagination.page === 1 || loading}>Anterior</Button>
-                <Button variant="outline" size="sm" onClick={() => handlePageChange(pagination.page + 1)} disabled={pagination.page === pagination.lastPage || loading}>Siguiente</Button>
-              </div>
-            </div>
+            <DataTable
+              columns={columns}
+              data={cotizaciones}
+              isLoading={loading}
+              pagination={{
+                page: pagination.page,
+                limit: pagination.limit,
+                total: pagination.total,
+                totalPages: pagination.lastPage,
+                onPageChange: handlePageChange,
+              }}
+              emptyMessage="No se encontraron cotizaciones"
+            />
           </CardContent>
         </Card>
       </FadeIn>
