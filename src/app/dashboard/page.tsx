@@ -12,12 +12,12 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { 
-  AlertTriangle, 
-  Clock, 
-  FileText, 
-  TrendingUp, 
-  Target, 
+import {
+  AlertTriangle,
+  Clock,
+  FileText,
+  TrendingUp,
+  Target,
   Zap,
   AlertCircle,
   ArrowUpRight,
@@ -40,7 +40,7 @@ export default function DashboardPage() {
     try {
       setIsLoading(true)
       setError(null)
-      
+
       // Fetch data in parallel
       const [licitacionesRes, adjudicacionesRes] = await Promise.all([
         licitacionesService.getAll({ page: 1 }),
@@ -49,14 +49,14 @@ export default function DashboardPage() {
 
       setLicitaciones(licitacionesRes.data ?? [])
       setTotalLicitaciones(licitacionesRes.meta?.total ?? 0)
-      
+
       // Handle potential direct array response or paginated object
-      const adjData = Array.isArray(adjudicacionesRes) 
-        ? adjudicacionesRes 
+      const adjData = Array.isArray(adjudicacionesRes)
+        ? adjudicacionesRes
         : (adjudicacionesRes as any).data || [];
-      
+
       setAdjudicaciones(adjData)
-      
+
     } catch (err) {
       console.error('Error loading dashboard data:', err)
       setError('No se pudieron cargar los datos. Verifica tu conexión e intenta de nuevo.')
@@ -74,10 +74,10 @@ export default function DashboardPage() {
   // Aggregate data for chart (Group by day)
   const chartData = adjudicaciones.reduce((acc: { date: string, total: number }[], adj) => {
     const date = adj.adjudicationDate ? new Date(adj.adjudicationDate).toLocaleDateString('es-CL', { month: 'short', day: 'numeric' }) : 'Sin fecha';
-    const price = typeof adj.totalPriceWithoutIVA === 'string' 
-      ? parseFloat(adj.totalPriceWithoutIVA) 
+    const price = typeof adj.totalPriceWithoutIVA === 'string'
+      ? parseFloat(adj.totalPriceWithoutIVA)
       : (typeof adj.totalPriceWithoutIVA === 'number' ? adj.totalPriceWithoutIVA : 0);
-    
+
     const existing = acc.find(item => item.date === date);
     if (existing) {
       existing.total += price;
@@ -87,20 +87,20 @@ export default function DashboardPage() {
     return acc;
   }, []).slice(-15); // Show last 15 unique days
   const pipelineTotal = adjudicaciones.reduce((acc, adj) => {
-    const price = typeof adj.totalPriceWithoutIVA === 'string' 
-      ? parseFloat(adj.totalPriceWithoutIVA) 
+    const price = typeof adj.totalPriceWithoutIVA === 'string'
+      ? parseFloat(adj.totalPriceWithoutIVA)
       : adj.totalPriceWithoutIVA;
     return acc + (price || 0);
   }, 0);
 
   // 2. Win Rate: Adjudicated licitations / Total
-  const adjudicatedCount = licitaciones.filter(l => 
-    l.status === LicitationStatus.TOTAL_ADJUDICATION || 
+  const adjudicatedCount = licitaciones.filter(l =>
+    l.status === LicitationStatus.TOTAL_ADJUDICATION ||
     l.status === LicitationStatus.PARTIAL_ADJUDICATION
   ).length;
-  
-  const winRate = totalLicitaciones > 0 
-    ? (adjudicatedCount / totalLicitaciones) * 100 
+
+  const winRate = totalLicitaciones > 0
+    ? (adjudicatedCount / totalLicitaciones) * 100
     : 0;
 
   // 3. Urgent Closures: Licitations with deadline in the next 7 days
@@ -138,7 +138,7 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <FadeIn direction="none">
         <div className="flex flex-col gap-2">
-          <h1 className="text-3xl font-bold tracking-tight">The Bidding Pulse</h1>
+          <h1 className="text-3xl font-bold tracking-tight">NC Group</h1>
           <p className="text-muted-foreground">
             Gestión estratégica y análisis de licitaciones en tiempo real.
           </p>
@@ -205,9 +205,9 @@ export default function DashboardPage() {
                     </div>
                   )}
                   <div className="w-full bg-zinc-100 h-1.5 rounded-full overflow-hidden mt-1">
-                    <div 
-                      className="bg-blue-500 h-full transition-all duration-1000" 
-                      style={{ width: `${winRate}%` }} 
+                    <div
+                      className="bg-blue-500 h-full transition-all duration-1000"
+                      style={{ width: `${winRate}%` }}
                     />
                   </div>
                 </div>
@@ -274,8 +274,8 @@ export default function DashboardPage() {
                       const isCritical = daysLeft <= 2;
 
                       return (
-                        <Link 
-                          key={licitacion.id} 
+                        <Link
+                          key={licitacion.id}
                           href={`/dashboard/licitaciones/${licitacion.id}`}
                           className="group relative flex items-center justify-between p-3 rounded-xl border border-zinc-100 hover:border-blue-200 hover:bg-blue-50/30 transition-all duration-200"
                         >
@@ -333,7 +333,7 @@ export default function DashboardPage() {
                       </div>
                     </div>
                   )}
-                  
+
                   {adjudicaciones.length > 0 && (
                     <div className="flex items-start gap-3 p-3 bg-white rounded-lg border border-zinc-200 shadow-sm">
                       <div className="mt-1 h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
@@ -344,7 +344,7 @@ export default function DashboardPage() {
                     </div>
                   )}
                 </div>
-                
+
                 <div className="mt-6 pt-6 border-t border-zinc-200">
                   <h4 className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-3">Accesos Rápidos</h4>
                   <div className="grid grid-cols-2 gap-2">
@@ -390,16 +390,16 @@ export default function DashboardPage() {
                     const price = data.total;
                     const maxHeight = Math.max(...chartData.map(d => d.total), 1);
                     const height = (price / maxHeight) * 100;
-                    
+
                     return (
                       <div key={i} className="flex-1 flex flex-col items-center gap-2 group h-full justify-end">
                         <div className="opacity-0 group-hover:opacity-100 transition-opacity mb-1 text-center">
-                           <span className="text-[8px] font-bold bg-zinc-900 text-white px-1 rounded-sm whitespace-nowrap">
-                             {price > 1000000 ? `${(price/1000000).toFixed(1)}M` : `${(price/1000).toFixed(0)}k`}
-                           </span>
+                          <span className="text-[8px] font-bold bg-zinc-900 text-white px-1 rounded-sm whitespace-nowrap">
+                            {price > 1000000 ? `${(price / 1000000).toFixed(1)}M` : `${(price / 1000).toFixed(0)}k`}
+                          </span>
                         </div>
-                        <div 
-                          className="w-full bg-blue-100 rounded-t-sm group-hover:bg-blue-600 transition-all duration-300 min-h-[4px]" 
+                        <div
+                          className="w-full bg-blue-100 rounded-t-sm group-hover:bg-blue-600 transition-all duration-300 min-h-[4px]"
                           style={{ height: `${Math.max(height, 2)}%` }}
                           title={`Total ${data.date}: ${formatCurrency(price)}`}
                         />

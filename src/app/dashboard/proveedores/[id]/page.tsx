@@ -167,8 +167,8 @@ export default function ProveedorDetailPage() {
                       <div className="flex flex-col gap-2">
                         <span className="text-xs text-muted-foreground uppercase font-semibold">Marcas Representadas</span>
                         <div className="flex flex-wrap gap-1.5">
-                          {proveedor.brands && proveedor.brands.length > 0 
-                            ? proveedor.brands.map((brand, index) => (<Badge key={index} variant="secondary" className="font-medium text-[10px]">{brand}</Badge>)) 
+                          {proveedor.brands && proveedor.brands.length > 0
+                            ? proveedor.brands.map((brand, index) => (<Badge key={index} variant="secondary" className="font-medium text-[10px]">{brand}</Badge>))
                             : (<Badge variant="secondary" className="font-medium text-[10px]">{proveedor.brand}</Badge>)}
                         </div>
                       </div>
@@ -222,7 +222,7 @@ export default function ProveedorDetailPage() {
           <FadeIn delay={300}>
             <Tabs defaultValue="cotizaciones" className="w-full">
               <TabsList className="w-full grid grid-cols-2 bg-muted/50 p-1 h-auto mb-6 border">
-                <TabsTrigger value="cotizaciones" className="data-[state=active]:bg-background py-2 transition-all font-semibold">
+                <TabsTrigger value="cotizaciones" className="data-[state=active]:bg-background py-2 transition-all font-semibold cursor-pointer">
                   Cotizaciones ({quotationHistory.length})
                 </TabsTrigger>
                 <TabsTrigger value="adjudicaciones" className="data-[state=active]:bg-background py-2 transition-all font-semibold">

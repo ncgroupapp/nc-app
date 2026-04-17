@@ -11,6 +11,7 @@ import { Calendar, FileText, Mail, MapPin, Phone, User, Copy, Check } from "luci
 import { Licitation } from "@/services/licitaciones.service";
 import { showSnackbar } from "@/components/ui/snackbar";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface LicitationInfoCardProps {
   licitation: Licitation;
@@ -84,11 +85,20 @@ export const LicitationInfoCard = ({ licitation }: LicitationInfoCardProps) => {
               {contact?.email && (
                 <div className="flex items-center space-x-2">
                   <Mail className="h-3.5 w-3.5 text-muted-foreground" />
-                  <span className="text-xs font-medium truncate max-w-[120px]">{contact.email}</span>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-6 w-6" 
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="text-xs font-medium truncate max-w-[120px] cursor-pointer">{contact.email}</span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{contact.email}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
                     onClick={() => handleCopyEmail(contact.email!)}
                     title="Copiar email"
                   >

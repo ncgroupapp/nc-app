@@ -555,8 +555,8 @@ export default function LicitacionesPage() {
                 )}
                 <Tabs defaultValue="datos" className="w-full">
                   <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="datos">Datos Generales</TabsTrigger>
-                    <TabsTrigger value="productos">Productos Solicitados</TabsTrigger>
+                    <TabsTrigger value="datos" className="cursor-pointer">Datos Generales</TabsTrigger>
+                    <TabsTrigger value="productos" className="cursor-pointer">Productos Solicitados</TabsTrigger>
                   </TabsList>
                   <TabsContent value="datos" className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">

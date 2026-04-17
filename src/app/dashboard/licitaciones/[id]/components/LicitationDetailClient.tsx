@@ -92,16 +92,16 @@ export function LicitationDetailClient({
       <FadeIn delay={200}>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="productos">Productos Solicitados</TabsTrigger>
-            <TabsTrigger value="cotizaciones">Cotización</TabsTrigger>
-            <TabsTrigger value="entregas">Entrega de Productos</TabsTrigger>
+            <TabsTrigger value="productos" className="cursor-pointer">Productos Solicitados</TabsTrigger>
+            <TabsTrigger value="cotizaciones" className="cursor-pointer">Cotización</TabsTrigger>
+            <TabsTrigger value="entregas" className="cursor-pointer">Entrega de Productos</TabsTrigger>
           </TabsList>
 
           {/* Tab: Productos Solicitados */}
           <TabsContent value="productos" className="space-y-4">
-            <RequestedProductsTab 
+            <RequestedProductsTab
               licitationId={licitationId}
-              licitationProducts={licitation.licitationProducts} 
+              licitationProducts={licitation.licitationProducts}
               status={licitation.status as LicitationStatus}
               hasQuotation={!!quotation}
               onRefresh={handleRefreshLicitation}
