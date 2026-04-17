@@ -44,10 +44,11 @@ export function QuotationItemForm({
       ...data,
       productName: offer.product?.name || offer.name || data.productName,
       brand: offer.product?.brand || data.brand,
-      origin: offer.product?.origin || data.origin,
+      origin: offer.origin ?? offer.product?.origin ?? data.origin,
       priceWithoutIVA: offer.price,
       quantity: offer.quantity,
-      deliveryTime: 0,
+      ivaPercentage: offer.iva ?? 0,
+      deliveryTime: offer.delivery ?? 0,
     });
   };
 
