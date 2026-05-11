@@ -1,27 +1,37 @@
-'use client'
+"use client";
 
-import { FadeIn } from '@/components/common/fade-in'
-import { SearchInput } from '@/components/common/search-input'
-import { OfferForm } from '@/components/ofertas/offer-form'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { DataTable, DataTableColumn } from '@/components/ui/data-table'
+import { FadeIn } from "@/components/common/fade-in";
+import { SearchInput } from "@/components/common/search-input";
+import { OfferForm } from "@/components/ofertas/offer-form";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { DataTable, DataTableColumn } from "@/components/ui/data-table";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { MultiSelectSearch } from '@/components/ui/multi-select-search'
-import { Skeleton } from '@/components/ui/skeleton'
-import { useConfirm } from '@/hooks/use-confirm'
-import { useDebounce } from '@/hooks/use-debounce'
-import { CreateOfferDto, Offer, offersService } from '@/services/offers.service'
-import { Product, productsService } from '@/services/products.service'
-import { proveedoresService } from '@/services/proveedores.service'
-import { Proveedor } from '@/types'
+} from "@/components/ui/dialog";
+import { MultiSelectSearch } from "@/components/ui/multi-select-search";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useConfirm } from "@/hooks/use-confirm";
+import { useDebounce } from "@/hooks/use-debounce";
+import {
+  CreateOfferDto,
+  Offer,
+  offersService,
+} from "@/services/offers.service";
+import { Product, productsService } from "@/services/products.service";
+import { proveedoresService } from "@/services/proveedores.service";
+import { Proveedor } from "@/types";
 import {
   Calendar,
   Edit,
@@ -29,82 +39,84 @@ import {
   Plus,
   Search,
   Trash2,
-  Users
-} from "lucide-react"
-import { useEffect, useState } from 'react'
-import { toast } from 'sonner'
+  Users,
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 export default function OfertasPage() {
-  const { confirm } = useConfirm()
-  const [ofertas, setOfertas] = useState<Offer[]>([])
-  const [productos, setProductos] = useState<Product[]>([])
-  const [proveedores, setProveedores] = useState<Proveedor[]>([])
-  const [loading, setLoading] = useState(true)
-  const [submitting, setSubmitting] = useState(false)
-  const [searchTerm, setSearchTerm] = useState('')
-  const debouncedSearchTerm = useDebounce(searchTerm, 300)
-  const [selectedProducts, setSelectedProducts] = useState<number[]>([])
-  const [selectedProviders, setSelectedProviders] = useState<number[]>([])
-  
+  const { confirm } = useConfirm();
+  const [ofertas, setOfertas] = useState<Offer[]>([]);
+  const [productos, setProductos] = useState<Product[]>([]);
+  const [proveedores, setProveedores] = useState<Proveedor[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+  const [selectedProducts, setSelectedProducts] = useState<number[]>([]);
+  const [selectedProviders, setSelectedProviders] = useState<number[]>([]);
+
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 10,
     total: 0,
-    totalPages: 1
-  })
+    totalPages: 1,
+  });
 
-  const [productSearch, setProductSearch] = useState('')
-  const debouncedProductSearch = useDebounce(productSearch, 300)
+  const [productSearch, setProductSearch] = useState("");
+  const debouncedProductSearch = useDebounce(productSearch, 300);
 
-  const [providerSearch, setProviderSearch] = useState('')
-  const debouncedProviderSearch = useDebounce(providerSearch, 300)
+  const [providerSearch, setProviderSearch] = useState("");
+  const debouncedProviderSearch = useDebounce(providerSearch, 300);
 
   // Dialog states
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [editingOffer, setEditingOffer] = useState<Offer | null>(null)
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingOffer, setEditingOffer] = useState<Offer | null>(null);
 
   const fetchOffers = async (page: number) => {
     try {
-      setLoading(true)
+      setLoading(true);
       const filters = {
         page,
         limit: pagination.limit,
         search: debouncedSearchTerm,
         productId: selectedProducts.length > 0 ? selectedProducts : undefined,
-        providerId: selectedProviders.length > 0 ? selectedProviders : undefined,
-      }
-      const ofertasRes = await offersService.getAll(filters)
-      setOfertas(ofertasRes.data || [])
+        providerId:
+          selectedProviders.length > 0 ? selectedProviders : undefined,
+      };
+      const ofertasRes = await offersService.getAll(filters);
+      setOfertas(ofertasRes.data || []);
       if (ofertasRes.meta) {
         setPagination({
           page: ofertasRes.meta.page,
           limit: ofertasRes.meta.limit,
           total: ofertasRes.meta.total,
-          totalPages: ofertasRes.meta.lastPage
-        })
+          totalPages: ofertasRes.meta.lastPage,
+        });
       }
     } catch (err) {
-      console.error('Error loading data:', err)
+      console.error("Error loading data:", err);
       toast.error("Error", {
-        description: "Error al cargar los datos. Por favor, intente nuevamente."
-      })
+        description:
+          "Error al cargar los datos. Por favor, intente nuevamente.",
+      });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchOffers(1)
-  }, [debouncedSearchTerm, selectedProducts, selectedProviders])
+    fetchOffers(1);
+  }, [debouncedSearchTerm, selectedProducts, selectedProviders]);
 
   // Dynamically load products for filters
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         const isSearching = debouncedProductSearch.trim().length > 0;
-        const productsRes = await productsService.getAll({ 
-          search: isSearching ? debouncedProductSearch : undefined, 
-          limit: isSearching ? 20 : 5 
+        const productsRes = await productsService.getAll({
+          search: isSearching ? debouncedProductSearch : undefined,
+          limit: isSearching ? 20 : 5,
         });
         setProductos(productsRes.data || []);
       } catch (err) {
@@ -119,9 +131,9 @@ export default function OfertasPage() {
     const fetchProviders = async () => {
       try {
         const isSearching = debouncedProviderSearch.trim().length > 0;
-        const providersRes = await proveedoresService.getAll({ 
-          search: isSearching ? debouncedProviderSearch : undefined, 
-          limit: isSearching ? 20 : 5 
+        const providersRes = await proveedoresService.getAll({
+          search: isSearching ? debouncedProviderSearch : undefined,
+          limit: isSearching ? 20 : 5,
         });
         setProveedores(providersRes.data || []);
       } catch (err) {
@@ -133,60 +145,63 @@ export default function OfertasPage() {
 
   const handleSubmit = async (data: CreateOfferDto) => {
     try {
-      setSubmitting(true)
+      setSubmitting(true);
       if (editingOffer) {
-        await offersService.update(editingOffer.id, data)
+        await offersService.update(editingOffer.id, data);
         toast.success("Éxito", {
           description: "Oferta actualizada correctamente",
-        })
+        });
       } else {
-        await offersService.create(data)
+        await offersService.create(data);
         toast.success("Éxito", {
           description: "Oferta creada correctamente",
-        })
+        });
       }
-      setIsDialogOpen(false)
-      fetchOffers(pagination.page)
+      setIsDialogOpen(false);
+      fetchOffers(pagination.page);
     } catch (err) {
-      console.error('Error saving offer:', err)
+      console.error("Error saving offer:", err);
       toast.error("Error", {
         description: "Error al guardar la oferta. Verifique los datos.",
-      })
+      });
     } finally {
-      setSubmitting(false)
+      setSubmitting(false);
     }
-  }
+  };
 
   const handleOpenCreate = () => {
-    setEditingOffer(null)
-    setIsDialogOpen(true)
-  }
+    setEditingOffer(null);
+    setIsDialogOpen(true);
+  };
 
   const handleOpenEdit = (offer: Offer) => {
-    setEditingOffer(offer)
-    setIsDialogOpen(true)
-  }
+    setEditingOffer(offer);
+    setIsDialogOpen(true);
+  };
 
   const handleDelete = async (id: number) => {
-    if (!await confirm({
-      title: 'Eliminar Oferta',
-      message: '¿Está seguro de eliminar esta oferta?',
-      variant: 'destructive'
-    })) return
+    if (
+      !(await confirm({
+        title: "Eliminar Oferta",
+        message: "¿Está seguro de eliminar esta oferta?",
+        variant: "destructive",
+      }))
+    )
+      return;
 
     try {
-      await offersService.delete(id)
+      await offersService.delete(id);
       toast.success("Éxito", {
         description: "Oferta eliminada correctamente",
-      })
-      fetchOffers(pagination.page)
+      });
+      fetchOffers(pagination.page);
     } catch (err) {
-      console.error('Error deleting offer:', err)
+      console.error("Error deleting offer:", err);
       toast.error("Error", {
         description: "Error al eliminar la oferta",
-      })
+      });
     }
-  }
+  };
 
   const columns: DataTableColumn<Offer>[] = [
     {
@@ -209,12 +224,12 @@ export default function OfertasPage() {
     {
       key: "productCode",
       header: "Número de Pieza",
-      render: (row) => row.product?.code || '-',
+      render: (row) => row.product?.code || "-",
     },
     {
       key: "productBrand",
       header: "Marca",
-      render: (row) => row.product?.brand || '-',
+      render: (row) => row.product?.brand || "-",
     },
     {
       key: "providerName",
@@ -225,7 +240,8 @@ export default function OfertasPage() {
     {
       key: "price",
       header: "Precio Unit. (S/IVA)",
-      render: (row) => `$${Number(row.price).toFixed(2)}`,
+      render: (row) =>
+        `${row.currency || "CLP"} $${Number(row.price).toFixed(2)}`,
     },
     {
       key: "priceWithIva",
@@ -233,8 +249,8 @@ export default function OfertasPage() {
       render: (row) => {
         const iva = row.iva ?? 22;
         const priceWithIva = Number(row.price) * (1 + iva / 100);
-        return `$${priceWithIva.toFixed(2)}`;
-      }
+        return `${row.currency || "CLP"} $${priceWithIva.toFixed(2)}`;
+      },
     },
     {
       key: "total",
@@ -242,10 +258,11 @@ export default function OfertasPage() {
       render: (row) => {
         const iva = row.iva ?? 22;
         const priceWithIva = Number(row.price) * (1 + iva / 100);
-        return `$${(priceWithIva * Number(row.quantity)).toFixed(2)}`;
+        return `${row.currency || "CLP"} $${(priceWithIva * Number(row.quantity)).toFixed(2)}`;
       },
       className: "font-bold",
     },
+
     {
       key: "delivery",
       header: "Entrega (días)",
@@ -476,17 +493,17 @@ export default function OfertasPage() {
       </FadeIn>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="sm:max-w-[750px] p-6">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle className="text-xl text-primary font-bold">
               {editingOffer ? "Editar Oferta" : "Nueva Oferta"}
             </DialogTitle>
-            <DialogDescription>
-              Complete los detalles de la oferta. Todos los campos marcados con
-              * son obligatorios.
+            <DialogDescription className="text-sm">
+              Complete los detalles de la oferta. Todos los campos marcados con{" "}
+              <span className="text-red-500">*</span> son obligatorios.
             </DialogDescription>
           </DialogHeader>
-          <OfferForm 
+          <OfferForm
             initialData={editingOffer}
             onSubmit={handleSubmit}
             onCancel={() => setIsDialogOpen(false)}

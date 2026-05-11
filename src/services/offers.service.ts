@@ -2,6 +2,7 @@ import api from '@/lib/axios';
 import { ApiResponse, PaginatedResponse } from '@/types/api';
 import { Proveedor } from '@/types/proveedor';
 import { Product } from './products.service';
+import { Currency } from '@/types/enums';
 
 // Types matching backend entities
 export interface Offer {
@@ -14,6 +15,7 @@ export interface Offer {
   providerName?: string;
   provider?: Proveedor;
   price: number;
+  currency?: Currency;
   iva?: number;
   quantity: number;
   origin?: string;
@@ -36,6 +38,7 @@ export interface CreateOfferDto {
   productId: number;
   providerId: number;
   price: number;
+  currency?: Currency;
   iva?: number;
   quantity: number;
   origin?: string;

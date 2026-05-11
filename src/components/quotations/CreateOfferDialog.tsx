@@ -9,7 +9,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { offersService, Offer, CreateOfferDto } from "@/services/offers.service";
+import {
+  offersService,
+  Offer,
+  CreateOfferDto,
+} from "@/services/offers.service";
 import { OfferForm } from "@/components/ofertas/offer-form";
 
 type CreateOfferDialogProps = {
@@ -44,23 +48,23 @@ export function CreateOfferDialog({
     }
   };
 
-  const seedData = initialProductId
-    ? ({ productId: initialProductId } as Offer)
+  // Preparamos los datos iniciales si hay un productId
+  const initialData = initialProductId 
+    ? { productId: initialProductId } as Offer 
     : null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[750px] p-6">
         <DialogHeader>
-          <DialogTitle>Crear Nueva Oferta</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-xl text-primary font-bold">Crear Nueva Oferta</DialogTitle>
+          <DialogDescription className="text-sm">
             Complete los datos para registrar una nueva oferta de proveedor
           </DialogDescription>
         </DialogHeader>
 
         <OfferForm
-          key={open ? "open" : "closed"}
-          initialData={seedData}
+          initialData={initialData}
           onSubmit={handleSubmit}
           onCancel={() => onOpenChange(false)}
           isLoading={loading}

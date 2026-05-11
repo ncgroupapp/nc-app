@@ -14,9 +14,12 @@ export enum QuotationAwardStatus {
 }
 
 export enum Currency {
-  UYU = 'UYU',
   USD = 'USD',
   EUR = 'EUR',
+  CLP = 'CLP',
+  ARS = 'ARS',
+  BRL = 'BRL',
+  UYU = 'UYU',
 }
 
 export enum AdjudicationStatus {
