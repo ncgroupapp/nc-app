@@ -81,7 +81,7 @@ export function OfferForm({
         productId: initialData.productId || 0,
         providerId: initialData.providerId || 0,
         price: initialData.price || 0,
-        currency: sanitizedCurrency || Currency.CLP,
+        currency: sanitizedCurrency || Currency.USD,
         iva: initialData.iva ?? 22,
         deliveryDate: initialData.deliveryDate || "",
         quantity: initialData.quantity || 1,
@@ -96,7 +96,7 @@ export function OfferForm({
         productId: 0,
         providerId: 0,
         price: 0,
-        currency: Currency.CLP,
+        currency: Currency.USD,
         iva: 22,
         deliveryDate: "",
         quantity: 1,
@@ -332,7 +332,7 @@ export function OfferForm({
               Moneda
             </Label>
             <Select
-              value={formData.currency || Currency.CLP}
+              value={formData.currency || Currency.USD}
               onValueChange={(val) =>
                 val &&
                 setFormData((prev) => ({ ...prev, currency: val as Currency }))
