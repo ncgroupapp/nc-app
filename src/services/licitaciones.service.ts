@@ -71,7 +71,8 @@ export interface CreateLicitationDto {
   deadlineDate: string;
   clientId: number;
   callNumber: string;
-  internalNumber: string;
+  /** Optional: the backend assigns the next correlative (NC-<year>-<nnn>) */
+  internalNumber?: string;
   products?: ProductWithQuantityDto[];
   /** @deprecated Use products instead */
   productIds?: number[];
@@ -112,6 +113,11 @@ export const licitacionesService = {
 
     const response = await api.get<PaginatedResponse<Licitation>>(`/licitations?${params.toString()}`);
     return response.data;
+  },
+
+  getNextInternalNumber: async (): Promise<string> => {
+    const response = await api.get<ApiResponse<{ internalNumber: string }>>('/licitations/next-internal-number');
+    return response.data.data.internalNumber;
   },
 
   getById: async (id: number): Promise<Licitation> => {

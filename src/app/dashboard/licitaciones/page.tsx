@@ -93,6 +93,8 @@ function LicitacionesContent() {
   // What was read from that request's mail and PDFs (closing date, products, missing items)
   const [requestDraft, setRequestDraft] = useState<LicitacionDraft | null>(null);
   const [draftLoading, setDraftLoading] = useState(false);
+  // Correlative internal number the new licitation will get (assigned by the backend on create)
+  const [nextInternalNumber, setNextInternalNumber] = useState("");
   const [licitaciones, setLicitaciones] = useState<Licitation[]>([]);
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [searchResults, setSearchResults] = useState<Product[]>([]);
@@ -307,6 +309,14 @@ function LicitacionesContent() {
     fetchCreateClients();
   }, [debouncedCreateClientSearch, isCreateDialogOpen]);
 
+  useEffect(() => {
+    if (!isCreateDialogOpen) return;
+    licitacionesService
+      .getNextInternalNumber()
+      .then(setNextInternalNumber)
+      .catch((error) => console.error("Error loading next internal number:", error));
+  }, [isCreateDialogOpen]);
+
   // "Armar licitación" from a request: open the dialog prefilled with its data
   useEffect(() => {
     if (searchParams.get("nueva") !== "1") return;
@@ -495,7 +505,6 @@ function LicitacionesContent() {
         deadlineDate: deadlineDateTime.toISOString(),
         clientId: parseInt(formData.clientId),
         callNumber: formData.callNumber,
-        internalNumber: formData.internalNumber,
         products: formData.productsWithQuantity.map((p) => ({
           productId: p.product.id,
           quantity: p.quantity,
@@ -693,8 +702,9 @@ function LicitacionesContent() {
                         <Input id="callNumber" value={formData.callNumber} onChange={(e) => setFormData((prev) => ({ ...prev, callNumber: e.target.value }))} placeholder="Ej: LIC-2024-001" required />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="internalNumber">Número Interno *</Label>
-                        <Input id="internalNumber" value={formData.internalNumber} onChange={(e) => setFormData((prev) => ({ ...prev, internalNumber: e.target.value }))} placeholder="Ej: INT-2024-001" required />
+                        <Label htmlFor="internalNumber">Número Interno</Label>
+                        <Input id="internalNumber" value={nextInternalNumber} readOnly disabled placeholder="Se asigna al crear" className="font-mono" />
+                        <p className="text-xs text-muted-foreground">Correlativo automático, se asigna al crear.</p>
                       </div>
                     </div>
                     <div className="space-y-2">
