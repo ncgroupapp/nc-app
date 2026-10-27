@@ -1,8 +1,9 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import Link from 'next/link'
 import { useParams } from 'next/navigation'
-import { ArrowDownLeft, ArrowUpRight, Download, Loader2, Mail, Paperclip, Save } from 'lucide-react'
+import { ArrowDownLeft, ArrowUpRight, Download, FilePlus2, Loader2, Mail, Paperclip, Save } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -25,6 +26,7 @@ import {
   SolicitudAttachment,
   SolicitudMessage,
   SolicitudStatus,
+  buildLicitacionUrl,
   formatDateTime,
   formatFileSize,
   solicitudesService,
@@ -172,6 +174,15 @@ export default function SolicitudDetailPage() {
                 {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
                 Guardar cambios
               </Button>
+              <Button asChild variant="outline" className="w-full border-brand-navy/20 text-brand-navy">
+                <Link href={buildLicitacionUrl(solicitud)}>
+                  <FilePlus2 className="mr-2 h-4 w-4" /> Armar licitación
+                </Link>
+              </Button>
+              <p className="text-xs text-muted-foreground">
+                Abre una licitación nueva con el número de compra, la fecha y el cliente precargados. Al crearla, la
+                solicitud pasa a En proceso.
+              </p>
             </CardContent>
           </Card>
         </FadeIn>

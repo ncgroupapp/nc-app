@@ -161,3 +161,34 @@ export function formatFileSize(bytes: number): string {
 export function formatDateTime(value: string): string {
   return new Date(value).toLocaleString('es-UY', { dateStyle: 'short', timeStyle: 'short' });
 }
+
+/**
+ * Guesses the purchase number from a request subject, e.g.
+ * "INVITACION A OFERTAR D196925" → "D196925", "CD 2026 1698" → "CD 2026 1698",
+ * "PEDIDO DE PRECIO SM 6207" → "SM 6207". Returns "" when nothing looks like one.
+ */
+export function extractCallNumber(subject: string | null): string {
+  if (!subject) return '';
+  const patterns = [
+    /\b(D\d{5,})\b/i,
+    /\b(CD\s*\d{4}\s*[-/]?\s*\d+)\b/i,
+    /\b(SM\s*\d+)\b/i,
+    /\b((?:LA|LP|CE)\s*\d+(?:\s*[-/]\s*\d+)?)\b/i,
+    /(?:N[º°o]\.?|n[uú]mero)\s*(\d+\s*(?:[-/]|de)\s*\d{4})/i,
+  ];
+  for (const pattern of patterns) {
+    const match = subject.match(pattern);
+    if (match?.[1]) return match[1].replace(/\s+/g, ' ').trim().toUpperCase();
+  }
+  return '';
+}
+
+/** Link that opens "Nueva licitación" prefilled with the data of a request. */
+export function buildLicitacionUrl(solicitud: Pick<Solicitud, 'id' | 'subject' | 'fromEmail' | 'receivedAt'>): string {
+  const params = new URLSearchParams({ nueva: '1', solicitud: String(solicitud.id) });
+  const callNumber = extractCallNumber(solicitud.subject);
+  if (callNumber) params.set('numero', callNumber);
+  if (solicitud.fromEmail) params.set('email', solicitud.fromEmail);
+  params.set('fecha', solicitud.receivedAt.slice(0, 10));
+  return `/dashboard/licitaciones?${params.toString()}`;
+}

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,6 +43,7 @@ import {
 } from "@/services/licitaciones.service";
 import { Product, productsService } from "@/services/products.service";
 import { Cliente } from "@/types";
+import { SolicitudStatus, solicitudesService } from "@/services/solicitudes.service";
 import { AlertCircle, CheckCircle, Clock, Eye, FileText, Loader2, Lock, Plus, Search, XCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { showSnackbar } from "@/components/ui/snackbar";
@@ -68,7 +70,25 @@ interface ProductWithQuantity {
   quantity: number;
 }
 
+// useSearchParams needs a Suspense boundary for the static build
 export default function LicitacionesPage() {
+  return (
+    <Suspense>
+      <LicitacionesContent />
+    </Suspense>
+  );
+}
+
+/** Domain of an email address, e.g. "compras@imm.gub.uy" → "imm.gub.uy". */
+function emailDomain(email?: string | null): string {
+  return email?.split("@")[1]?.trim().toLowerCase() ?? "";
+}
+
+function LicitacionesContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  // Set when the dialog was opened from a request ("Armar licitación")
+  const [fromSolicitudId, setFromSolicitudId] = useState<number | null>(null);
   const [licitaciones, setLicitaciones] = useState<Licitation[]>([]);
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [searchResults, setSearchResults] = useState<Product[]>([]);
@@ -283,6 +303,36 @@ export default function LicitacionesPage() {
     fetchCreateClients();
   }, [debouncedCreateClientSearch, isCreateDialogOpen]);
 
+  // "Armar licitación" from a request: open the dialog prefilled with its data
+  useEffect(() => {
+    if (searchParams.get("nueva") !== "1") return;
+    const solicitudId = Number(searchParams.get("solicitud"));
+    const email = searchParams.get("email");
+    setFromSolicitudId(Number.isFinite(solicitudId) && solicitudId > 0 ? solicitudId : null);
+    setFormData((prev) => ({
+      ...prev,
+      callNumber: searchParams.get("numero") ?? prev.callNumber,
+      startDate: searchParams.get("fecha") ?? prev.startDate,
+    }));
+    setIsCreateDialogOpen(true);
+    router.replace("/dashboard/licitaciones");
+
+    // Preselect the client whose email shares the sender's domain
+    const domain = emailDomain(email);
+    if (!domain) return;
+    clientesService
+      .getAll({ limit: 100 })
+      .then((response) => {
+        const match = (response.data || []).find(
+          (c) => emailDomain(c.email) === domain || c.contacts?.some((contact) => emailDomain(contact.email) === domain),
+        );
+        if (!match) return;
+        setCreateClientResults((prev) => (prev.some((c) => c.id === match.id) ? prev : [match, ...prev]));
+        setFormData((prev) => (prev.clientId ? prev : { ...prev, clientId: match.id.toString() }));
+      })
+      .catch((error) => console.error("Error matching client for request:", error));
+  }, [searchParams, router]);
+
   const getEstadoInfo = (status: LicitationStatus) => {
     switch (status) {
       case LicitationStatus.PENDING:
@@ -404,6 +454,13 @@ export default function LicitacionesPage() {
         productsWithQuantity: []
       });
       setIsCreateDialogOpen(false);
+      if (fromSolicitudId) {
+        // The request is now being worked on
+        await solicitudesService
+          .update(fromSolicitudId, { status: SolicitudStatus.IN_PROGRESS })
+          .catch((error) => console.error("Error updating request status:", error));
+        setFromSolicitudId(null);
+      }
       await fetchLicitaciones(1, searchTerm, selectedEstado, selectedClients, dateFrom, dateTo);
       showSnackbar("Licitación creada correctamente", "success");
     } catch (err) {
