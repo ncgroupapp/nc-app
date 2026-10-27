@@ -31,6 +31,10 @@ export interface QuotationItem {
   origin?: string;
   providerId?: number;
   providerName?: string;
+  /** Oferta del proveedor elegida: su precio es el costo del ítem. */
+  offerId?: number | null;
+  unitCost?: number | string | null;
+  costCurrency?: Currency | null;
   inStock: boolean;
   quantity: number;
   deliveryTime?: number;
@@ -77,6 +81,10 @@ export interface CreateQuotationItemDto {
   origin?: string;
   providerId?: number;
   providerName?: string;
+  /** Oferta del proveedor elegida: su precio es el costo del ítem. */
+  offerId?: number | null;
+  unitCost?: number | string | null;
+  costCurrency?: Currency | null;
   inStock: boolean;
   quantity: number;
   deliveryTime?: number;
@@ -222,6 +230,9 @@ export const cotizacionesService = {
         origin: item.origin,
         providerId: item.providerId,
         providerName: item.providerName,
+        offerId: item.offerId ?? null,
+        unitCost: item.unitCost === null || item.unitCost === undefined ? null : Number(item.unitCost),
+        costCurrency: item.costCurrency ?? null,
         inStock: item.inStock,
         quantity: item.quantity,
         deliveryTime: item.deliveryTime,
@@ -236,6 +247,12 @@ export const cotizacionesService = {
       })) as unknown as QuotationItem[];
     }
     const response = await api.patch<ApiResponse<Quotation>>(`/quotation/${id}`, cleanedData);
+    return response.data.data;
+  },
+
+  /** Elige la oferta del proveedor que define el costo del ítem (null la quita). Sirve también en cotizaciones finalizadas. */
+  setItemOffer: async (quotationId: number, itemId: number, offerId: number | null): Promise<QuotationItem> => {
+    const response = await api.patch<ApiResponse<QuotationItem>>(`/quotation/${quotationId}/item/${itemId}/offer`, { offerId });
     return response.data.data;
   },
 

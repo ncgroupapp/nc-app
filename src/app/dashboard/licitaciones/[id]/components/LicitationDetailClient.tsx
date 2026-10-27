@@ -7,7 +7,7 @@ import { QuotationStatus } from "@/types/enums";
 import { FadeIn } from "@/components/common/fade-in";
 import { useQuotationActions } from "../hooks/useQuotationActions";
 import { useAdjudicationActions } from "../hooks/useAdjudicationActions";
-import { cotizacionesService } from "@/services/cotizaciones.service";
+import { cotizacionesService, Quotation, QuotationItem } from "@/services/cotizaciones.service";
 import {
   RequestedProductsTab,
   QuotationTab,
@@ -126,6 +126,11 @@ export function LicitationDetailClient({
               onEditAwardedQuantity={adjudicationActions.handleEditAwardedQuantity}
               onFinalize={quotationActions.handleFinalizeQuotation}
               onDownloadPdf={quotationActions.handleDownloadPdf}
+              onItemCostChanged={(updated) =>
+                setQuotation((current: Quotation | null) =>
+                  current ? { ...current, items: current.items.map((i: QuotationItem) => (i.id === updated.id ? updated : i)) } : current
+                )
+              }
             />
           </TabsContent>
 

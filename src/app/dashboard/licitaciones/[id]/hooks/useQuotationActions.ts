@@ -21,6 +21,11 @@ export interface NewItemData {
   deliveryTime: number | "";
   inStock: boolean;
   currency: Currency;
+  providerId: number | null;
+  providerName: string;
+  offerId: number | null;
+  unitCost: number | null;
+  costCurrency: Currency | null;
 }
 
 export interface CreateQuotationData {
@@ -71,8 +76,22 @@ const initialNewItemData: NewItemData = {
   ivaPercentage: 22,
   deliveryTime: 15,
   inStock: true,
-  currency: Currency.UYU
+  currency: Currency.UYU,
+  providerId: null,
+  providerName: "",
+  offerId: null,
+  unitCost: null,
+  costCurrency: null,
 };
+
+/** Supplier offer chosen in the item form: it defines the cost, apart from the sale price. */
+const offerFields = (data: NewItemData) => ({
+  providerId: data.providerId ?? undefined,
+  providerName: data.providerName || undefined,
+  offerId: data.offerId,
+  unitCost: data.unitCost,
+  costCurrency: data.costCurrency,
+});
 
 const initialCreateQuotationData: CreateQuotationData = {
   quotationIdentifier: '',
@@ -185,6 +204,7 @@ export const useQuotationActions = (
         currency: newItemData.currency,
         deliveryTime: dTime,
         awardStatus: QuotationAwardStatus.PENDING,
+        ...offerFields(newItemData),
       };
       
       const updatedQuotation = await cotizacionesService.update(quotation.id, {
@@ -214,7 +234,12 @@ export const useQuotationActions = (
       ivaPercentage: item.ivaPercentage,
       deliveryTime: item.deliveryTime || 0,
       inStock: item.inStock,
-      currency: item.currency
+      currency: item.currency,
+      providerId: item.providerId ?? null,
+      providerName: item.providerName || "",
+      offerId: item.offerId ?? null,
+      unitCost: item.unitCost === null || item.unitCost === undefined ? null : Number(item.unitCost),
+      costCurrency: item.costCurrency ?? null,
     });
     setIsEditItemDialogOpen(true);
   };
@@ -246,6 +271,7 @@ export const useQuotationActions = (
             ivaPercentage: iva,
             currency: newItemData.currency,
             deliveryTime: dTime,
+            ...offerFields(newItemData),
           };
         }
         return item;

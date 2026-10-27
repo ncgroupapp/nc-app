@@ -30,7 +30,8 @@ import {
   SelectItem,
   SelectTrigger,
 } from "@/components/ui/select";
-import { Calculator, CheckCircle, Download, Edit, FileText, Loader2, Plus, XCircle, Package, Tag, Hash, DollarSign } from "lucide-react";
+import { useState } from "react";
+import { Calculator, CircleDollarSign, CheckCircle, Download, Edit, FileText, Loader2, Plus, XCircle, Package, Tag, Hash, DollarSign } from "lucide-react";
 import { Quotation, QuotationItem } from "@/services/cotizaciones.service";
 import { QuotationStatus, QuotationAwardStatus } from "@/types";
 import { QuotationItemForm } from "@/components/quotations";
@@ -38,6 +39,7 @@ import { getStatusParams } from "../../utils/statusHelpers";
 import { calcularTotales } from "../../utils/calculations";
 import { NewItemData } from "../../hooks/useQuotationActions";
 import { QuotationObservationsCard } from "../QuotationObservationsCard";
+import { ItemCostDialog } from "../dialogs/ItemCostDialog";
 
 interface QuotationTabProps {
   quotation: Quotation | null;
@@ -55,6 +57,7 @@ interface QuotationTabProps {
   onEditAwardedQuantity: (item: QuotationItem) => void;
   onFinalize: () => Promise<void>;
   onDownloadPdf: () => Promise<void>;
+  onItemCostChanged: (item: QuotationItem) => void;
 }
 
 export const QuotationTab = ({
@@ -73,7 +76,10 @@ export const QuotationTab = ({
   onEditAwardedQuantity,
   onFinalize,
   onDownloadPdf,
+  onItemCostChanged,
 }: QuotationTabProps) => {
+  const [costItem, setCostItem] = useState<QuotationItem | null>(null);
+
   if (!quotation) {
     return (
       <Card className="border shadow-sm">
@@ -185,6 +191,13 @@ export const QuotationTab = ({
                                 <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-tighter">
                                   Entrega: {item.deliveryTime} días
                                 </span>
+                                {item.unitCost !== null && item.unitCost !== undefined ? (
+                                  <span className="text-[10px] font-medium text-emerald-700">
+                                    Costo: {item.costCurrency} {Number(item.unitCost).toLocaleString("es-UY", { minimumFractionDigits: 2 })}
+                                  </span>
+                                ) : (
+                                  <span className="text-[10px] font-medium text-amber-700">Sin oferta (costo)</span>
+                                )}
                               </div>
                             </TableCell>
                             <TableCell>
@@ -252,6 +265,18 @@ export const QuotationTab = ({
                             </TableCell>
                             <TableCell className="text-right">
                               <div className="flex items-center justify-end space-x-1">
+                                {item.id && (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-emerald-700"
+                                    title="Oferta del proveedor (costo)"
+                                    aria-label="Elegir oferta del proveedor (costo)"
+                                    onClick={() => setCostItem(item)}
+                                  >
+                                    <CircleDollarSign className="h-4 w-4" />
+                                  </Button>
+                                )}
                                 {quotation.status !== QuotationStatus.FINALIZED ? (
                                   <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => onEditItem(item)}>
                                     <Edit className="h-4 w-4" />
@@ -337,6 +362,13 @@ export const QuotationTab = ({
         </CardContent>
       </Card>
       <QuotationObservationsCard key={quotation.id} quotation={quotation} />
+
+      <ItemCostDialog
+        quotationId={quotation.id}
+        item={costItem}
+        onOpenChange={(open) => { if (!open) setCostItem(null) }}
+        onSaved={onItemCostChanged}
+      />
     </div>
   );
 };

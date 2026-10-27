@@ -7,7 +7,7 @@ import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { removeClientCookie } from "@/lib/utils";
 import { removeAuthToken } from "@/lib/auth-actions";
-import { BookOpen, Calculator, ChevronDown, ChevronUp, FileText, Gavel, Home, Inbox, LogOut, Package, Settings, Ship, Tag, Truck, User, Users, Warehouse } from "lucide-react";
+import { BookOpen, Calculator, ChevronDown, ChevronUp, FileText, Gavel, Home, Inbox, LogOut, Package, Settings, Ship, Tag, TrendingUp, Truck, User, Users, Warehouse } from "lucide-react";
 import { featureFlags } from "@/lib/feature-flags";
 import {
   Sidebar,
@@ -63,6 +63,11 @@ const sidebarNavItems: NavItem[] = [
     title: "Solicitudes",
     href: "/dashboard/solicitudes",
     icon: Inbox,
+  },
+  {
+    title: "Rentabilidad",
+    href: "/dashboard/rentabilidad",
+    icon: TrendingUp,
   },
   {
     title: "Proveedores",
