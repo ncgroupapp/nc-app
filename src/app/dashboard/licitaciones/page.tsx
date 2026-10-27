@@ -43,7 +43,8 @@ import {
 } from "@/services/licitaciones.service";
 import { Product, productsService } from "@/services/products.service";
 import { Cliente } from "@/types";
-import { SolicitudStatus, solicitudesService } from "@/services/solicitudes.service";
+import { LicitacionDraft, SolicitudStatus, solicitudesService } from "@/services/solicitudes.service";
+import { RequestDraftNotice } from "@/components/solicitudes/request-draft-notice";
 import { AlertCircle, CheckCircle, Clock, Eye, FileText, Loader2, Lock, Plus, Search, XCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { showSnackbar } from "@/components/ui/snackbar";
@@ -89,6 +90,9 @@ function LicitacionesContent() {
   const searchParams = useSearchParams();
   // Set when the dialog was opened from a request ("Armar licitación")
   const [fromSolicitudId, setFromSolicitudId] = useState<number | null>(null);
+  // What was read from that request's mail and PDFs (closing date, products, missing items)
+  const [requestDraft, setRequestDraft] = useState<LicitacionDraft | null>(null);
+  const [draftLoading, setDraftLoading] = useState(false);
   const [licitaciones, setLicitaciones] = useState<Licitation[]>([]);
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [searchResults, setSearchResults] = useState<Product[]>([]);
@@ -317,6 +321,47 @@ function LicitacionesContent() {
     setIsCreateDialogOpen(true);
     router.replace("/dashboard/licitaciones");
 
+    if (Number.isFinite(solicitudId) && solicitudId > 0) {
+      setRequestDraft(null);
+      setDraftLoading(true);
+      solicitudesService
+        .getLicitacionDraft(solicitudId)
+        .then(async (draft) => {
+          setRequestDraft(draft);
+          const received = new Date(draft.startDate);
+          const deadline = draft.deadline ? new Date(draft.deadline.date) : null;
+          // Products found by code, each once; ambiguous ones are left for the user to pick
+          const found = await Promise.all(
+            draft.products
+              .filter((p) => !p.ambiguous)
+              .map(async (p) => ({ product: await productsService.getById(p.productId), quantity: p.quantity ?? 1 })),
+          );
+          setFormData((prev) => ({
+            ...prev,
+            startDate: format(received, "yyyy-MM-dd"),
+            startTime: received,
+            deadlineDate: deadline ? format(deadline, "yyyy-MM-dd") : prev.deadlineDate,
+            deadlineTime: deadline && draft.deadline?.hasTime ? deadline : prev.deadlineTime,
+            productsWithQuantity: [
+              ...prev.productsWithQuantity,
+              ...found.filter((f) => !prev.productsWithQuantity.some((p) => p.product.id === f.product.id)),
+            ],
+          }));
+          const missing = draft.unmatched.length;
+          const unreadable = draft.sources.filter((s) => !s.readable).length;
+          if (missing > 0 || unreadable > 0) {
+            showSnackbar(
+              missing > 0
+                ? `${missing} ${missing === 1 ? "producto pedido no está cargado" : "productos pedidos no están cargados"} en la app`
+                : "Hay archivos de la solicitud que no se pudieron leer",
+              "warning",
+            );
+          }
+        })
+        .catch((error) => console.error("Error reading request draft:", error))
+        .finally(() => setDraftLoading(false));
+    }
+
     // Preselect the client whose email shares the sender's domain
     const domain = emailDomain(email);
     if (!domain) return;
@@ -371,6 +416,20 @@ function LicitacionesContent() {
       ...prev,
       productsWithQuantity: prev.productsWithQuantity.filter((p) => p.product.id !== productId),
     }));
+  };
+
+  // Adds a product suggested by the request (e.g. one of two products sharing a code)
+  const handleAddDraftProduct = async (productId: number, quantity: number | null) => {
+    try {
+      const product = await productsService.getById(productId);
+      setFormData((prev) =>
+        prev.productsWithQuantity.some((p) => p.product.id === productId)
+          ? prev
+          : { ...prev, productsWithQuantity: [...prev.productsWithQuantity, { product, quantity: quantity ?? 1 }] },
+      );
+    } catch (error) {
+      handleActionError(error, "No se pudo agregar el producto");
+    }
   };
 
   const handleUpdateQuantity = (productId: number, quantity: number) => {
@@ -580,6 +639,8 @@ function LicitacionesContent() {
             onOpenChange={(open) => {
               setIsCreateDialogOpen(open);
               if (!open) {
+                setFromSolicitudId(null);
+                setRequestDraft(null);
                 setCreateClientSearch("");
                 setCreateClientResults([]);
               }
@@ -608,6 +669,16 @@ function LicitacionesContent() {
                     <Button type="button" variant="ghost" size="sm" onClick={() => setError(null)} className="h-6 w-6 p-0 hover:bg-destructive/20">
                       <XCircle className="h-4 w-4" />
                     </Button>
+                  </div>
+                )}
+                {fromSolicitudId && (
+                  <div className="mb-4">
+                    <RequestDraftNotice
+                      draft={requestDraft}
+                      isLoading={draftLoading}
+                      addedProductIds={formData.productsWithQuantity.map((p) => p.product.id)}
+                      onAddProduct={handleAddDraftProduct}
+                    />
                   </div>
                 )}
                 <Tabs defaultValue="datos" className="w-full">

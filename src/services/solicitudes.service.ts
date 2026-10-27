@@ -87,6 +87,26 @@ export interface SolicitudesFilters {
   dateTo?: string;
 }
 
+export interface LicitacionDraftProduct {
+  productId: number;
+  name: string;
+  code: string | null;
+  matchedCode: string;
+  quantity: number | null;
+  /** Another product has the same code: the user picks the right one. */
+  ambiguous: boolean;
+}
+
+/** What could be read from a request (mail + PDFs) to prefill a licitation. */
+export interface LicitacionDraft {
+  solicitudId: number;
+  startDate: string;
+  deadline: { date: string; hasTime: boolean; evidence: string } | null;
+  products: LicitacionDraftProduct[];
+  unmatched: Array<{ quantity: number | null; description: string }>;
+  sources: Array<{ name: string; readable: boolean; chars: number }>;
+}
+
 export interface UpdateSolicitudForm {
   status?: SolicitudStatus;
   assignee?: string | null;
@@ -115,6 +135,11 @@ export const solicitudesService = {
 
   update: async (id: number, data: UpdateSolicitudForm): Promise<Solicitud> => {
     const response = await api.patch<ApiResponse<Solicitud>>(`/solicitudes/${id}`, data);
+    return response.data.data;
+  },
+
+  getLicitacionDraft: async (id: number): Promise<LicitacionDraft> => {
+    const response = await api.get<ApiResponse<LicitacionDraft>>(`/solicitudes/${id}/licitacion-draft`);
     return response.data.data;
   },
 
