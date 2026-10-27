@@ -94,7 +94,7 @@ export function MailAccountsCard({ onSynced }: MailAccountsCardProps) {
           <Mail className="h-4 w-4" /> Casillas de correo
         </CardTitle>
         <CardDescription>
-          Se cargan como solicitudes los mails con la etiqueta <b>Cotizaciones</b>. La app solo tiene permiso de lectura y
+          Se cargan como solicitudes los mails con las etiquetas <b>Solicitudes</b> o <b>Cotizaciones</b>. La app solo tiene permiso de lectura y
           revisa la casilla cada 2 minutos.
         </CardDescription>
       </CardHeader>
