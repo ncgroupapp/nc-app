@@ -26,6 +26,7 @@ import {
   Truck
 } from "lucide-react";
 import { FadeIn } from "@/components/common/fade-in";
+import { BusinessMetrics } from "@/components/dashboard/business-metrics";
 import { licitacionesService, Licitation, LicitationStatus } from "@/services/licitaciones.service";
 import { adjudicacionesService, Adjudication } from "@/services/adjudicaciones.service";
 
@@ -153,6 +154,8 @@ export default function DashboardPage() {
           </Alert>
         </FadeIn>
       )}
+
+      <BusinessMetrics licitaciones={licitaciones} isLoadingLicitaciones={isLoading} />
 
       {/* 1. Módulos Hero (Fila 1 - KPIs) */}
       <div className="grid grid-cols-12 gap-4">

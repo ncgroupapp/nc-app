@@ -123,9 +123,9 @@ const sidebarNavItems: NavItem[] = [
     : []),
 ];
 
-// Active item: navy pill with a cyan marker on the left edge (brand colors)
+// Active item: white pill with navy text and a cyan marker on the left edge (brand colors)
 const ACTIVE_ITEM_CLASS =
-  "relative font-medium data-[active=true]:bg-brand-navy data-[active=true]:text-white data-[active=true]:hover:bg-brand-navy data-[active=true]:hover:text-white data-[active=true]:before:absolute data-[active=true]:before:left-0 data-[active=true]:before:top-1.5 data-[active=true]:before:bottom-1.5 data-[active=true]:before:w-1 data-[active=true]:before:rounded-r data-[active=true]:before:bg-brand-cyan";
+  "relative font-medium data-[active=true]:bg-white data-[active=true]:font-semibold data-[active=true]:text-brand-navy data-[active=true]:shadow-sm data-[active=true]:hover:bg-white data-[active=true]:hover:text-brand-navy data-[active=true]:before:absolute data-[active=true]:before:left-0 data-[active=true]:before:top-1.5 data-[active=true]:before:bottom-1.5 data-[active=true]:before:w-1 data-[active=true]:before:rounded-r data-[active=true]:before:bg-brand-cyan";
 
 // "/dashboard" only matches itself; other sections also match their sub-pages (e.g. a product detail)
 function isActivePath(pathname: string, href: string): boolean {
@@ -163,7 +163,7 @@ export function AppSidebar() {
               <Link href="/dashboard">
                 <div className="flex aspect-square size-11 shrink-0 items-center justify-center">
                   <Image
-                    src="/logo/logo.png"
+                    src="/logo/logo-blanco.png"
                     alt="NC Group SAS"
                     width={56}
                     height={44}
@@ -171,8 +171,8 @@ export function AppSidebar() {
                   />
                 </div>
                 <div className="flex flex-col gap-0.5 leading-none">
-                  <span className="font-bold tracking-wide text-brand-navy">NC GROUP</span>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="font-bold tracking-wide text-white">NC GROUP</span>
+                  <span className="text-xs text-sidebar-foreground/70">
                     Gestión de Licitaciones
                   </span>
                 </div>

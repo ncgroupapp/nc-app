@@ -35,15 +35,15 @@
   --chart-3: var(--brand-navy);
   --chart-4: #5B8FC7;
   --chart-5: #9BE7EE;
-  /* Sidebar: white with navy active item */
-  --sidebar: #FFFFFF;
-  --sidebar-foreground: #3B4458;
-  --sidebar-primary: var(--brand-navy);
-  --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #EEF3F9;
-  --sidebar-accent-foreground: var(--brand-navy);
-  --sidebar-border: #E3E8EF;
-  --sidebar-ring: var(--brand-blue);
+  /* Sidebar: navy (logo color) with white active item */
+  --sidebar: var(--brand-navy);
+  --sidebar-foreground: #D5DDEC;
+  --sidebar-primary: #FFFFFF;
+  --sidebar-primary-foreground: var(--brand-navy);
+  --sidebar-accent: rgba(255, 255, 255, 0.08);
+  --sidebar-accent-foreground: #FFFFFF;
+  --sidebar-border: rgba(255, 255, 255, 0.1);
+  --sidebar-ring: var(--brand-cyan);
 
   --font-sans: 'Geist', 'Geist Fallback', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   --font-serif: Source Serif 4, serif;
