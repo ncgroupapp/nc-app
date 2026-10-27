@@ -118,6 +118,16 @@ const sidebarNavItems: NavItem[] = [
     : []),
 ];
 
+// Active item: navy pill with a cyan marker on the left edge (brand colors)
+const ACTIVE_ITEM_CLASS =
+  "relative font-medium data-[active=true]:bg-brand-navy data-[active=true]:text-white data-[active=true]:hover:bg-brand-navy data-[active=true]:hover:text-white data-[active=true]:before:absolute data-[active=true]:before:-left-2 data-[active=true]:before:top-1.5 data-[active=true]:before:bottom-1.5 data-[active=true]:before:w-1 data-[active=true]:before:rounded-r data-[active=true]:before:bg-brand-cyan";
+
+// "/dashboard" only matches itself; other sections also match their sub-pages (e.g. a product detail)
+function isActivePath(pathname: string, href: string): boolean {
+  if (href === "/dashboard") return pathname === href;
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
 export function AppSidebar() {
   const pathname = usePathname();
   const router = useRouter();
@@ -144,21 +154,21 @@ export function AppSidebar() {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild className="hover:bg-transparent">
+            <SidebarMenuButton size="lg" asChild className="h-14 hover:bg-transparent">
               <Link href="/dashboard">
-                <div className="flex aspect-square size-10 items-center justify-center rounded-full bg-white p-1">
+                <div className="flex aspect-square size-11 shrink-0 items-center justify-center">
                   <Image
                     src="/logo/logo.png"
-                    alt="Logo"
-                    width={40}
-                    height={40}
+                    alt="NC Group SAS"
+                    width={56}
+                    height={44}
                     className="object-contain"
                   />
                 </div>
                 <div className="flex flex-col gap-0.5 leading-none">
-                  <span className="font-semibold text-white">Licitaciones</span>
-                  <span className="text-xs text-white/60">
-                    Sistema de Gestión
+                  <span className="font-bold tracking-wide text-brand-navy">NC GROUP</span>
+                  <span className="text-xs text-muted-foreground">
+                    Gestión de Licitaciones
                   </span>
                 </div>
               </Link>
@@ -177,8 +187,9 @@ export function AppSidebar() {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     asChild
-                    isActive={pathname === item.href}
+                    isActive={isActivePath(pathname, item.href!)}
                     tooltip={item.title}
+                    className={ACTIVE_ITEM_CLASS}
                   >
                     <Link href={item.href!}>
                       {item.icon && <item.icon />}
@@ -212,8 +223,9 @@ export function AppSidebar() {
                       <SidebarMenuItem key={subItem.href}>
                         <SidebarMenuButton
                           asChild
-                          isActive={pathname === subItem.href}
+                          isActive={isActivePath(pathname, subItem.href)}
                           tooltip={subItem.title}
+                          className={ACTIVE_ITEM_CLASS}
                         >
                           <Link href={subItem.href}>
                             {subItem.icon && <subItem.icon />}
@@ -240,7 +252,7 @@ export function AppSidebar() {
                   size="lg"
                   className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground cursor-pointer"
                 >
-                  <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary/20">
+                  <div className="flex aspect-square size-8 items-center justify-center rounded-full bg-gradient-to-br from-brand-cyan via-brand-blue to-brand-navy text-white">
                     <User className="size-4" />
                   </div>
                   <div className="grid flex-1 text-left text-sm leading-tight">

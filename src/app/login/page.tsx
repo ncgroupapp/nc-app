@@ -31,7 +31,13 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { AlertCircle, Eye, EyeOff, Loader2 } from "lucide-react";
+import { AlertCircle, Eye, EyeOff, FileText, Loader2, Package, PenLine } from "lucide-react";
+
+const LOGIN_FEATURES = [
+  { icon: FileText, label: "Licitaciones, cotizaciones y adjudicaciones" },
+  { icon: Package, label: "Inventario de repuestos, stock y proveedores" },
+  { icon: PenLine, label: "Documentos oficiales con firma autorizada" },
+] as const
 
 export default function LoginPage() {
   const router = useRouter()
@@ -105,25 +111,81 @@ export default function LoginPage() {
   }
 
   return (
-    <main id="main-content" className="flex min-h-screen w-full items-center justify-center bg-zinc-50/50 p-4 dark:bg-zinc-900" tabIndex={-1}>
-      <Card className="w-full max-w-sm shadow-2xl border-0 sm:border">
-        <CardHeader className="space-y-2 text-center">
-          <div className="flex justify-center mb-4">
-            <Image 
-              src="/logo/logo.png" 
-              alt="Logo" 
-              width={120} 
-              height={120} 
+    <main id="main-content" className="flex min-h-screen w-full bg-white" tabIndex={-1}>
+      <section
+        className="nc-login-hero relative hidden lg:flex lg:w-[56%] flex-col overflow-hidden px-16 py-14 text-white"
+        aria-hidden="true"
+      >
+        <div className="nc-login-dots absolute inset-0" />
+        <div className="nc-login-ring nc-login-ring-1" />
+        <div className="nc-login-ring nc-login-ring-2" />
+        <div className="nc-login-ring nc-login-ring-3" />
+        <div className="nc-login-ring nc-login-ring-4" />
+        <div className="nc-login-lines absolute right-16 bottom-36 flex flex-col items-end gap-2">
+          <i className="w-28" />
+          <i className="w-20" />
+          <i className="w-11" />
+        </div>
+
+        <div className="relative z-10">
+          <div className="nc-login-logo inline-flex">
+            <Image
+              src="/logo/logo-blanco.png"
+              alt="NC Group SAS"
+              width={429}
+              height={338}
+              priority
+              className="h-[min(338px,36vh)] w-auto -ml-6 mt-[min(70px,6vh)] object-contain"
+            />
+          </div>
+        </div>
+
+        <div className="relative z-10 mt-auto">
+          <h2 className="nc-login-fade max-w-xl text-4xl font-extrabold leading-tight tracking-tight [animation-delay:.5s]">
+            Sistema de Gestión de Licitaciones
+          </h2>
+          <div className="nc-login-rule my-6 h-[3px] w-16 rounded-full" />
+          <ul className="flex flex-col gap-3.5 text-[15px] text-slate-300">
+            {LOGIN_FEATURES.map((feature, index) => (
+              <li
+                key={feature.label}
+                className="nc-login-fade flex items-center gap-3.5"
+                style={{ animationDelay: `${0.85 + index * 0.15}s` }}
+              >
+                <span className="grid size-10 place-items-center rounded-lg border border-white/15 bg-white/5">
+                  <feature.icon className="size-[18px] text-brand-cyan" />
+                </span>
+                {feature.label}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="nc-login-fade relative z-10 mt-12 flex justify-between border-t border-white/10 pt-5 text-xs text-slate-400 [animation-delay:1.3s]">
+          <span>Pinamar, Canelones · Uruguay</span>
+          <span>ncgroup@ncgroup.com.uy</span>
+        </div>
+      </section>
+
+      <section className="flex flex-1 items-center justify-center p-6">
+      <Card className="nc-login-form nc-login-fade w-full max-w-sm border-0 shadow-none [animation-delay:.3s]">
+        <CardHeader className="space-y-2 px-0">
+          <div className="mb-4 flex justify-center lg:hidden">
+            <Image
+              src="/logo/logo.png"
+              alt="NC Group SAS"
+              width={120}
+              height={95}
               priority
               className="object-contain"
             />
           </div>
-          <CardTitle className="text-2xl font-bold tracking-tight">Iniciar Sesión</CardTitle>
-          <CardDescription>
-            Ingresa tus credenciales para acceder al sistema
+          <CardTitle className="text-3xl font-extrabold tracking-tight text-brand-navy">Bienvenido</CardTitle>
+          <CardDescription className="text-[15px]">
+            Ingresá con tu cuenta para continuar.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-0">
           {error && (
             <div className="mb-4 flex items-center gap-2 rounded-md bg-destructive/15 p-3 text-sm text-destructive">
               <AlertCircle className="h-4 w-4" />
@@ -139,7 +201,7 @@ export default function LoginPage() {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input
+                      <Input className="h-12 rounded-xl"
                         placeholder="tu@email.com"
                         type="email"
                         autoComplete="email"
@@ -159,7 +221,7 @@ export default function LoginPage() {
                     <FormLabel>Contraseña</FormLabel>
                     <FormControl>
                       <div className="relative">
-                        <Input
+                        <Input className="h-12 rounded-xl"
                           type={showPassword ? "text" : "password"}
                           autoComplete="current-password"
                           disabled={isLoading}
@@ -174,9 +236,9 @@ export default function LoginPage() {
                           disabled={isLoading}
                         >
                           {showPassword ? (
-                            <EyeOff className="h-4 w-4 text-blue-950" />
+                            <EyeOff className="h-4 w-4 text-slate-400" />
                           ) : (
-                            <Eye className="h-4 w-4 text-blue-950" />
+                            <Eye className="h-4 w-4 text-slate-400" />
                           )}
                           <span className="sr-only">
                             {showPassword ? "Ocultar contraseña" : "Ver contraseña"}
@@ -188,19 +250,24 @@ export default function LoginPage() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button
+                type="submit"
+                className="mt-2 h-12 w-full rounded-xl bg-gradient-to-r from-brand-blue to-brand-navy text-[15px] font-bold shadow-lg shadow-brand-blue/30 hover:opacity-95"
+                disabled={isLoading}
+              >
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Ingresar
               </Button>
             </form>
           </Form>
         </CardContent>
-        <CardFooter className="flex justify-center">
-          <p className="text-sm text-blue-950 text-center">
-            Sistema de Licitaciones
+        <CardFooter className="flex justify-center px-0">
+          <p className="text-center text-xs text-muted-foreground">
+            © {new Date().getFullYear()} NC GROUP SAS · Sistema de Gestión de Licitaciones
           </p>
         </CardFooter>
       </Card>
+      </section>
     </main>
   )
 }

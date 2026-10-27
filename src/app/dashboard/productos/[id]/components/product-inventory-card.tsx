@@ -21,27 +21,20 @@ export function ProductInventoryCard({ product }: ProductInventoryCardProps) {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className={`flex items-center justify-between p-4 rounded-xl border ${
-          isLowStock ? 'bg-amber-50 border-amber-200' : 'bg-secondary/10 border-transparent'
-        }`}>
+        <div className="flex items-center justify-between rounded-xl bg-gradient-to-br from-brand-navy to-[#28407A] p-5 text-white">
           <div className="flex flex-col">
-            <span className={`text-xs uppercase font-bold tracking-wider ${
-              isLowStock ? 'text-amber-700' : 'text-muted-foreground'
-            }`}>
-              Stock Disponible
+            <span className="text-xs font-bold uppercase tracking-wider text-brand-cyan">
+              Stock disponible
             </span>
-            <div className="flex items-center gap-2 mt-1">
-              <span className={`text-3xl font-black ${
-                isLowStock ? 'text-amber-700' : 'text-foreground'
-              }`}>
-                {stock}
-              </span>
-              <span className="text-sm text-muted-foreground font-medium">unidades</span>
+            <div className="mt-1 flex items-baseline gap-2">
+              <span className="text-4xl font-extrabold">{stock}</span>
+              <span className="text-sm font-medium text-slate-300">unidades</span>
             </div>
           </div>
           {isLowStock && (
-            <div className="bg-amber-100 p-2 rounded-full">
-              <AlertTriangle className="h-6 w-6 text-amber-600" />
+            <div className="flex items-center gap-1.5 rounded-full bg-amber-400/15 px-3 py-1.5 text-xs font-semibold text-amber-300">
+              <AlertTriangle className="h-4 w-4" />
+              {stock === 0 ? "Agotado" : "Bajo stock"}
             </div>
           )}
         </div>

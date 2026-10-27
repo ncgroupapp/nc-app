@@ -29,14 +29,19 @@ export function ProductImageCard({ product }: ProductImageCardProps) {
   }
 
   return (
-    <Card className="overflow-hidden border shadow-sm flex flex-col">
-      <div className="aspect-square relative bg-secondary/10 flex items-center justify-center p-4">
+    <Card className="overflow-hidden border shadow-sm flex flex-col gap-0 py-0">
+      <div className="aspect-square relative bg-[radial-gradient(circle_at_50%_40%,#fff_0,#F4F7FB_75%)] flex items-center justify-center p-6">
         <div className="relative w-full h-full group flex items-center justify-center">
-          <img 
-            src={images[currentImageIndex]} 
-            alt={product.name} 
-            className="max-h-full max-w-full object-contain transition-all" 
+          <img
+            src={images[currentImageIndex]}
+            alt={product.name}
+            className="max-h-[88%] max-w-[88%] object-contain mix-blend-multiply transition-all"
           />
+          {images.length > 1 && (
+            <span className="absolute left-0 bottom-0 rounded-full border bg-white px-2.5 py-0.5 text-xs font-semibold text-brand-navy shadow-sm">
+              {currentImageIndex + 1} / {images.length}
+            </span>
+          )}
           {images.length > 1 && (
             <>
               <Button 
@@ -62,17 +67,17 @@ export function ProductImageCard({ product }: ProductImageCardProps) {
         </div>
       </div>
       {images.length > 1 && (
-        <div className="flex gap-2 p-3 overflow-x-auto bg-muted/30 border-t scrollbar-hide">
+        <div className="flex gap-2.5 p-3 overflow-x-auto bg-white border-t scrollbar-hide">
           {images.map((img, idx) => (
-            <button 
-              key={idx} 
-              onClick={() => setCurrentImageIndex(idx)} 
-              className={`relative flex-shrink-0 w-12 h-12 rounded-md overflow-hidden border-2 transition-all ${
-                idx === currentImageIndex ? 'border-primary ring-2 ring-primary/20' : 'border-transparent hover:border-muted-foreground/30'
+            <button
+              key={idx}
+              onClick={() => setCurrentImageIndex(idx)}
+              className={`relative flex-shrink-0 grid place-items-center size-16 rounded-xl overflow-hidden border-2 bg-[radial-gradient(circle_at_50%_40%,#fff_0,#F1F5FA_70%)] transition-all ${
+                idx === currentImageIndex ? 'border-brand-blue ring-2 ring-brand-blue/20' : 'border-border hover:border-brand-blue/40'
               }`}
               aria-label={`Ver miniatura ${idx + 1}`}
             >
-              <img src={img} alt={`Miniatura ${idx + 1}`} className="w-full h-full object-cover" />
+              <img src={img} alt={`Miniatura ${idx + 1}`} className="max-w-[86%] max-h-[86%] object-contain mix-blend-multiply" />
             </button>
           ))}
         </div>

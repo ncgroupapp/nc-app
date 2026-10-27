@@ -86,9 +86,9 @@ export default function ProductosPage() {
 
   const getStockStatus = (stock?: number) => {
     const stockValue = stock ?? 0
-    if (stockValue === 0) return { label: 'Agotado', variant: 'destructive' as const }
-    if (stockValue <= 5) return { label: 'Bajo Stock', variant: 'secondary' as const }
-    return { label: 'Disponible', variant: 'default' as const }
+    if (stockValue === 0) return { label: 'Agotado', className: 'bg-red-50 text-red-700 border-red-100' }
+    if (stockValue <= 5) return { label: 'Bajo stock', className: 'bg-amber-50 text-amber-700 border-amber-100' }
+    return { label: 'Disponible', className: 'bg-emerald-50 text-emerald-700 border-emerald-100' }
   }
 
   const handleProductSubmit = async (data: CreateProductForm) => {
@@ -139,20 +139,36 @@ export default function ProductosPage() {
     {
       key: 'image',
       header: 'Imagen',
-      className: 'w-[80px]',
+      className: 'w-[96px]',
       render: (product) => (
-        <div className="flex items-center justify-center w-12 h-12 rounded-md overflow-hidden border bg-muted/20">
+        <div className="flex items-center justify-center size-16 rounded-xl overflow-hidden border bg-[radial-gradient(circle_at_50%_40%,#fff_0,#F1F5FA_70%)]">
           {product.images && product.images.length > 0 ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
+            <img src={product.images[0]} alt={product.name} className="max-w-[86%] max-h-[86%] object-contain mix-blend-multiply" />
           ) : (
-            <Package className="h-5 w-5 text-muted-foreground" />
+            <Package className="h-6 w-6 text-muted-foreground/60" />
           )}
         </div>
       )
     },
-    { key: 'code', header: 'Código', accessorKey: 'code', className: 'w-[120px] font-medium' },
-    { key: 'name', header: 'Nombre', accessorKey: 'name', className: 'min-w-[200px] font-medium' },
+    {
+      key: 'code',
+      header: 'Código',
+      className: 'w-[140px]',
+      render: (product) => (
+        <span className="rounded-md bg-secondary px-2 py-1 font-mono text-xs text-brand-navy">
+          {product.code || '-'}
+        </span>
+      )
+    },
+    {
+      key: 'name',
+      header: 'Nombre',
+      className: 'min-w-[200px]',
+      render: (product) => (
+        <span className="font-semibold text-brand-navy">{product.name}</span>
+      )
+    },
     { 
       key: 'brand_model', 
       header: 'Marca/Modelo', 
@@ -179,21 +195,26 @@ export default function ProductosPage() {
       className: 'w-[100px]',
       render: (product) => (
         <div className="flex items-center gap-2">
-          <span className="font-medium">{product.stockQuantity ?? 0}</span>
+          <span className="text-base font-extrabold text-brand-navy">{product.stockQuantity ?? 0}</span>
           {(product.stockQuantity ?? 0) <= 5 && (
             <AlertTriangle className="h-4 w-4 text-amber-500" />
           )}
         </div>
-      ) 
+      )
     },
-    { 
-      key: 'status', 
-      header: 'Estado', 
+    {
+      key: 'status',
+      header: 'Estado',
       className: 'w-[120px]',
-      render: (product) => { 
-        const status = getStockStatus(product.stockQuantity); 
-        return <Badge variant={status.variant}>{status.label}</Badge>
-      } 
+      render: (product) => {
+        const status = getStockStatus(product.stockQuantity);
+        return (
+          <Badge variant="outline" className={`gap-1.5 rounded-full font-semibold ${status.className}`}>
+            <span className="size-1.5 rounded-full bg-current" aria-hidden="true" />
+            {status.label}
+          </Badge>
+        )
+      }
     },
     { 
       key: 'actions', 

@@ -4,41 +4,46 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: oklch(1.00 0 0);
-  --foreground: oklch(0.32 0 0);
-  --card: oklch(1.00 0 0);
-  --card-foreground: oklch(0.32 0 0);
-  --popover: oklch(1.00 0 0);
-  --popover-foreground: oklch(0.32 0 0);
-  --primary: oklch(0.62 0.19 259.76);
-  --primary-foreground: oklch(1.00 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.45 0.03 257.68);
-  --muted: oklch(0.98 0 0);
-  /* Tinted muted foreground to match primary */
-  --muted-foreground: oklch(0.55 0.12 259.76);
-  --accent: oklch(0.95 0.03 233.56);
-  --accent-foreground: oklch(0.38 0.14 265.59);
-  --destructive: oklch(0.64 0.21 25.39);
+  /* NC Group brand colors (taken from the logo) */
+  --brand-navy: #1E2846;
+  --brand-blue: #0A6EB4;
+  --brand-cyan: #50D2DC;
+  --brand-gradient: linear-gradient(90deg, var(--brand-cyan), var(--brand-blue) 45%, var(--brand-navy));
+
+  --background: #F6F8FB;
+  --foreground: #1F2633;
+  --card: #FFFFFF;
+  --card-foreground: #1F2633;
+  --popover: #FFFFFF;
+  --popover-foreground: #1F2633;
+  --primary: var(--brand-blue);
+  --primary-foreground: #FFFFFF;
+  --secondary: #F3F6FA;
+  --secondary-foreground: var(--brand-navy);
+  --muted: #F3F6FA;
+  --muted-foreground: #6B7385;
+  --accent: #E8F2FA;
+  --accent-foreground: var(--brand-navy);
+  --destructive: oklch(0.58 0.19 25.39);
   --warning: oklch(0.70 0.19 86.84);
   --warning-foreground: oklch(0.98 0 0);
-  --border: oklch(0.93 0.01 261.82);
-  --input: oklch(0.93 0.01 261.82);
-  --ring: oklch(0.62 0.19 259.76);
-  --chart-1: oklch(0.62 0.19 259.76);
-  --chart-2: oklch(0.55 0.22 262.96);
-  --chart-3: oklch(0.49 0.22 264.43);
-  --chart-4: oklch(0.42 0.18 265.55);
-  --chart-5: oklch(0.38 0.14 265.59);
-  /* Sidebar: primary bg, subtle hover */
-  --sidebar: oklch(0.62 0.19 259.76);
-  --sidebar-foreground: oklch(0.98 0 0);
-  --sidebar-primary: oklch(0.98 0 0);
-  --sidebar-primary-foreground: oklch(0.62 0.19 259.76);
-  --sidebar-accent: oklch(1 0 0 / 10%);
-  --sidebar-accent-foreground: oklch(0.98 0 0);
-  --sidebar-border: oklch(1 0 0 / 15%);
-  --sidebar-ring: oklch(0.98 0 0 / 20%);
+  --border: #E3E8EF;
+  --input: #E3E8EF;
+  --ring: var(--brand-blue);
+  --chart-1: var(--brand-blue);
+  --chart-2: var(--brand-cyan);
+  --chart-3: var(--brand-navy);
+  --chart-4: #5B8FC7;
+  --chart-5: #9BE7EE;
+  /* Sidebar: white with navy active item */
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #3B4458;
+  --sidebar-primary: var(--brand-navy);
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #EEF3F9;
+  --sidebar-accent-foreground: var(--brand-navy);
+  --sidebar-border: #E3E8EF;
+  --sidebar-ring: var(--brand-blue);
 
   --font-sans: 'Geist', 'Geist Fallback', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   --font-serif: Source Serif 4, serif;
@@ -127,6 +132,9 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-brand-navy: var(--brand-navy);
+  --color-brand-blue: var(--brand-blue);
+  --color-brand-cyan: var(--brand-cyan);
 
   --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);
@@ -228,3 +236,57 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* === Login page (brand panel + animations) === */
+.nc-login-hero {
+  background:
+    radial-gradient(900px 520px at 105% -5%, rgb(80 210 220 / 0.22), transparent 60%),
+    radial-gradient(800px 600px at -10% 110%, rgb(10 110 180 / 0.42), transparent 60%),
+    linear-gradient(160deg, #22305A 0%, var(--brand-navy) 55%, #141C33 100%);
+}
+.nc-login-dots {
+  background-image: radial-gradient(rgb(255 255 255 / 0.07) 1.2px, transparent 1.2px);
+  background-size: 22px 22px;
+  mask-image: linear-gradient(120deg, transparent 35%, #000 100%);
+  animation: nc-drift 14s linear infinite;
+}
+.nc-login-ring { position: absolute; border-radius: 9999px; border-style: solid; border-color: transparent; pointer-events: none; }
+.nc-login-ring-1 { width: 760px; height: 760px; right: -360px; top: -300px; border-width: 2px; border-color: rgb(80 210 220 / 0.25);
+  --nc-to: 360deg; animation: nc-ring-in 1.4s ease-out both, nc-spin 90s linear infinite; }
+.nc-login-ring-2 { width: 600px; height: 600px; right: -280px; top: -220px; border-width: 26px;
+  border-left-color: rgb(80 210 220 / 0.55); border-bottom-color: rgb(10 110 180 / 0.55); transform: rotate(-20deg);
+  --nc-to: 340deg; animation: nc-ring-in 1.4s 0.15s ease-out both, nc-spin 38s linear infinite, nc-pulse 6s ease-in-out infinite; }
+.nc-login-ring-3 { width: 420px; height: 420px; left: -190px; bottom: -200px; border-width: 2px; border-color: rgb(255 255 255 / 0.1);
+  --nc-to: -360deg; animation: nc-ring-in 1.4s 0.3s ease-out both, nc-spin 110s linear infinite; }
+.nc-login-ring-4 { width: 300px; height: 300px; left: -130px; bottom: -140px; border-width: 16px;
+  border-top-color: rgb(80 210 220 / 0.35); border-right-color: rgb(10 110 180 / 0.35); transform: rotate(15deg);
+  --nc-to: -345deg; animation: nc-ring-in 1.4s 0.45s ease-out both, nc-spin 46s linear infinite, nc-pulse 7s ease-in-out 1s infinite; }
+.nc-login-lines i { display: block; height: 3px; border-radius: 3px; background: var(--brand-gradient);
+  transform-origin: right; animation: nc-grow 0.9s cubic-bezier(.2,.8,.2,1) both; }
+.nc-login-lines i:nth-child(1) { animation-delay: 0.9s; }
+.nc-login-lines i:nth-child(2) { animation-delay: 1.05s; }
+.nc-login-lines i:nth-child(3) { animation-delay: 1.2s; }
+.nc-login-logo { animation: nc-enter-up 1.1s cubic-bezier(.2,.8,.2,1) both, nc-glow 5s ease-in-out 1.2s infinite; }
+.nc-login-logo img { animation: nc-float 6s ease-in-out 1.2s infinite; }
+.nc-login-rule { background: var(--brand-gradient); transform-origin: left; animation: nc-grow 0.8s 0.75s cubic-bezier(.2,.8,.2,1) both; }
+.nc-login-fade { animation: nc-fade-up 0.8s ease-out both; }
+
+@keyframes nc-enter-up { from { opacity: 0; transform: translateY(26px) scale(.96); } to { opacity: 1; transform: none; } }
+@keyframes nc-fade-up { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes nc-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
+@keyframes nc-glow {
+  0%, 100% { filter: drop-shadow(0 10px 30px rgb(0 0 0 / 0.35)) drop-shadow(0 0 0 rgb(80 210 220 / 0)); }
+  50% { filter: drop-shadow(0 10px 30px rgb(0 0 0 / 0.35)) drop-shadow(0 0 22px rgb(80 210 220 / 0.35)); }
+}
+@keyframes nc-spin { to { transform: rotate(var(--nc-to)); } }
+@keyframes nc-ring-in { from { opacity: 0; scale: .85; } to { opacity: 1; scale: 1; } }
+@keyframes nc-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .55; } }
+@keyframes nc-grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes nc-drift { to { background-position: 22px 22px; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .nc-login-hero *, .nc-login-form { animation: none !important; }
+}
+
+/* Thin brand gradient line (used under the dashboard top bar) */
+.nc-brand-line { background: var(--brand-gradient); }

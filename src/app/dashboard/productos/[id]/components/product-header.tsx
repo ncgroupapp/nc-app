@@ -25,12 +25,13 @@ export function ProductHeader({ product }: ProductHeaderProps) {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{product.name}</h1>
-          <div className="flex items-center gap-2 mt-1">
+          <h1 className="text-3xl font-extrabold tracking-tight text-brand-navy">{product.name}</h1>
+          <div className="flex items-center gap-2 mt-1.5">
             <Package className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-            <p className="text-muted-foreground font-medium">
+            <span className="text-sm text-muted-foreground">Código</span>
+            <span className="rounded-md bg-secondary px-2 py-0.5 font-mono text-sm font-semibold text-brand-navy">
               {product.code || "Sin código"}
-            </p>
+            </span>
           </div>
         </div>
       </div>
