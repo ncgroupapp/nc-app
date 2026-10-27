@@ -37,6 +37,7 @@ import { QuotationItemForm } from "@/components/quotations";
 import { getStatusParams } from "../../utils/statusHelpers";
 import { calcularTotales } from "../../utils/calculations";
 import { NewItemData } from "../../hooks/useQuotationActions";
+import { QuotationObservationsCard } from "../QuotationObservationsCard";
 
 interface QuotationTabProps {
   quotation: Quotation | null;
@@ -335,6 +336,7 @@ export const QuotationTab = ({
           </div>
         </CardContent>
       </Card>
+      <QuotationObservationsCard key={quotation.id} quotation={quotation} />
     </div>
   );
 };

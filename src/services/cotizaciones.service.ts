@@ -16,6 +16,12 @@ export interface ProviderQuotationHistory {
   price: number;
 }
 
+/** Product image shown under the observations in the quotation PDF. */
+export interface ObservationImage {
+  url: string;
+  caption?: string | null;
+}
+
 export interface QuotationItem {
   id?: number;
   quotationId?: number;
@@ -51,6 +57,7 @@ export interface Quotation {
   status: QuotationStatus;
   description?: string;
   observations?: string;
+  observationImages?: ObservationImage[] | null;
   items: QuotationItem[];
   quotationDate?: string;
   validUntil?: string;
@@ -112,6 +119,7 @@ export interface UpdateQuotationDto {
   associatedPurchase?: string;
   description?: string;
   observations?: string;
+  observationImages?: ObservationImage[];
   quotationDate?: string;
   validUntil?: string;
   paymentForm?: string;
