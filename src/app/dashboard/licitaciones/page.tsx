@@ -45,7 +45,7 @@ import { Product, productsService } from "@/services/products.service";
 import { Cliente } from "@/types";
 import { LicitacionDraft, SolicitudStatus, solicitudesService } from "@/services/solicitudes.service";
 import { RequestDraftNotice } from "@/components/solicitudes/request-draft-notice";
-import { AlertCircle, CheckCircle, Clock, Eye, FileText, Loader2, Lock, Plus, Search, XCircle } from "lucide-react";
+import { AlertCircle, CheckCircle, Clock, Eye, FileText, Loader2, Lock, Plus, Search, Trash2, XCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { showSnackbar } from "@/components/ui/snackbar";
 import { handleActionError } from "@/lib/error-handler";
@@ -136,6 +136,48 @@ function LicitacionesContent() {
   const estados = Object.values(LicitationStatus);
 
   const { confirm } = useConfirm();
+
+  const handleDelete = async (licitation: Licitation) => {
+    let impact: Awaited<ReturnType<typeof licitacionesService.getDeleteImpact>>;
+    try {
+      impact = await licitacionesService.getDeleteImpact(licitation.id);
+    } catch (err) {
+      handleActionError(err, "No se pudo revisar la licitación antes de eliminarla.");
+      return;
+    }
+
+    if (!impact.canDelete) {
+      showSnackbar(
+        `No se puede eliminar ${licitation.callNumber}: tiene ${impact.adjudications} adjudicación(es) y ${impact.deliveries} entrega(s).`,
+        "error",
+      );
+      return;
+    }
+
+    const quotationsText = impact.quotations.length
+      ? ` También se eliminarán ${impact.quotations.length === 1 ? "su cotización" : `sus ${impact.quotations.length} cotizaciones`}: ${impact.quotations.map((q) => q.identifier).join(", ")}.`
+      : "";
+    const confirmed = await confirm({
+      title: "Eliminar Licitación",
+      message: `¿Eliminar la licitación ${licitation.callNumber} (${licitation.internalNumber})?${quotationsText} Esta acción no se puede deshacer.`,
+      confirmText: "Eliminar",
+      cancelText: "Cancelar",
+      variant: "destructive",
+    });
+    if (!confirmed) return;
+
+    try {
+      setLoading(true);
+      await licitacionesService.delete(licitation.id);
+      showSnackbar("Licitación eliminada", "success");
+      await fetchLicitaciones(currentPage, searchTerm, selectedEstado, selectedClients, dateFrom, dateTo);
+    } catch (err) {
+      console.error("Error deleting licitation:", err);
+      handleActionError(err, "Error al eliminar la licitación.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleClose = async (licitation: Licitation) => {
     const confirmed = await confirm({
@@ -628,6 +670,16 @@ function LicitacionesContent() {
               <Lock className="h-4 w-4" />
             </Button>
           )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleDelete(licitacion)}
+            className="text-red-600 hover:text-red-700"
+            title="Eliminar licitación"
+            aria-label="Eliminar licitación"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
         </div>
       ),
     },

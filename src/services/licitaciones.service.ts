@@ -115,6 +115,14 @@ export const licitacionesService = {
     return response.data;
   },
 
+  /** Quotations that would be deleted with the licitation, and whether deleting is allowed. */
+  getDeleteImpact: async (
+    id: number,
+  ): Promise<{ quotations: Array<{ id: number; identifier: string; status: string }>; adjudications: number; deliveries: number; canDelete: boolean }> => {
+    const response = await api.get<ApiResponse<{ quotations: Array<{ id: number; identifier: string; status: string }>; adjudications: number; deliveries: number; canDelete: boolean }>>(`/licitations/${id}/delete-impact`);
+    return response.data.data;
+  },
+
   getNextInternalNumber: async (): Promise<string> => {
     const response = await api.get<ApiResponse<{ internalNumber: string }>>('/licitations/next-internal-number');
     return response.data.data.internalNumber;
