@@ -186,7 +186,7 @@ function SolicitudesContent() {
       <FadeIn direction="none">
         <PageHeader
           title="Solicitudes"
-          subtitle="Pedidos que llegan por mail con la etiqueta Solicitudes"
+          subtitle="Pedidos que llegan por mail con la etiqueta Cotizaciones"
           backButton={false}
         />
       </FadeIn>
@@ -263,7 +263,7 @@ function SolicitudesContent() {
                 totalPages: meta.lastPage,
                 onPageChange: (page) => loadPage(page),
               }}
-              emptyMessage="Todavía no hay solicitudes. Etiquetá un mail como Solicitudes en tu correo."
+              emptyMessage="Todavía no hay solicitudes. Etiquetá un mail como Cotizaciones en tu correo."
             />
           </CardContent>
         </Card>
