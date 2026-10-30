@@ -46,6 +46,22 @@ export interface BillingSummaryRow {
   net: number;
 }
 
+export type BillingSort = 'numero_desc' | 'numero_asc' | 'fecha_desc';
+
+export const BILLING_SORT_LABELS: Record<BillingSort, string> = {
+  numero_desc: 'N.º correlativo, último primero',
+  numero_asc: 'N.º correlativo, primero arriba',
+  fecha_desc: 'Fecha, más reciente primero',
+};
+
+/** Numbers missing from a correlative (type + series) */
+export interface BillingNumberGap {
+  type: BillingDocumentType;
+  series: string | null;
+  missing: number[];
+  missingCount: number;
+}
+
 export interface BillingFilters {
   page?: number;
   limit?: number;
@@ -54,12 +70,14 @@ export interface BillingFilters {
   currency?: BillingCurrency;
   dateFrom?: string;
   dateTo?: string;
+  sort?: BillingSort;
 }
 
 export interface BillingListResponse {
   data: BillingDocument[];
   meta: PaginationMeta;
   summary: BillingSummaryRow[];
+  gaps: BillingNumberGap[];
 }
 
 export type BillingDocumentInput = Partial<

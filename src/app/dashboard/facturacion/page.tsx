@@ -41,12 +41,14 @@ import { useDebounce } from '@/hooks/use-debounce'
 import { handleActionError } from '@/lib/error-handler'
 import { formatIsoDate } from '@/services/remitos.service'
 import {
+  BILLING_SORT_LABELS,
   BILLING_TYPE_CLASSES,
   BILLING_TYPE_LABELS,
   BillingCurrency,
   BillingDocument,
   BillingDocumentType,
   BillingListResponse,
+  BillingSort,
   billingService,
   formatBillingNumber,
   formatMoney,
@@ -69,6 +71,7 @@ export default function FacturacionPage() {
   const [currency, setCurrency] = useState<BillingCurrency | 'all'>('all')
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
+  const [sort, setSort] = useState<BillingSort>('numero_desc')
   const [page, setPage] = useState(1)
   const debouncedSearch = useDebounce(search, 300)
   const [editing, setEditing] = useState<BillingDocument | null>(null)
@@ -85,13 +88,14 @@ export default function FacturacionPage() {
         currency: currency === 'all' ? undefined : currency,
         dateFrom: dateFrom || undefined,
         dateTo: dateTo || undefined,
+        sort,
       }))
     } catch (error) {
       if (!quiet) handleActionError(error, 'Error al cargar la facturación')
     } finally {
       if (!quiet) setLoading(false)
     }
-  }, [page, debouncedSearch, type, currency, dateFrom, dateTo])
+  }, [page, debouncedSearch, type, currency, dateFrom, dateTo, sort])
 
   useEffect(() => { load() }, [load])
   useEffect(() => {
@@ -99,9 +103,10 @@ export default function FacturacionPage() {
     return () => clearInterval(timer)
   }, [load])
   // Any filter change goes back to the first page
-  useEffect(() => { setPage(1) }, [debouncedSearch, type, currency, dateFrom, dateTo])
+  useEffect(() => { setPage(1) }, [debouncedSearch, type, currency, dateFrom, dateTo, sort])
 
   const documents = result?.data ?? []
+  const gaps = result?.gaps ?? []
   const meta = result?.meta
   // Documents whose currency could not be read are flagged "Revisar datos" in the table instead of totalled
   const totals = result?.summary.filter((row) => row.currency !== '-') ?? []
@@ -259,12 +264,37 @@ export default function FacturacionPage() {
                 <SelectItem value="USD">Dólares</SelectItem>
               </SelectContent>
             </Select>
+            <Select value={sort} onValueChange={(v) => setSort(v as BillingSort)}>
+              <SelectTrigger className="lg:w-64" aria-label="Ordenar"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {(Object.keys(BILLING_SORT_LABELS) as BillingSort[]).map((value) => (
+                  <SelectItem key={value} value={value}>{BILLING_SORT_LABELS[value]}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <div className="flex items-center gap-2">
               <Input type="date" aria-label="Desde" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="w-40" />
               <span className="text-sm text-muted-foreground">a</span>
               <Input type="date" aria-label="Hasta" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="w-40" />
             </div>
           </div>
+
+          {gaps.length > 0 && (
+            <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+              <p className="flex items-center gap-1.5 font-medium">
+                <AlertTriangle className="h-4 w-4" aria-hidden="true" /> Faltan números en la numeración
+              </p>
+              <ul className="mt-1 space-y-0.5 text-xs">
+                {gaps.map((gap) => (
+                  <li key={`${gap.type}-${gap.series ?? ''}`}>
+                    {gap.type === 'factura' ? 'Facturas' : 'Notas de crédito'}{gap.series ? ` serie ${gap.series}` : ''}:{' '}
+                    {gap.missing.join(', ')}
+                    {gap.missingCount > gap.missing.length && ` y ${gap.missingCount - gap.missing.length} más`}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           <div className="overflow-x-auto">
             <Table>
