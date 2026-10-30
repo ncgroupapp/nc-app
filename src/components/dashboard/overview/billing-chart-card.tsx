@@ -61,13 +61,13 @@ export function BillingChartCard({ data }: { data: DashboardOverview['billing'] 
 
       <div className="px-4 pb-4 pt-4 md:px-5 md:pb-5">
         {empty ? (
-          <div className="flex h-52 flex-col items-center justify-center gap-1 text-center text-sm text-muted-foreground">
+          <div className="flex h-36 flex-col items-center justify-center gap-1 text-center text-sm text-muted-foreground">
             Todavía no hay facturas cargadas.
             <Link href="/dashboard/facturacion" className="font-semibold text-brand-blue hover:underline">Ir a Facturación</Link>
           </div>
         ) : (
           <div className="flex gap-2">
-            <div className="relative h-52 w-12 shrink-0 text-[11px] text-muted-foreground" aria-hidden="true">
+            <div className="relative h-36 w-12 shrink-0 text-[11px] text-muted-foreground" aria-hidden="true">
               {ticks.map((tick, i) => (
                 <span key={i} className="absolute right-0 -translate-y-1/2" style={{ top: `${(1 - tick / top) * 100}%` }}>
                   {tick === 0 ? '0' : formatCompactMoney(tick, currency).replace(/^(US)?\$\s/, '')}
@@ -75,7 +75,7 @@ export function BillingChartCard({ data }: { data: DashboardOverview['billing'] 
               ))}
             </div>
             <div className="min-w-0 flex-1">
-              <div className="relative h-52" onMouseLeave={() => setHovered(null)}>
+              <div className="relative h-36" onMouseLeave={() => setHovered(null)}>
                 {ticks.map((tick, i) => (
                   <div
                     key={i}

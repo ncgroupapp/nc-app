@@ -24,6 +24,11 @@ export interface BillingDocument {
   issueDate: string | null;
   clientName: string | null;
   clientRut: string | null;
+  /** Client of the app the document is linked to */
+  clientId: number | null;
+  client: { id: number; name: string; identifier: string } | null;
+  /** How it was linked: by RUT, by name, or chosen by hand */
+  clientMatch: 'rut' | 'nombre' | 'manual' | null;
   currency: string | null;
   subtotal: number | null;
   tax: number | null;
@@ -71,6 +76,7 @@ export interface BillingFilters {
   dateFrom?: string;
   dateTo?: string;
   sort?: BillingSort;
+  clientId?: number;
 }
 
 export interface BillingListResponse {
@@ -83,7 +89,7 @@ export interface BillingListResponse {
 export type BillingDocumentInput = Partial<
   Pick<
     BillingDocument,
-    'type' | 'series' | 'number' | 'issueDate' | 'clientName' | 'clientRut' | 'currency' | 'subtotal' | 'tax' | 'total' | 'referenceNumber'
+    'type' | 'series' | 'number' | 'issueDate' | 'clientName' | 'clientRut' | 'clientId' | 'currency' | 'subtotal' | 'tax' | 'total' | 'referenceNumber'
   >
 >;
 
@@ -100,7 +106,15 @@ export interface BillingReprocessResult {
   stillNeedReview: number;
   /** Documents that turned out to share type, series and number with another one */
   duplicates: number;
+  /** Documents linked to a client of the app in this run */
+  linkedClients: number;
 }
+
+export const CLIENT_MATCH_LABELS: Record<NonNullable<BillingDocument['clientMatch']>, string> = {
+  rut: 'Vinculado por RUT',
+  nombre: 'Vinculado por nombre',
+  manual: 'Vinculado a mano',
+};
 
 /** "A 1234" or "1234"; "Sin número" when it could not be read */
 export const formatBillingNumber = (doc: Pick<BillingDocument, 'series' | 'number'>) =>

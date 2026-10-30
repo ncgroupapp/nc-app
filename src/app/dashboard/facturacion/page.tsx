@@ -13,6 +13,8 @@ import {
   RefreshCw,
   Trash2,
   Upload,
+  UserRound,
+  X,
 } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
@@ -34,6 +36,7 @@ import { FadeIn } from '@/components/common/fade-in'
 import { PageHeader } from '@/components/common/page-header'
 import { SearchInput } from '@/components/common/search-input'
 import { BillingDocumentDialog } from '@/components/facturacion/billing-document-dialog'
+import { ClientPicker, PickedClient } from '@/components/facturacion/client-picker'
 import { PdfPreviewDialog, PdfRequest } from '@/components/remitos/pdf-preview-dialog'
 
 import { useConfirm } from '@/hooks/use-confirm'
@@ -44,6 +47,7 @@ import {
   BILLING_SORT_LABELS,
   BILLING_TYPE_CLASSES,
   BILLING_TYPE_LABELS,
+  CLIENT_MATCH_LABELS,
   BillingCurrency,
   BillingDocument,
   BillingDocumentType,
@@ -72,6 +76,7 @@ export default function FacturacionPage() {
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
   const [sort, setSort] = useState<BillingSort>('numero_desc')
+  const [clientFilter, setClientFilter] = useState<PickedClient | null>(null)
   const [page, setPage] = useState(1)
   const debouncedSearch = useDebounce(search, 300)
   const [editing, setEditing] = useState<BillingDocument | null>(null)
@@ -89,13 +94,14 @@ export default function FacturacionPage() {
         dateFrom: dateFrom || undefined,
         dateTo: dateTo || undefined,
         sort,
+        clientId: clientFilter?.id,
       }))
     } catch (error) {
       if (!quiet) handleActionError(error, 'Error al cargar la facturación')
     } finally {
       if (!quiet) setLoading(false)
     }
-  }, [page, debouncedSearch, type, currency, dateFrom, dateTo, sort])
+  }, [page, debouncedSearch, type, currency, dateFrom, dateTo, sort, clientFilter])
 
   useEffect(() => { load() }, [load])
   useEffect(() => {
@@ -103,14 +109,14 @@ export default function FacturacionPage() {
     return () => clearInterval(timer)
   }, [load])
   // Any filter change goes back to the first page
-  useEffect(() => { setPage(1) }, [debouncedSearch, type, currency, dateFrom, dateTo, sort])
+  useEffect(() => { setPage(1) }, [debouncedSearch, type, currency, dateFrom, dateTo, sort, clientFilter])
 
   const documents = result?.data ?? []
   const gaps = result?.gaps ?? []
   const meta = result?.meta
   // Documents whose currency could not be read are flagged "Revisar datos" in the table instead of totalled
   const totals = result?.summary.filter((row) => row.currency !== '-') ?? []
-  const hasFilters = !!(search || type !== 'all' || currency !== 'all' || dateFrom || dateTo)
+  const hasFilters = !!(search || type !== 'all' || currency !== 'all' || dateFrom || dateTo || clientFilter)
 
   const uploadFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return
@@ -140,8 +146,14 @@ export default function FacturacionPage() {
     setRereading(true)
     try {
       const summary = await billingService.reprocess(ids)
+      if (summary.linkedClients > 0) {
+        showSnackbar(
+          `${summary.linkedClients} ${summary.linkedClients === 1 ? 'documento vinculado' : 'documentos vinculados'} a clientes de la app`,
+          'success',
+        )
+      }
       if (summary.processed === 0) {
-        showSnackbar('No hay documentos para volver a leer', 'info')
+        if (summary.linkedClients === 0) showSnackbar('No hay documentos para volver a leer', 'info')
       } else {
         const message = [
           `${summary.fixed} de ${summary.processed} ${summary.processed === 1 ? 'documento leído' : 'documentos leídos'} correctamente`,
@@ -160,6 +172,16 @@ export default function FacturacionPage() {
       handleActionError(error, 'No se pudieron volver a leer los documentos')
     } finally {
       setRereading(false)
+    }
+  }
+
+  const linkClient = async (doc: BillingDocument, client: PickedClient) => {
+    try {
+      await billingService.update(doc.id, { clientId: client.id })
+      showSnackbar(`Vinculado a ${client.name}`, 'success')
+      load(true)
+    } catch (error) {
+      handleActionError(error, 'No se pudo vincular el cliente')
     }
   }
 
@@ -272,6 +294,17 @@ export default function FacturacionPage() {
                 ))}
               </SelectContent>
             </Select>
+            {clientFilter ? (
+              <span className="inline-flex h-9 items-center gap-2 rounded-md border bg-[#EAF3FB] px-3 text-sm font-medium text-brand-navy">
+                <UserRound className="h-4 w-4" aria-hidden="true" />
+                <span className="max-w-48 truncate">{clientFilter.name}</span>
+                <button type="button" aria-label="Quitar filtro de cliente" onClick={() => setClientFilter(null)} className="text-muted-foreground hover:text-foreground">
+                  <X className="h-4 w-4" />
+                </button>
+              </span>
+            ) : (
+              <ClientPicker trigger={<><UserRound className="mr-2 h-4 w-4" />Cliente</>} onSelect={setClientFilter} />
+            )}
             <div className="flex items-center gap-2">
               <Input type="date" aria-label="Desde" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="w-40" />
               <span className="text-sm text-muted-foreground">a</span>
@@ -338,8 +371,38 @@ export default function FacturacionPage() {
                     </TableCell>
                     <TableCell>{formatIsoDate(doc.issueDate)}</TableCell>
                     <TableCell>
-                      <div className="font-medium">{doc.clientName || '-'}</div>
-                      {doc.clientRut && <div className="text-xs text-muted-foreground">RUT {doc.clientRut}</div>}
+                      {doc.client ? (
+                        <>
+                          <button
+                            type="button"
+                            className="text-left font-medium hover:text-brand-blue hover:underline"
+                            title="Ver solo las facturas de este cliente"
+                            onClick={() => setClientFilter({ id: doc.client!.id, name: doc.client!.name })}
+                          >
+                            {doc.client.name}
+                          </button>
+                          <div className="text-xs text-muted-foreground">
+                            {doc.clientMatch ? CLIENT_MATCH_LABELS[doc.clientMatch] : 'Vinculado'}
+                            {doc.clientRut && ` · RUT ${doc.clientRut}`}
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="font-medium">{doc.clientName || '-'}</div>
+                          <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
+                            {(doc.clientName || doc.clientRut) && (
+                              <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-800">Sin vincular</span>
+                            )}
+                            <ClientPicker
+                              trigger={<span className="text-xs">Vincular cliente</span>}
+                              variant="secondary"
+                              className="h-6 px-2"
+                              onSelect={(client) => linkClient(doc, client)}
+                            />
+                          </div>
+                          {doc.clientRut && <div className="text-xs text-muted-foreground">RUT {doc.clientRut}</div>}
+                        </>
+                      )}
                     </TableCell>
                     <TableCell className={`text-right font-semibold tabular-nums ${doc.type === 'nota_credito' ? 'text-amber-700' : ''}`}>
                       {doc.type === 'nota_credito' && doc.total !== null ? '− ' : ''}{formatMoney(doc.total !== null ? Math.abs(doc.total) : null, doc.currency)}

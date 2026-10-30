@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, UserRound, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { showSnackbar } from "@/components/ui/snackbar";
 import { handleActionError } from "@/lib/error-handler";
+import { ClientPicker, PickedClient } from "./client-picker";
 import {
   BILLING_TYPE_LABELS,
   BillingDocument,
@@ -48,10 +49,12 @@ const amount = (value: string) => (value.trim() === "" ? null : Number(value.rep
 /** Fixes the data read from an invoice / credit note file (number, date, client, totals). */
 export function BillingDocumentDialog({ document, onClose, onSaved }: BillingDocumentDialogProps) {
   const [form, setForm] = useState<FormState | null>(null);
+  const [linked, setLinked] = useState<PickedClient | null>(null);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     setForm(document ? toForm(document) : null);
+    setLinked(document?.client ? { id: document.client.id, name: document.client.name } : null);
   }, [document]);
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
@@ -77,6 +80,8 @@ export function BillingDocumentDialog({ document, onClose, onSaved }: BillingDoc
       total: amounts[2],
       referenceNumber: text(form.referenceNumber),
     };
+    // Only send the client when it was changed here, so an automatic link is kept as such
+    if ((linked?.id ?? null) !== (document.clientId ?? null)) payload.clientId = linked?.id ?? null;
     setSaving(true);
     try {
       await billingService.update(document.id, payload);
@@ -136,8 +141,26 @@ export function BillingDocumentDialog({ document, onClose, onSaved }: BillingDoc
                 </SelectContent>
               </Select>
             </div>
+            <div className="space-y-2 sm:col-span-2">
+              <Label>Cliente de la app</Label>
+              <div className="flex flex-wrap items-center gap-2">
+                {linked ? (
+                  <span className="inline-flex h-9 items-center gap-2 rounded-md border bg-[#EAF3FB] px-3 text-sm font-medium text-brand-navy">
+                    <UserRound className="h-4 w-4" aria-hidden="true" />
+                    {linked.name}
+                    <button type="button" aria-label="Quitar cliente" onClick={() => setLinked(null)} className="text-muted-foreground hover:text-foreground">
+                      <X className="h-4 w-4" />
+                    </button>
+                  </span>
+                ) : (
+                  <span className="text-sm text-muted-foreground">Sin vincular</span>
+                )}
+                <ClientPicker trigger={linked ? "Cambiar" : "Elegir cliente"} onSelect={setLinked} />
+              </div>
+              <p className="text-xs text-muted-foreground">Se vincula solo por RUT o nombre; elegilo a mano si no lo encontró.</p>
+            </div>
             <div className="space-y-2">
-              <Label htmlFor="billing-client">Cliente</Label>
+              <Label htmlFor="billing-client">Cliente (como figura en la factura)</Label>
               <Input id="billing-client" value={form.clientName} maxLength={255} onChange={(e) => set("clientName", e.target.value)} />
             </div>
             <div className="space-y-2">
