@@ -55,7 +55,73 @@ export interface DashboardAlerts {
   certificates?: CertificateAlert[];
 }
 
+export interface MoneyByCurrency {
+  UYU: number;
+  USD: number;
+}
+
+export type OverviewCertificateStatus = 'vigente' | 'por_vencer' | 'vencido' | 'sin_cargar';
+
+export interface DashboardOverview {
+  /** YYYY-MM-DD in Uruguay. */
+  today: string;
+  billing: {
+    thisMonth: MoneyByCurrency & { invoices: number; creditNotes: number };
+    lastMonth: MoneyByCurrency;
+    /** Last 12 months (YYYY-MM), oldest first, net of credit notes. */
+    monthly: Array<MoneyByCurrency & { month: string }>;
+    yearToDate: MoneyByCurrency;
+    creditNotesYear: MoneyByCurrency;
+    topClients: Array<MoneyByCurrency & { name: string; documents: number }>;
+    latest: Array<{
+      id: number;
+      type: 'factura' | 'nota_credito';
+      series: string | null;
+      number: string | null;
+      issueDate: string | null;
+      clientName: string | null;
+      currency: string | null;
+      total: number | null;
+    }>;
+  };
+  licitations: {
+    active: number;
+    closingToday: number;
+    closingThisWeek: number;
+    createdMonthly: number[];
+    adjudicationRate: number | null;
+    adjudicationRatePrevious: number | null;
+    funnel: { received: number; quoted: number; adjudicated: number; delivered: number };
+  };
+  margin: { last90Days: number | null; minMargin: number };
+  solicitudes: {
+    new: number;
+    unread: number;
+    inProgress: number;
+    resolvedThisMonth: number;
+    avgResponseMinutes: number | null;
+    lastReceivedAt: string | null;
+    latest: Array<{
+      id: number;
+      subject: string | null;
+      fromName: string | null;
+      fromEmail: string | null;
+      receivedAt: string;
+      status: 'nueva' | 'en_proceso';
+      unread: boolean;
+      assignee: string | null;
+      attachments: number;
+    }>;
+  };
+  certificates: Array<{ id: number; name: string; status: OverviewCertificateStatus; daysLeft: number | null }>;
+}
+
 export const dashboardService = {
+  getOverview: async (): Promise<DashboardOverview> => {
+    const response = await api.get<ApiResponse<DashboardOverview>>('/dashboard/overview');
+    return response.data.data;
+  },
+
   getAlerts: async (): Promise<DashboardAlerts> => {
     const response = await api.get<ApiResponse<DashboardAlerts>>('/dashboard/alerts');
     return response.data.data;
