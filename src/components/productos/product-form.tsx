@@ -507,7 +507,11 @@ export function ProductForm({ initialData, onSubmit, onCancel, isLoading }: Prod
                 }
                 placeholder="Código principal"
                 required
+                aria-describedby="code-help"
               />
+              <p id="code-help" className="text-xs text-muted-foreground">
+                Escribí CORRELATIVO para que se asigne el siguiente (NC-0001, NC-0002…).
+              </p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="equivalentCodes">Códigos Equivalentes</Label>
