@@ -14,7 +14,8 @@ export interface ClientesState {
 
 export interface ClientesActions {
   fetchClientes: (page?: number, search?: string) => Promise<void>;
-  createCliente: (data: CreateClienteForm) => Promise<void>;
+  /** Returns the created client */
+  createCliente: (data: CreateClienteForm) => Promise<Cliente>;
   updateCliente: (id: string, data: Partial<Cliente>) => Promise<void>;
   deleteCliente: (id: string) => Promise<void>;
   setSelectedCliente: (cliente: Cliente | null) => void;

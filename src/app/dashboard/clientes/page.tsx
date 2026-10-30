@@ -19,6 +19,10 @@ import { Cliente, CreateClienteForm } from '@/types'
 import { Building2, Mail, Phone, Plus, Search } from "lucide-react";
 import { useEffect, useState } from 'react'
 import { ClientForm } from '@/components/clientes/client-form'
+import { ClientLogo } from '@/components/clientes/client-logo'
+import type { LogoChange } from '@/components/clientes/client-logo-field'
+import { clientesService } from '@/services/clientes.service'
+import { showSnackbar } from '@/components/ui/snackbar'
 import { SearchInput } from '@/components/common/search-input'
 import { useConfirm } from '@/hooks/use-confirm'
 import { useDebounce } from '@/hooks/use-debounce'
@@ -50,8 +54,9 @@ export default function ClientesPage() {
     fetchClientes(currentPage, debouncedSearch)
   }, [currentPage, debouncedSearch, fetchClientes])
 
-  const handleFormSubmit = async (data: CreateClienteForm) => {
+  const handleFormSubmit = async (data: CreateClienteForm, logo: LogoChange) => {
     try {
+      let clientId = editingCliente?.id
       if (editingCliente) {
         // Ensure contacts have required 'name' property
         const fixedData = {
@@ -65,7 +70,17 @@ export default function ClientesPage() {
         };
         await updateCliente(editingCliente.id, fixedData)
       } else {
-        await createCliente(data)
+        clientId = (await createCliente(data)).id
+      }
+      if (logo && clientId) {
+        try {
+          if (logo.action === 'upload') await clientesService.uploadLogo(clientId, logo.logo)
+          else await clientesService.removeLogo(clientId)
+        } catch (error) {
+          console.error('Error saving client logo:', error)
+          showSnackbar('El cliente se guardó, pero no se pudo guardar el logo', 'error')
+        }
+        fetchClientes(currentPage, debouncedSearch)
       }
       setIsCreateDialogOpen(false)
       setEditingCliente(null)
@@ -98,7 +113,14 @@ export default function ClientesPage() {
   }
 
   const columns: DataTableColumn<Cliente>[] = [
-    { key: 'name', header: 'Nombre', accessorKey: 'name', className: 'font-medium' },
+    {
+      key: 'name', header: 'Nombre', className: 'font-medium', render: (row) => (
+        <div className="flex items-center gap-3">
+          <ClientLogo client={row} />
+          <span>{row.name}</span>
+        </div>
+      )
+    },
     { key: 'identifier', header: 'Identificador', accessorKey: 'identifier' },
     {
       key: 'email', header: 'Email', render: (row) => {

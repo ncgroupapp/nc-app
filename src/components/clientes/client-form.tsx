@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Plus, Trash2 } from "lucide-react";
@@ -21,16 +21,19 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { FormGrid } from '@/components/common/form-helpers'
 import { FormActionButtons } from '@/components/common/form-action-buttons'
+import { ClientLogoField, LogoChange } from './client-logo-field'
 
 interface ClientFormProps {
   initialData?: Cliente | null
-  onSubmit: (data: any) => Promise<void>
+  /** logo: what to do with the client's logo after saving the client */
+  onSubmit: (data: any, logo: LogoChange) => Promise<void>
   onCancel: () => void
   isLoading?: boolean
 }
 
 export function ClientForm({ initialData, onSubmit, onCancel, isLoading = false }: ClientFormProps) {
   const { confirm } = useConfirm()
+  const [logoChange, setLogoChange] = useState<LogoChange>(null)
 
   const form = useForm<ClienteFormType>({
     resolver: zodResolver(clienteSchema),
@@ -47,6 +50,7 @@ export function ClientForm({ initialData, onSubmit, onCancel, isLoading = false 
   })
 
   useEffect(() => {
+    setLogoChange(null)
     if (initialData) {
       form.reset({
         nombre: initialData.name,
@@ -76,13 +80,19 @@ export function ClientForm({ initialData, onSubmit, onCancel, isLoading = false 
       }))
     }
 
-    await onSubmit(clientData)
+    await onSubmit(clientData, logoChange)
   }
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
         <div className="space-y-4 py-4">
+          <ClientLogoField
+            client={initialData ?? null}
+            name={form.watch('nombre')}
+            value={logoChange}
+            onChange={setLogoChange}
+          />
           <FormGrid>
             <FormField
               control={form.control}

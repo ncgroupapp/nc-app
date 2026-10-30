@@ -7,6 +7,8 @@ export interface Cliente {
   address?: string
   created_at: string
   updated_at: string
+  /** When the logo was last changed; null or missing when the client has no logo */
+  logoUpdatedAt?: string | null
   contacts?: Array<{ 
     name: string
     email?: string

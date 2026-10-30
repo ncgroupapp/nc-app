@@ -10,6 +10,26 @@ export interface ClientFilters {
 }
 
 export const clientesService = {
+  /** Logo already prepared with prepareLogo (PNG). */
+  uploadLogo: async (id: string | number, logo: Blob): Promise<Cliente> => {
+    const form = new FormData();
+    form.append('file', logo, 'logo.png');
+    const response = await api.post<ApiResponse<Cliente>>(`/clients/${id}/logo`, form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data.data;
+  },
+
+  removeLogo: async (id: string | number): Promise<Cliente> => {
+    const response = await api.delete<ApiResponse<Cliente>>(`/clients/${id}/logo`);
+    return response.data.data;
+  },
+
+  getLogo: async (id: string | number): Promise<Blob> => {
+    const response = await api.get(`/clients/${id}/logo`, { responseType: 'blob' });
+    return response.data as Blob;
+  },
+
   getAll: async (
  filters: ClientFilters = {}
   ): Promise<PaginatedResponse<Cliente>> => {

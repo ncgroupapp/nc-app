@@ -79,6 +79,7 @@ export const useClientesStore = create<ClientesStore>()(
               state.clientes.push(response.data);
               state.isLoading = false;
             });
+            return response.data;
           } else {
             throw new Error(response.message);
           }
