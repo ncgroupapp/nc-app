@@ -25,6 +25,8 @@ const securityHeaders = [
       "img-src 'self' data: https: blob:",
       `connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com ${apiUrl}`.trim(),
       "font-src 'self' data:",
+      // PDF previews (remitos, facturas, certificados) are shown from blob: URLs inside an iframe
+      "frame-src 'self' blob:",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",

@@ -10,6 +10,7 @@ import {
   MoreHorizontal,
   Pencil,
   Receipt,
+  RefreshCw,
   Trash2,
   Upload,
 } from 'lucide-react'
@@ -62,6 +63,7 @@ export default function FacturacionPage() {
   const [result, setResult] = useState<BillingListResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
+  const [rereading, setRereading] = useState(false)
   const [search, setSearch] = useState('')
   const [type, setType] = useState<BillingDocumentType | 'all'>('all')
   const [currency, setCurrency] = useState<BillingCurrency | 'all'>('all')
@@ -128,6 +130,34 @@ export default function FacturacionPage() {
     }
   }
 
+  /** Reads number, date, client and totals again from the stored files */
+  const reread = async (ids?: number[]) => {
+    setRereading(true)
+    try {
+      const summary = await billingService.reprocess(ids)
+      if (summary.processed === 0) {
+        showSnackbar('No hay documentos para volver a leer', 'info')
+      } else {
+        const message = [
+          `${summary.fixed} de ${summary.processed} ${summary.processed === 1 ? 'documento leído' : 'documentos leídos'} correctamente`,
+          summary.stillNeedReview > 0 && `${summary.stillNeedReview} para revisar a mano`,
+        ].filter(Boolean).join(' · ')
+        showSnackbar(message, summary.stillNeedReview > 0 ? 'warning' : 'success')
+      }
+      if (summary.duplicates > 0) {
+        showSnackbar(
+          `${summary.duplicates} ${summary.duplicates === 1 ? 'documento aparece repetido' : 'documentos aparecen repetidos'} (mismo tipo y número): buscalos y eliminá la copia`,
+          'warning',
+        )
+      }
+      load()
+    } catch (error) {
+      handleActionError(error, 'No se pudieron volver a leer los documentos')
+    } finally {
+      setRereading(false)
+    }
+  }
+
   const showFile = (doc: BillingDocument) =>
     setPreview({
       title: `${BILLING_TYPE_LABELS[doc.type]} ${formatBillingNumber(doc)}${doc.clientName ? ` · ${doc.clientName}` : ''}`,
@@ -169,6 +199,9 @@ export default function FacturacionPage() {
               className="hidden"
               onChange={(e) => uploadFiles(e.target.files)}
             />
+            <Button variant="outline" onClick={() => reread()} disabled={rereading} title="Lee de nuevo los archivos marcados con Revisar datos">
+              <RefreshCw className={`mr-2 h-4 w-4 ${rereading ? 'animate-spin' : ''}`} /> Volver a leer datos
+            </Button>
             <Button onClick={() => fileInput.current?.click()} disabled={uploading}>
               <Upload className="mr-2 h-4 w-4" /> {uploading ? 'Subiendo...' : 'Subir archivos'}
             </Button>
@@ -298,6 +331,9 @@ export default function FacturacionPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
+                            <DropdownMenuItem disabled={rereading} onClick={() => reread([doc.id])}>
+                              <RefreshCw className="mr-2 h-4 w-4" /> Volver a leer datos
+                            </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => setEditing(doc)}>
                               <Pencil className="mr-2 h-4 w-4" /> Editar datos
                             </DropdownMenuItem>

@@ -76,6 +76,14 @@ export interface BillingUploadResult {
   results: Array<{ status: 'created' | 'duplicate' | 'skipped'; fileName?: string; reason?: string }>;
 }
 
+export interface BillingReprocessResult {
+  processed: number;
+  fixed: number;
+  stillNeedReview: number;
+  /** Documents that turned out to share type, series and number with another one */
+  duplicates: number;
+}
+
 /** "A 1234" or "1234"; "Sin número" when it could not be read */
 export const formatBillingNumber = (doc: Pick<BillingDocument, 'series' | 'number'>) =>
   doc.number ? [doc.series, doc.number].filter(Boolean).join(' ') : 'Sin número';
@@ -112,6 +120,12 @@ export const billingService = {
 
   delete: async (id: number): Promise<void> => {
     await api.delete(`/billing/${id}`);
+  },
+
+  /** Reads the data again from the stored files: the given documents, or all flagged for review */
+  reprocess: async (ids?: number[]): Promise<BillingReprocessResult> => {
+    const response = await api.post<ApiResponse<BillingReprocessResult>>('/billing/reprocess', ids ? { ids } : {});
+    return response.data.data;
   },
 
   getFile: async (doc: Pick<BillingDocument, 'id' | 'mimeType'>): Promise<Blob> => {
