@@ -16,10 +16,11 @@ import {
 import { Input } from '@/components/ui/input'
 import { useClientesStore } from '@/stores/clientes/clientesStore'
 import { Cliente, CreateClienteForm } from '@/types'
-import { Building2, Mail, Phone, Plus, Search } from "lucide-react";
+import { Building2, ImagePlus, Mail, Phone, Plus, Search } from "lucide-react";
 import { useEffect, useState } from 'react'
 import { ClientForm } from '@/components/clientes/client-form'
 import { ClientLogo } from '@/components/clientes/client-logo'
+import { ImportLogosDialog } from '@/components/clientes/import-logos-dialog'
 import type { LogoChange } from '@/components/clientes/client-logo-field'
 import { clientesService } from '@/services/clientes.service'
 import { showSnackbar } from '@/components/ui/snackbar'
@@ -49,6 +50,7 @@ export default function ClientesPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [editingCliente, setEditingCliente] = useState<Cliente | null>(null)
+  const [importingLogos, setImportingLogos] = useState(false)
 
   useEffect(() => {
     fetchClientes(currentPage, debouncedSearch)
@@ -156,6 +158,9 @@ export default function ClientesPage() {
             <h1 className="text-3xl font-bold tracking-tight">Clientes</h1>
             <p className="text-muted-foreground">Gestión de clientes y organismos.</p>
           </div>
+          <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={() => setImportingLogos(true)}><ImagePlus className="mr-2 h-4 w-4" /> Importar logos</Button>
+          <ImportLogosDialog open={importingLogos} onOpenChange={setImportingLogos} onDone={() => fetchClientes(currentPage, debouncedSearch)} />
           <Dialog open={isCreateDialogOpen} onOpenChange={handleDialogChange}>
             <DialogTrigger asChild>
               <Button onClick={() => setEditingCliente(null)}><Plus className="mr-2 h-4 w-4" /> Nuevo Cliente</Button>
@@ -168,6 +173,7 @@ export default function ClientesPage() {
               <ClientForm initialData={editingCliente} onSubmit={handleFormSubmit} onCancel={() => setIsCreateDialogOpen(false)} isLoading={isLoading} />
             </DialogContent>
           </Dialog>
+          </div>
         </div>
       </FadeIn>
 
