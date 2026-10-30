@@ -59,14 +59,6 @@ export const BILLING_SORT_LABELS: Record<BillingSort, string> = {
   fecha_desc: 'Fecha, más reciente primero',
 };
 
-/** Numbers missing from a correlative (type + series) */
-export interface BillingNumberGap {
-  type: BillingDocumentType;
-  series: string | null;
-  missing: number[];
-  missingCount: number;
-}
-
 export interface BillingFilters {
   page?: number;
   limit?: number;
@@ -83,7 +75,6 @@ export interface BillingListResponse {
   data: BillingDocument[];
   meta: PaginationMeta;
   summary: BillingSummaryRow[];
-  gaps: BillingNumberGap[];
 }
 
 export type BillingDocumentInput = Partial<

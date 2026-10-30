@@ -112,7 +112,6 @@ export default function FacturacionPage() {
   useEffect(() => { setPage(1) }, [debouncedSearch, type, currency, dateFrom, dateTo, sort, clientFilter])
 
   const documents = result?.data ?? []
-  const gaps = result?.gaps ?? []
   const meta = result?.meta
   // Documents whose currency could not be read are flagged "Revisar datos" in the table instead of totalled
   const totals = result?.summary.filter((row) => row.currency !== '-') ?? []
@@ -311,23 +310,6 @@ export default function FacturacionPage() {
               <Input type="date" aria-label="Hasta" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="w-40" />
             </div>
           </div>
-
-          {gaps.length > 0 && (
-            <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-              <p className="flex items-center gap-1.5 font-medium">
-                <AlertTriangle className="h-4 w-4" aria-hidden="true" /> Faltan números en la numeración
-              </p>
-              <ul className="mt-1 space-y-0.5 text-xs">
-                {gaps.map((gap) => (
-                  <li key={`${gap.type}-${gap.series ?? ''}`}>
-                    {gap.type === 'factura' ? 'Facturas' : 'Notas de crédito'}{gap.series ? ` serie ${gap.series}` : ''}:{' '}
-                    {gap.missing.join(', ')}
-                    {gap.missingCount > gap.missing.length && ` y ${gap.missingCount - gap.missing.length} más`}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
 
           <div className="overflow-x-auto">
             <Table>
