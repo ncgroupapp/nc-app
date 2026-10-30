@@ -28,6 +28,7 @@ import {
 import { FadeIn } from "@/components/common/fade-in";
 import { BusinessMetrics } from "@/components/dashboard/business-metrics";
 import { NewSolicitudesCard } from "@/components/dashboard/new-solicitudes-card";
+import { DailyAlertsCard } from "@/components/dashboard/daily-alerts-card";
 import { licitacionesService, Licitation, LicitationStatus } from "@/services/licitaciones.service";
 import { adjudicacionesService, Adjudication } from "@/services/adjudicaciones.service";
 
@@ -155,6 +156,8 @@ export default function DashboardPage() {
           </Alert>
         </FadeIn>
       )}
+
+      <DailyAlertsCard />
 
       <NewSolicitudesCard />
 
