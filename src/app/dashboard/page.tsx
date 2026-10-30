@@ -75,7 +75,7 @@ export default function DashboardPage() {
       <FadeIn delay={80}>
         <SolicitudesOverviewCard data={data.solicitudes} />
       </FadeIn>
-      <FadeIn delay={120} className="grid gap-4 md:gap-5 xl:grid-cols-[1.65fr_1fr] xl:items-start">
+      <FadeIn delay={120} className="grid gap-4 md:gap-5 lg:grid-cols-2">
         <BillingChartCard data={data.billing} />
         <TodayCard />
       </FadeIn>

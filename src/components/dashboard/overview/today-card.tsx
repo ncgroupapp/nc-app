@@ -11,7 +11,7 @@ import { describeExpiry } from '@/services/certificates.service'
 import { DashboardAlerts, dashboardService } from '@/services/dashboard.service'
 
 const REFRESH_MS = 5 * 60_000
-const MAX_ITEMS = 6
+const MAX_ITEMS = 8
 const TIME_ZONE = 'America/Montevideo'
 
 type Tone = 'red' | 'amber' | 'gray' | 'green'
