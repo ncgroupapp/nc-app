@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { AlertTriangle, Bell, Check, ChevronRight, FilePen, Gavel } from 'lucide-react'
+import { AlertTriangle, BadgeCheck, Bell, Check, ChevronRight, FilePen, Gavel } from 'lucide-react'
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { FadeIn } from '@/components/common/fade-in'
 import { cn } from '@/lib/utils'
-import { ClosingLicitation, DashboardAlerts, dashboardService } from '@/services/dashboard.service'
+import { CertificateAlert, ClosingLicitation, DashboardAlerts, dashboardService } from '@/services/dashboard.service'
+import { describeExpiry } from '@/services/certificates.service'
 
 const TIME_ZONE = 'America/Montevideo'
 const REFRESH_MS = 5 * 60_000
@@ -52,6 +53,12 @@ function timeChipClass(licitation: ClosingLicitation, minutesLeft: number) {
   return 'bg-slate-100 text-slate-700'
 }
 
+const CERTIFICATE_CHIP: Record<CertificateAlert['status'], { label: string; className: string }> = {
+  vencido: { label: 'Vencido', className: 'bg-red-100 text-red-700' },
+  por_vencer: { label: 'Por vencer', className: 'bg-amber-100 text-amber-800' },
+  sin_cargar: { label: 'Sin cargar', className: 'bg-slate-100 text-slate-700' },
+}
+
 function QuotationBadge({ status }: { status: ClosingLicitation['quotationStatus'] }) {
   if (status === 'finalizada') {
     return (
@@ -66,7 +73,7 @@ function QuotationBadge({ status }: { status: ClosingLicitation['quotationStatus
   return <span className="rounded-md bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-700">Sin cotización</span>
 }
 
-/** Dashboard card: calls that close today (with products still missing a supplier offer) and unfinished quotations. */
+/** Dashboard card: calls that close today (with products still missing a supplier offer), unfinished quotations and certificates to renew. */
 export function DailyAlertsCard() {
   const [alerts, setAlerts] = useState<DashboardAlerts | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -100,12 +107,14 @@ export function DailyAlertsCard() {
 
   const closing = alerts?.closingToday ?? []
   const unfinished = alerts?.unfinishedQuotations ?? []
+  const certificates = alerts?.certificates ?? []
   // Nothing pending: keep the dashboard clean
-  if (!alerts || (closing.length === 0 && unfinished.length === 0)) return null
+  if (!alerts || (closing.length === 0 && unfinished.length === 0 && certificates.length === 0)) return null
 
   const summary = [
     closing.length > 0 && `${closing.length} ${closing.length === 1 ? 'compra cierra' : 'compras cierran'} hoy`,
     unfinished.length > 0 && `${unfinished.length} ${unfinished.length === 1 ? 'cotización sin finalizar' : 'cotizaciones sin finalizar'}`,
+    certificates.length > 0 && `${certificates.length} ${certificates.length === 1 ? 'certificado para renovar' : 'certificados para renovar'}`,
   ].filter(Boolean).join(' · ')
 
   return (
@@ -230,6 +239,36 @@ export function DailyAlertsCard() {
                     </li>
                   )
                 })}
+              </ul>
+            </section>
+          )}
+
+          {certificates.length > 0 && (
+            <section aria-labelledby="alerts-certificates">
+              <h3 id="alerts-certificates" className="mb-2 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                <BadgeCheck className="h-3.5 w-3.5" aria-hidden="true" /> Certificados
+              </h3>
+              <ul className="divide-y rounded-lg border">
+                {certificates.map((certificate) => (
+                  <li key={certificate.id}>
+                    <Link
+                      href="/dashboard/certificados"
+                      className="flex items-center gap-3 px-3 py-2.5 transition-colors hover:bg-muted/50"
+                    >
+                      <span className={cn('w-20 shrink-0 rounded-md py-1 text-center text-xs font-semibold', CERTIFICATE_CHIP[certificate.status].className)}>
+                        {CERTIFICATE_CHIP[certificate.status].label}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold">
+                          {certificate.name}
+                          {certificate.requiredForRupe && <span className="font-normal text-muted-foreground"> · RUPE</span>}
+                        </p>
+                        <p className="truncate text-xs text-muted-foreground">{describeExpiry(certificate)}</p>
+                      </div>
+                      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                    </Link>
+                  </li>
+                ))}
               </ul>
             </section>
           )}

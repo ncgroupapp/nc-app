@@ -36,11 +36,23 @@ export interface UnfinishedQuotation {
   overdue: boolean;
 }
 
+export interface CertificateAlert {
+  id: number;
+  name: string;
+  requiredForRupe: boolean;
+  /** YYYY-MM-DD, null when it was never loaded. */
+  expiryDate: string | null;
+  status: 'por_vencer' | 'vencido' | 'sin_cargar';
+  daysLeft: number | null;
+}
+
 export interface DashboardAlerts {
   /** YYYY-MM-DD in Uruguay. */
   today: string;
   closingToday: ClosingLicitation[];
   unfinishedQuotations: UnfinishedQuotation[];
+  /** Expired, about to expire, or RUPE certificates never loaded. */
+  certificates?: CertificateAlert[];
 }
 
 export const dashboardService = {

@@ -7,7 +7,7 @@ import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { removeClientCookie } from "@/lib/utils";
 import { removeAuthToken } from "@/lib/auth-actions";
-import { BookOpen, Calculator, ChevronDown, ChevronUp, ClipboardList, FileText, Gavel, Home, Inbox, LogOut, Package, Settings, Ship, Tag, TrendingUp, Truck, User, Users, Warehouse } from "lucide-react";
+import { BadgeCheck, BookOpen, Calculator, ChevronDown, ChevronUp, ClipboardList, FileText, Gavel, Home, Inbox, LogOut, Package, Receipt, Settings, Ship, Tag, TrendingUp, Truck, User, Users, Warehouse } from "lucide-react";
 import { featureFlags } from "@/lib/feature-flags";
 import {
   Sidebar,
@@ -70,11 +70,6 @@ const sidebarNavItems: NavItem[] = [
     icon: TrendingUp,
   },
   {
-    title: "Remitos",
-    href: "/dashboard/remitos",
-    icon: ClipboardList,
-  },
-  {
     title: "Proveedores",
     href: "/dashboard/proveedores",
     icon: Users,
@@ -93,6 +88,26 @@ const sidebarNavItems: NavItem[] = [
     title: "Ofertas",
     href: "/dashboard/ofertas",
     icon: Tag,
+  },
+  {
+    title: "Documentos",
+    items: [
+      {
+        title: "Remitos",
+        href: "/dashboard/remitos",
+        icon: ClipboardList,
+      },
+      {
+        title: "Facturación",
+        href: "/dashboard/facturacion",
+        icon: Receipt,
+      },
+      {
+        title: "Certificados",
+        href: "/dashboard/certificados",
+        icon: BadgeCheck,
+      },
+    ],
   },
   ...(featureFlags.licitaciones
     ? [
@@ -222,7 +237,7 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Grouped sections (e.g. Licitaciones) */}
+        {/* Grouped sections (e.g. Documentos, Licitaciones) */}
         {groupedItems.map((group) => (
           <Collapsible
             key={group.title}
