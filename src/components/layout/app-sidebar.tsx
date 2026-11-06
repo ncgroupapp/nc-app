@@ -155,7 +155,7 @@ const sidebarNavItems: NavItem[] = [
 
 // Active item: white pill with navy text and a cyan marker on the left edge (brand colors)
 const ACTIVE_ITEM_CLASS =
-  "relative font-medium data-[active=true]:bg-white data-[active=true]:font-semibold data-[active=true]:text-brand-navy data-[active=true]:shadow-sm data-[active=true]:hover:bg-white data-[active=true]:hover:text-brand-navy data-[active=true]:before:absolute data-[active=true]:before:left-0 data-[active=true]:before:top-1.5 data-[active=true]:before:bottom-1.5 data-[active=true]:before:w-1 data-[active=true]:before:rounded-r data-[active=true]:before:bg-brand-cyan";
+  "relative h-10 text-[15px] font-medium [&>svg]:size-5 data-[active=true]:bg-white data-[active=true]:font-semibold data-[active=true]:text-brand-navy data-[active=true]:shadow-sm data-[active=true]:hover:bg-white data-[active=true]:hover:text-brand-navy data-[active=true]:before:absolute data-[active=true]:before:left-0 data-[active=true]:before:top-1.5 data-[active=true]:before:bottom-1.5 data-[active=true]:before:w-1 data-[active=true]:before:rounded-r data-[active=true]:before:bg-brand-cyan";
 
 // "/dashboard" only matches itself; other sections also match their sub-pages (e.g. a product detail)
 function isActivePath(pathname: string, href: string): boolean {
