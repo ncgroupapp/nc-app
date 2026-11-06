@@ -127,6 +127,11 @@ export interface CostComparisonProduct {
 }
 
 export const licitacionesService = {
+  /** Licitations per status over all of them. */
+  getStatusCounts: async (): Promise<Record<LicitationStatus, number>> => {
+    const response = await api.get<ApiResponse<Record<LicitationStatus, number>>>('/licitations/status-counts');
+    return response.data.data;
+  },
   getCostComparison: async (id: number): Promise<CostComparisonProduct[]> => {
     const response = await api.get<ApiResponse<CostComparisonProduct[]>>(`/licitations/${id}/cost-comparison`);
     return response.data.data;

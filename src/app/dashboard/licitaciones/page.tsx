@@ -65,6 +65,16 @@ const statusLabels: Record<LicitationStatus, string> = {
   [LicitationStatus.CLOSED]: "Cerrada",
 };
 
+// Tinted background and border of each status card, matching its icon color
+const STATUS_CARD_CLASS: Record<LicitationStatus, string> = {
+  [LicitationStatus.PENDING]: "border-yellow-200 bg-yellow-50/70",
+  [LicitationStatus.QUOTED]: "border-blue-200 bg-blue-50/70",
+  [LicitationStatus.PARTIAL_ADJUDICATION]: "border-orange-200 bg-orange-50/70",
+  [LicitationStatus.NOT_ADJUDICATED]: "border-red-200 bg-red-50/70",
+  [LicitationStatus.TOTAL_ADJUDICATION]: "border-green-200 bg-green-50/70",
+  [LicitationStatus.CLOSED]: "border-gray-200 bg-gray-50/70",
+};
+
 // Interface para productos con cantidad
 interface ProductWithQuantity {
   product: Product;
@@ -96,6 +106,8 @@ function LicitacionesContent() {
   // Correlative internal number the new licitation will get (assigned by the backend on create)
   const [nextInternalNumber, setNextInternalNumber] = useState("");
   const [licitaciones, setLicitaciones] = useState<Licitation[]>([]);
+  /** Licitations per status over all of them, for the stats cards (the list is paginated). */
+  const [statusCounts, setStatusCounts] = useState<Partial<Record<LicitationStatus, number>>>({});
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [productSearch, setProductSearch] = useState("");
@@ -224,7 +236,11 @@ function LicitacionesContent() {
         dateTo: to ? format(to, "yyyy-MM-dd") : undefined,
       };
 
-      const licitacionesRes = await licitacionesService.getAll(filters);
+      const [licitacionesRes, counts] = await Promise.all([
+        licitacionesService.getAll(filters),
+        licitacionesService.getStatusCounts(),
+      ]);
+      setStatusCounts(counts);
 
       setLicitaciones(licitacionesRes.data || []);
       setTotalPages(licitacionesRes.meta?.lastPage || 1);
@@ -585,7 +601,7 @@ function LicitacionesContent() {
     return estados.map((status) => ({
       status,
       label: statusLabels[status],
-      count: licitaciones.filter((l) => l.status === status).length,
+      count: statusCounts[status] ?? 0,
     }));
   };
 
@@ -854,22 +870,24 @@ function LicitacionesContent() {
       </FadeIn>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
         {getStatsByEstado().map(({ status, label, count }, index) => {
           const estadoInfo = getEstadoInfo(status);
           return (
-            <FadeIn key={status} delay={(index + 1) * 100}>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">{label}</CardTitle>
-                  <estadoInfo.icon className={`h-4 w-4 ${estadoInfo.color}`} />
-                </CardHeader>
-                <CardContent>
-                  {initialLoading ? (
-                    <div className="h-8 w-12 pt-1"><Skeleton className="h-full w-full" /></div>
-                  ) : (
-                    <div className="text-2xl font-bold">{count}</div>
-                  )}
+            <FadeIn key={status} delay={(index + 1) * 100} className="h-full">
+              <Card className={`h-full gap-0 py-0 shadow-sm ${STATUS_CARD_CLASS[status]}`}>
+                <CardContent className="flex items-center gap-4 p-5">
+                  <div className={`flex size-12 shrink-0 items-center justify-center rounded-xl ${estadoInfo.bgColor}`}>
+                    <estadoInfo.icon className={`h-6 w-6 ${estadoInfo.color}`} aria-hidden="true" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-muted-foreground">{label}</p>
+                    {initialLoading ? (
+                      <Skeleton className="mt-1 h-8 w-12" />
+                    ) : (
+                      <p className={`text-3xl font-bold tabular-nums ${estadoInfo.color}`}>{count}</p>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             </FadeIn>
