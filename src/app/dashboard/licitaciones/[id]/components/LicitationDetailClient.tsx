@@ -127,6 +127,7 @@ export function LicitationDetailClient({
               setNewItemData={quotationActions.setNewItemData}
               onAddItem={quotationActions.handleAddItemToQuotation}
               onEditItem={quotationActions.handleEditItem}
+              onDeleteItem={quotationActions.handleDeleteItem}
               onStatusChange={adjudicationActions.handleStatusChange}
               onOpenAward={adjudicationActions.handleOpenAward}
               onOpenReject={adjudicationActions.handleOpenReject}

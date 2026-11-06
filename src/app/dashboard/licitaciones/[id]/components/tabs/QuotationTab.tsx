@@ -31,7 +31,7 @@ import {
   SelectTrigger,
 } from "@/components/ui/select";
 import { useState } from "react";
-import { Calculator, CircleDollarSign, CheckCircle, Download, Edit, FileText, Loader2, Plus, XCircle, Package, Tag, Hash, DollarSign } from "lucide-react";
+import { Calculator, CircleDollarSign, CheckCircle, Download, Edit, FileText, Loader2, Plus, Trash2, XCircle, Package, Tag, Hash, DollarSign } from "lucide-react";
 import { Quotation, QuotationItem } from "@/services/cotizaciones.service";
 import { QuotationStatus, QuotationAwardStatus } from "@/types";
 import { QuotationItemForm } from "@/components/quotations";
@@ -51,6 +51,7 @@ interface QuotationTabProps {
   setNewItemData: React.Dispatch<React.SetStateAction<NewItemData>>;
   onAddItem: () => Promise<void>;
   onEditItem: (item: QuotationItem) => void;
+  onDeleteItem: (item: QuotationItem) => void;
   onStatusChange: (item: QuotationItem, status: QuotationAwardStatus) => void;
   onOpenAward: (item: QuotationItem) => void;
   onOpenReject: (item: QuotationItem) => void;
@@ -70,6 +71,7 @@ export const QuotationTab = ({
   setNewItemData,
   onAddItem,
   onEditItem,
+  onDeleteItem,
   onStatusChange,
   onOpenAward,
   onOpenReject,
@@ -278,9 +280,22 @@ export const QuotationTab = ({
                                   </Button>
                                 )}
                                 {quotation.status !== QuotationStatus.FINALIZED ? (
-                                  <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => onEditItem(item)}>
-                                    <Edit className="h-4 w-4" />
-                                  </Button>
+                                  <>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => onEditItem(item)}>
+                                      <Edit className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8 text-red-600 hover:bg-red-50 hover:text-red-700"
+                                      title="Borrar producto de la cotización"
+                                      aria-label={`Borrar ${item.productName} de la cotización`}
+                                      disabled={submitting}
+                                      onClick={() => onDeleteItem(item)}
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </>
                                 ) : (
                                   item.awardStatus === QuotationAwardStatus.PENDING && (
                                     <>

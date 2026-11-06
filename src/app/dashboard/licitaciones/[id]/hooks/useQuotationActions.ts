@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useConfirm } from "@/hooks/use-confirm";
 import { 
   cotizacionesService, 
   Quotation, 
@@ -60,7 +61,10 @@ export interface UseQuotationActionsReturn {
   setIsEditItemDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
   handleEditItem: (item: QuotationItem) => void;
   handleUpdateItem: () => Promise<void>;
-  
+
+  // Delete item
+  handleDeleteItem: (item: QuotationItem) => Promise<void>;
+
   // Finalize and PDF
   handleFinalizeQuotation: () => Promise<void>;
   handleDownloadPdf: () => Promise<void>;
@@ -109,6 +113,7 @@ export const useQuotationActions = (
   setError: React.Dispatch<React.SetStateAction<string | null>>
 ): UseQuotationActionsReturn => {
   const [submitting, setSubmitting] = useState(false);
+  const { confirm } = useConfirm();
   
   // Create Quotation Modal State
   const [isCreateQuotationDialogOpen, setIsCreateQuotationDialogOpen] = useState(false);
@@ -292,6 +297,31 @@ export const useQuotationActions = (
     }
   };
 
+  const handleDeleteItem = async (item: QuotationItem) => {
+    if (!quotation) return;
+    const confirmed = await confirm({
+      title: "Borrar producto",
+      message: `¿Borrar "${item.productName}" de la cotización ${quotation.quotationIdentifier}? El producto sigue existiendo en el sistema; solo se quita de esta cotización.`,
+      confirmText: "Borrar",
+      cancelText: "Cancelar",
+      variant: "destructive",
+    });
+    if (!confirmed) return;
+
+    try {
+      setSubmitting(true);
+      const updatedQuotation = await cotizacionesService.update(quotation.id, {
+        items: quotation.items.filter((i) => i !== item),
+      });
+      setQuotation(updatedQuotation);
+    } catch (err) {
+      console.error('Error deleting item:', err);
+      setError('Error al borrar el producto de la cotización');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleFinalizeQuotation = async () => {
     if (!quotation) return;
     
@@ -344,6 +374,7 @@ export const useQuotationActions = (
     setIsEditItemDialogOpen,
     handleEditItem,
     handleUpdateItem,
+    handleDeleteItem,
     handleFinalizeQuotation,
     handleDownloadPdf
   };
