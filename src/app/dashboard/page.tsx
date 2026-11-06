@@ -9,6 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { FadeIn } from '@/components/common/fade-in'
 import { BillingChartCard } from '@/components/dashboard/overview/billing-chart-card'
 import { FunnelCard, LatestInvoicesCard, RupeStrip, TopClientsCard } from '@/components/dashboard/overview/overview-cards'
+import { AgendaCard, AtStakeCard, CollectionsCard, MissingOffersCard } from '@/components/dashboard/overview/insight-cards'
 import { OverviewHero } from '@/components/dashboard/overview/overview-hero'
 import { OverviewKpis } from '@/components/dashboard/overview/overview-kpis'
 import { SolicitudesOverviewCard } from '@/components/dashboard/overview/solicitudes-overview-card'
@@ -72,6 +73,22 @@ export default function DashboardPage() {
       <FadeIn delay={40}>
         <OverviewKpis data={data} />
       </FadeIn>
+      {/* Older backends don't send these sections yet */}
+      {data.missingOffers && data.atStake && (
+        <FadeIn delay={60} className="grid gap-4 md:gap-5 lg:grid-cols-2">
+          <MissingOffersCard data={data.missingOffers} />
+          <AtStakeCard
+            data={data.atStake}
+            winRate={data.licitations.funnel.quoted > 0 ? (data.licitations.funnel.adjudicated / data.licitations.funnel.quoted) * 100 : null}
+          />
+        </FadeIn>
+      )}
+      {data.agenda && data.collections && (
+        <FadeIn delay={70} className="grid gap-4 md:gap-5 lg:grid-cols-2">
+          <AgendaCard items={data.agenda} today={data.today} />
+          <CollectionsCard data={data.collections} />
+        </FadeIn>
+      )}
       <FadeIn delay={80}>
         <SolicitudesOverviewCard data={data.solicitudes} />
       </FadeIn>

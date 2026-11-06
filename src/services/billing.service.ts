@@ -39,6 +39,8 @@ export interface BillingDocument {
   mimeType: string;
   fileSize: number;
   needsReview: boolean;
+  /** YYYY-MM-DD the invoice was collected; null while it is still to be collected */
+  paidAt: string | null;
   createdAt: string;
 }
 
@@ -80,9 +82,25 @@ export interface BillingListResponse {
 export type BillingDocumentInput = Partial<
   Pick<
     BillingDocument,
-    'type' | 'series' | 'number' | 'issueDate' | 'clientName' | 'clientRut' | 'clientId' | 'currency' | 'subtotal' | 'tax' | 'total' | 'referenceNumber'
+    'type' | 'series' | 'number' | 'issueDate' | 'clientName' | 'clientRut' | 'clientId' | 'currency' | 'subtotal' | 'tax' | 'total' | 'referenceNumber' | 'paidAt'
   >
 >;
+
+/** Business days (Monday to Friday) until an invoice falls due; holidays are not skipped. */
+export const PAYMENT_TERM_BUSINESS_DAYS = 60;
+
+/** "2026-08-14" → "2026-11-06": the 60th business day after the invoice date */
+export function paymentDueDate(issueDate: string): string {
+  const [year, month, day] = issueDate.split('-').map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  let left = PAYMENT_TERM_BUSINESS_DAYS;
+  while (left > 0) {
+    date.setUTCDate(date.getUTCDate() + 1);
+    const weekday = date.getUTCDay();
+    if (weekday !== 0 && weekday !== 6) left--;
+  }
+  return date.toISOString().slice(0, 10);
+}
 
 export interface BillingUploadResult {
   created: number;

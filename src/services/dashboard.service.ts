@@ -114,6 +114,25 @@ export interface DashboardOverview {
     }>;
   };
   certificates: Array<{ id: number; name: string; status: OverviewCertificateStatus; daysLeft: number | null }>;
+  /** Products of open licitations that no supplier has quoted yet. */
+  missingOffers: { products: number; licitations: number; nextDeadline: string | null };
+  /** Finished quotations (with VAT) of licitations still waiting to be adjudicated. */
+  atStake: MoneyByCurrency & { quotations: number };
+  /** Open licitations closing in the next 7 days, soonest first. */
+  agenda: AgendaItem[];
+  /** Invoices not marked as collected, by when they fall due (60 business days after the invoice date). */
+  collections: Record<'overdue' | 'thisWeek' | 'restOfMonth' | 'nextMonth', MoneyByCurrency & { invoices: number }>;
+}
+
+export interface AgendaItem {
+  id: number;
+  callNumber: string;
+  clientName: string | null;
+  /** YYYY-MM-DD and HH:MM in Uruguay. */
+  deadlineDay: string;
+  deadlineTime: string;
+  state: 'ready' | 'missing_offers' | 'unfinished' | 'no_quotation';
+  missingOffers: number;
 }
 
 export const dashboardService = {

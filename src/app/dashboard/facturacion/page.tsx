@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   AlertTriangle,
+  Check,
   ChevronLeft,
   ChevronRight,
   Eye,
@@ -56,7 +57,39 @@ import {
   billingService,
   formatBillingNumber,
   formatMoney,
+  paymentDueDate,
 } from '@/services/billing.service'
+
+const todayInUruguay = () => new Date().toLocaleDateString('en-CA', { timeZone: 'America/Montevideo' })
+
+/** Invoices: collected (click to undo) or the due date at 60 business days plus a button to mark them collected */
+function PaymentCell({ doc, onToggle }: { doc: BillingDocument; onToggle: (doc: BillingDocument) => void }) {
+  if (doc.type !== 'factura' || !doc.issueDate) return <span className="text-xs text-muted-foreground">-</span>
+  if (doc.paidAt) {
+    return (
+      <button
+        type="button"
+        onClick={() => onToggle(doc)}
+        title="Marcar como no cobrada"
+        className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-800 hover:bg-emerald-200"
+      >
+        <Check className="h-3 w-3" aria-hidden="true" /> Cobrada {formatIsoDate(doc.paidAt)}
+      </button>
+    )
+  }
+  const due = paymentDueDate(doc.issueDate)
+  const overdue = due < todayInUruguay()
+  return (
+    <div className="flex flex-col items-start gap-1">
+      <span className={`text-xs ${overdue ? 'font-semibold text-red-700' : 'text-muted-foreground'}`}>
+        {overdue ? 'Venció' : 'Vence'} {formatIsoDate(due)}
+      </span>
+      <Button variant="outline" size="sm" className="h-6 px-2 text-xs" onClick={() => onToggle(doc)}>
+        <Check className="mr-1 h-3 w-3" aria-hidden="true" /> Cobrada
+      </Button>
+    </div>
+  )
+}
 
 const PAGE_SIZE = 25
 /** New files from the folder agent show up without reloading the page */
@@ -181,6 +214,18 @@ export default function FacturacionPage() {
       load(true)
     } catch (error) {
       handleActionError(error, 'No se pudo vincular el cliente')
+    }
+  }
+
+  /** Marks an invoice as collected today, or back to pending */
+  const togglePaid = async (doc: BillingDocument) => {
+    const paidAt = doc.paidAt ? null : new Date().toLocaleDateString('en-CA', { timeZone: 'America/Montevideo' })
+    try {
+      await billingService.update(doc.id, { paidAt })
+      showSnackbar(paidAt ? `${formatBillingNumber(doc)} marcada como cobrada` : `${formatBillingNumber(doc)} vuelve a estar por cobrar`, 'success')
+      load(true)
+    } catch (error) {
+      handleActionError(error, 'No se pudo actualizar el cobro')
     }
   }
 
@@ -320,16 +365,17 @@ export default function FacturacionPage() {
                   <TableHead>Fecha</TableHead>
                   <TableHead>Cliente</TableHead>
                   <TableHead className="text-right">Total</TableHead>
+                  <TableHead>Cobro</TableHead>
                   <TableHead>Origen</TableHead>
                   <TableHead className="w-[110px] text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
-                  <TableRow><TableCell colSpan={7} className="py-10 text-center text-muted-foreground">Cargando...</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={8} className="py-10 text-center text-muted-foreground">Cargando...</TableCell></TableRow>
                 ) : documents.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
+                    <TableCell colSpan={8} className="py-10 text-center text-muted-foreground">
                       {hasFilters
                         ? 'No hay documentos con esos filtros.'
                         : 'Todavía no hay facturas. Cuando bajes una a la carpeta Ventas NC GROUP aparece acá, o subila con "Subir archivos".'}
@@ -388,6 +434,9 @@ export default function FacturacionPage() {
                     </TableCell>
                     <TableCell className={`text-right font-semibold tabular-nums ${doc.type === 'nota_credito' ? 'text-amber-700' : ''}`}>
                       {doc.type === 'nota_credito' && doc.total !== null ? '− ' : ''}{formatMoney(doc.total !== null ? Math.abs(doc.total) : null, doc.currency)}
+                    </TableCell>
+                    <TableCell>
+                      <PaymentCell doc={doc} onToggle={togglePaid} />
                     </TableCell>
                     <TableCell>
                       <span className="flex items-center gap-1 text-xs text-muted-foreground" title={doc.fileName}>
