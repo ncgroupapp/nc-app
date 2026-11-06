@@ -14,6 +14,7 @@ import {
   Truck,
   Percent,
   Hash,
+  Tag,
 } from "lucide-react";
 import { CreateOfferDto, Offer } from "@/services/offers.service";
 import { productsService, Product } from "@/services/products.service";
@@ -58,6 +59,7 @@ export function OfferForm({
     deliveryDate: "",
     quantity: 1,
     origin: "",
+    brand: "",
     delivery: 0,
   });
 
@@ -87,6 +89,7 @@ export function OfferForm({
         quantity: initialData.quantity || 1,
         delivery: initialData.delivery || 0,
         origin: initialData.origin || "",
+        brand: initialData.brand || "",
       });
       setDialogProductSearch(initialData.product?.name || "");
       setDialogProviderSearch(initialData.provider?.name || "");
@@ -102,6 +105,7 @@ export function OfferForm({
         quantity: 1,
         delivery: 0,
         origin: "",
+        brand: "",
       });
       setDialogProductSearch("");
       setDialogProviderSearch("");
@@ -356,7 +360,7 @@ export function OfferForm({
         </div>
 
         {/* IVA, Entrega y Origen */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label
               htmlFor="iva"
@@ -427,6 +431,24 @@ export function OfferForm({
                 setFormData((prev) => ({ ...prev, origin: e.target.value }))
               }
               placeholder="Ej: China"
+              className="h-10 border-primary/20 focus-visible:ring-primary focus-visible:border-primary"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label
+              htmlFor="brand"
+              className="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-2"
+            >
+              <Tag className="h-3 w-3" />
+              Marca ofertada
+            </Label>
+            <Input
+              id="brand"
+              value={formData.brand || ""}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, brand: e.target.value }))
+              }
+              placeholder="Ej: SKF"
               className="h-10 border-primary/20 focus-visible:ring-primary focus-visible:border-primary"
             />
           </div>

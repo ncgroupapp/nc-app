@@ -19,6 +19,8 @@ export interface Offer {
   iva?: number;
   quantity: number;
   origin?: string;
+  /** Brand offered by the provider. */
+  brand?: string;
   delivery?: number; // Days for delivery
   deliveryDate?: string;
   createdAt: string;
@@ -42,6 +44,7 @@ export interface CreateOfferDto {
   iva?: number;
   quantity: number;
   origin?: string;
+  brand?: string;
   delivery?: number;
   deliveryDate?: string;
 }

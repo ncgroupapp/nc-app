@@ -100,7 +100,38 @@ export interface LicitationFilters {
   dateTo?: string;
 }
 
+export interface CostComparisonOffer {
+  offerId: number;
+  providerId: number;
+  providerName: string;
+  /** Brand the provider offers (null when it was not loaded). */
+  brand: string | null;
+  currency: string;
+  /** Unit price without VAT. */
+  price: number;
+  /** VAT percentage (e.g. 22). */
+  iva: number;
+  /** Delivery time in days. */
+  delivery: number;
+  origin: string | null;
+}
+
+export interface CostComparisonProduct {
+  productId: number;
+  name: string;
+  code: string | null;
+  productBrand: string | null;
+  quantity: number;
+  /** Cheapest (with VAT) first. */
+  offers: CostComparisonOffer[];
+}
+
 export const licitacionesService = {
+  getCostComparison: async (id: number): Promise<CostComparisonProduct[]> => {
+    const response = await api.get<ApiResponse<CostComparisonProduct[]>>(`/licitations/${id}/cost-comparison`);
+    return response.data.data;
+  },
+
   getAll: async (filters: LicitationFilters = {}): Promise<PaginatedResponse<Licitation>> => {
     const params = new URLSearchParams();
     if (filters.page) params.append('page', filters.page.toString());

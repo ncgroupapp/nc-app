@@ -10,6 +10,7 @@ import { useAdjudicationActions } from "../hooks/useAdjudicationActions";
 import { cotizacionesService, Quotation, QuotationItem } from "@/services/cotizaciones.service";
 import {
   RequestedProductsTab,
+  CostComparisonTab,
   QuotationTab,
   DeliveryTab,
   CreateQuotationDialog,
@@ -91,8 +92,9 @@ export function LicitationDetailClient({
       {/* Tabs */}
       <FadeIn delay={200}>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="productos" className="cursor-pointer">Productos Solicitados</TabsTrigger>
+            <TabsTrigger value="costos" className="cursor-pointer">Comparativa de costos</TabsTrigger>
             <TabsTrigger value="cotizaciones" className="cursor-pointer">Cotización</TabsTrigger>
             <TabsTrigger value="entregas" className="cursor-pointer">Entrega de Productos</TabsTrigger>
           </TabsList>
@@ -106,6 +108,11 @@ export function LicitationDetailClient({
               hasQuotation={!!quotation}
               onRefresh={handleRefreshLicitation}
             />
+          </TabsContent>
+
+          {/* Tab: Comparativa de costos */}
+          <TabsContent value="costos" className="space-y-4">
+            <CostComparisonTab licitationId={licitationId} />
           </TabsContent>
 
           {/* Tab: Cotización */}
