@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { ThemeProvider } from "@/components/layout/theme-provider";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -45,11 +46,13 @@ export default function RootLayout({
         >
           Saltar al contenido principal
         </a>
-        <div className="relative flex min-h-screen flex-col">
-          {children}
-        </div>
-        <Toaster />
-        <ConfirmDialog />
+        <ThemeProvider>
+          <div className="relative flex min-h-screen flex-col">
+            {children}
+          </div>
+          <Toaster />
+          <ConfirmDialog />
+        </ThemeProvider>
       </body>
     </html>
   );

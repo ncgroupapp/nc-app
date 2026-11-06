@@ -117,7 +117,7 @@ export function MultiSelectSearch({
                       handleUnselect(selectedValues[0])
                     }}
                   >
-                    <X className="h-3 w-3 text-black hover:text-foreground" />
+                    <X className="h-3 w-3 text-black dark:text-foreground hover:text-foreground" />
                   </button>
                 </Badge>
               ) : (
@@ -146,14 +146,14 @@ export function MultiSelectSearch({
                           handleUnselect(val)
                         }}
                       >
-                        <X className="h-3 w-3 text-black hover:text-foreground" />
+                        <X className="h-3 w-3 text-black dark:text-foreground hover:text-foreground" />
                       </button>
                     </Badge>
                   )
                 })
               )
             ) : (
-              <span className="text-black">{placeholder}</span>
+              <span className="text-black dark:text-foreground">{placeholder}</span>
             )}
           </div>
           <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />

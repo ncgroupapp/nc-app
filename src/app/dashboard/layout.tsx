@@ -3,6 +3,7 @@ import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/s
 import { AuthGuard } from '@/components/layout/auth-guard'
 import { Separator } from '@/components/ui/separator'
 import { ErrorBoundary } from '@/components/common/error-boundary'
+import { ThemeToggle } from '@/components/layout/theme-toggle'
 
 export default function DashboardLayout({
   children,
@@ -14,12 +15,15 @@ export default function DashboardLayout({
       <SidebarProvider>
         <AppSidebar />
         <SidebarInset>
-          <header className="relative flex h-14 shrink-0 items-center gap-2 bg-white px-4">
+          <header className="relative flex h-14 shrink-0 items-center gap-2 bg-card px-4">
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 h-4" />
-            <span className="text-sm font-medium text-brand-navy">
+            <span className="text-sm font-medium text-brand-navy dark:text-foreground">
               Sistema de Gestión de Licitaciones
             </span>
+            <div className="ml-auto">
+              <ThemeToggle />
+            </div>
             <div className="nc-brand-line absolute inset-x-0 bottom-0 h-0.5" aria-hidden="true" />
           </header>
           <main id="main-content" className="flex-1 p-6" tabIndex={-1}>
