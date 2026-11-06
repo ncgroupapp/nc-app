@@ -132,10 +132,10 @@ export default function LoginPage() {
             <Image
               src="/logo/logo-blanco.png"
               alt="NC Group SAS"
-              width={429}
-              height={338}
+              width={610}
+              height={480}
               priority
-              className="h-[min(338px,36vh)] w-auto -ml-6 mt-[min(70px,6vh)] object-contain"
+              className="h-[min(460px,42vh)] w-auto -ml-8 mt-[min(24px,2vh)] object-contain"
             />
           </div>
         </div>
@@ -168,11 +168,14 @@ export default function LoginPage() {
       </section>
 
       <section className="flex flex-1 items-center justify-center p-6">
-      <Card className="nc-login-form nc-login-fade w-full max-w-sm border-0 shadow-none [animation-delay:.3s]">
+      <Card
+        className="nc-login-form nc-login-fade w-full max-w-md gap-0 rounded-3xl border-0 p-8 text-white shadow-2xl shadow-brand-navy/30 [animation-delay:.3s] md:p-10"
+        style={{ background: "linear-gradient(150deg, var(--brand-blue) 0%, #17335F 45%, var(--brand-navy) 100%)" }}
+      >
         <CardHeader className="space-y-2 px-0">
           <div className="mb-4 flex justify-center lg:hidden">
             <Image
-              src="/logo/logo.png"
+              src="/logo/logo-blanco.png"
               alt="NC Group SAS"
               width={120}
               height={95}
@@ -180,14 +183,14 @@ export default function LoginPage() {
               className="object-contain"
             />
           </div>
-          <CardTitle className="text-3xl font-extrabold tracking-tight text-brand-navy">Bienvenido</CardTitle>
-          <CardDescription className="text-[15px]">
+          <CardTitle className="text-3xl font-extrabold tracking-tight text-white">Bienvenido</CardTitle>
+          <CardDescription className="text-[15px] text-[#C9D3E6]">
             Ingresá con tu cuenta para continuar.
           </CardDescription>
         </CardHeader>
-        <CardContent className="px-0">
+        <CardContent className="px-0 pt-6">
           {error && (
-            <div className="mb-4 flex items-center gap-2 rounded-md bg-destructive/15 p-3 text-sm text-destructive">
+            <div className="mb-4 flex items-center gap-2 rounded-md bg-red-500/20 p-3 text-sm text-red-100">
               <AlertCircle className="h-4 w-4" />
               <p>{error}</p>
             </div>
@@ -199,9 +202,9 @@ export default function LoginPage() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel className="text-white dark:text-white">Email</FormLabel>
                     <FormControl>
-                      <Input className="h-12 rounded-xl"
+                      <Input className="h-12 rounded-xl border-white/20 bg-white text-slate-900 dark:bg-white dark:text-slate-900"
                         placeholder="tu@email.com"
                         type="email"
                         autoComplete="email"
@@ -209,7 +212,7 @@ export default function LoginPage() {
                         {...field}
                       />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-red-200" />
                   </FormItem>
                 )}
               />
@@ -218,10 +221,10 @@ export default function LoginPage() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Contraseña</FormLabel>
+                    <FormLabel className="text-white dark:text-white">Contraseña</FormLabel>
                     <FormControl>
                       <div className="relative">
-                        <Input className="h-12 rounded-xl"
+                        <Input className="h-12 rounded-xl border-white/20 bg-white text-slate-900 dark:bg-white dark:text-slate-900"
                           type={showPassword ? "text" : "password"}
                           autoComplete="current-password"
                           disabled={isLoading}
@@ -246,13 +249,13 @@ export default function LoginPage() {
                         </Button>
                       </div>
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-red-200" />
                   </FormItem>
                 )}
               />
               <Button
                 type="submit"
-                className="mt-2 h-12 w-full rounded-xl bg-gradient-to-r from-brand-blue to-brand-navy text-[15px] font-bold shadow-lg shadow-brand-blue/30 hover:opacity-95"
+                className="mt-4 h-12 w-full rounded-xl bg-gradient-to-r from-brand-cyan to-brand-blue text-[15px] font-bold text-white shadow-lg shadow-black/20 hover:opacity-95"
                 disabled={isLoading}
               >
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -261,8 +264,8 @@ export default function LoginPage() {
             </form>
           </Form>
         </CardContent>
-        <CardFooter className="flex justify-center px-0">
-          <p className="text-center text-xs text-muted-foreground">
+        <CardFooter className="mt-6 flex justify-center px-0">
+          <p className="text-center text-xs text-[#AFC0DA]">
             © {new Date().getFullYear()} NC GROUP SAS · Sistema de Gestión de Licitaciones
           </p>
         </CardFooter>
