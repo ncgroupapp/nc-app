@@ -112,7 +112,7 @@ export function LicitationDetailClient({
 
           {/* Tab: Comparativa de costos */}
           <TabsContent value="costos" className="space-y-4">
-            <CostComparisonTab licitationId={licitationId} />
+            <CostComparisonTab licitationId={licitationId} callNumber={licitation.callNumber} />
           </TabsContent>
 
           {/* Tab: Cotización */}

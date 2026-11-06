@@ -34,8 +34,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+/** Values already known when creating an offer from a licitation (CD name, product and quantity). */
+export interface OfferPrefill {
+  name: string;
+  productId: number;
+  productName: string;
+  quantity: number;
+}
+
 interface OfferFormProps {
   initialData?: Offer | null;
+  prefill?: OfferPrefill | null;
   onSubmit: (data: CreateOfferDto) => Promise<void>;
   onCancel: () => void;
   isLoading?: boolean;
@@ -45,6 +54,7 @@ type OfferFormState = CreateOfferDto & { iva: number };
 
 export function OfferForm({
   initialData,
+  prefill,
   onSubmit,
   onCancel,
   isLoading = false,
@@ -95,22 +105,23 @@ export function OfferForm({
       setDialogProviderSearch(initialData.provider?.name || "");
     } else {
       setFormData({
-        name: "",
-        productId: 0,
+        name: prefill?.name || "",
+        productId: prefill?.productId || 0,
         providerId: 0,
         price: 0,
         currency: Currency.USD,
         iva: 22,
         deliveryDate: "",
-        quantity: 1,
+        quantity: prefill?.quantity || 1,
         delivery: 0,
         origin: "",
         brand: "",
       });
-      setDialogProductSearch("");
+      // Searching by the prefilled product's name makes it show up as the selected option
+      setDialogProductSearch(prefill?.productName || "");
       setDialogProviderSearch("");
     }
-  }, [initialData]);
+  }, [initialData, prefill]);
 
   useEffect(() => {
     const fetchProducts = async () => {

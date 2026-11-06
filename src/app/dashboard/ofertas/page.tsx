@@ -2,7 +2,7 @@
 
 import { FadeIn } from "@/components/common/fade-in";
 import { SearchInput } from "@/components/common/search-input";
-import { OfferForm } from "@/components/ofertas/offer-form";
+import { OfferForm, OfferPrefill } from "@/components/ofertas/offer-form";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -72,6 +72,23 @@ export default function OfertasPage() {
   // Dialog states
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingOffer, setEditingOffer] = useState<Offer | null>(null);
+  const [prefill, setPrefill] = useState<OfferPrefill | null>(null);
+
+  // "Cargar oferta" from a licitation's cost comparison lands here with the CD, product and quantity
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const productId = Number(params.get("productId"));
+    if (params.get("nuevaOferta") !== "1" || !productId) return;
+    setPrefill({
+      name: params.get("cd") || "",
+      productId,
+      productName: params.get("producto") || "",
+      quantity: Number(params.get("cantidad")) || 1,
+    });
+    setEditingOffer(null);
+    setIsDialogOpen(true);
+    window.history.replaceState(null, "", window.location.pathname);
+  }, []);
 
   const fetchOffers = async (page: number) => {
     try {
@@ -171,11 +188,13 @@ export default function OfertasPage() {
 
   const handleOpenCreate = () => {
     setEditingOffer(null);
+    setPrefill(null);
     setIsDialogOpen(true);
   };
 
   const handleOpenEdit = (offer: Offer) => {
     setEditingOffer(offer);
+    setPrefill(null);
     setIsDialogOpen(true);
   };
 
@@ -505,6 +524,7 @@ export default function OfertasPage() {
           </DialogHeader>
           <OfferForm
             initialData={editingOffer}
+            prefill={prefill}
             onSubmit={handleSubmit}
             onCancel={() => setIsDialogOpen(false)}
             isLoading={submitting}

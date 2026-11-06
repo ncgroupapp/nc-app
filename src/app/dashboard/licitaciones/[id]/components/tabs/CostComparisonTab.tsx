@@ -13,7 +13,19 @@ import { CostComparisonOffer, CostComparisonProduct, licitacionesService } from 
 
 interface CostComparisonTabProps {
   licitationId: number;
+  /** Purchase number, used as the CD name of offers loaded from here. */
+  callNumber: string;
 }
+
+/** Offers page link that opens "Nueva Oferta" with the CD, product and quantity already filled in. */
+const newOfferHref = (callNumber: string, product: CostComparisonProduct) =>
+  `/dashboard/ofertas?${new URLSearchParams({
+    nuevaOferta: "1",
+    cd: callNumber,
+    productId: String(product.productId),
+    producto: product.name,
+    cantidad: String(product.quantity),
+  })}`;
 
 const formatMoney = (currency: string, value: number) =>
   `${currency} ${value.toLocaleString("es-UY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -31,7 +43,7 @@ function bestTotalsByCurrency(products: CostComparisonProduct[]) {
   return [...totals.entries()];
 }
 
-export function CostComparisonTab({ licitationId }: CostComparisonTabProps) {
+export function CostComparisonTab({ licitationId, callNumber }: CostComparisonTabProps) {
   const [products, setProducts] = useState<CostComparisonProduct[] | null>(null);
   const [error, setError] = useState(false);
 
@@ -105,7 +117,7 @@ export function CostComparisonTab({ licitationId }: CostComparisonTabProps) {
                   <p className="text-xs text-muted-foreground">{subtitle} · Sin ofertas: falta pedir precio</p>
                 </div>
                 <Button size="sm" variant="outline" asChild>
-                  <Link href={`/dashboard/productos/${product.productId}`}>Cargar oferta</Link>
+                  <Link href={newOfferHref(callNumber, product)}>Cargar oferta</Link>
                 </Button>
               </div>
             );
@@ -125,6 +137,9 @@ export function CostComparisonTab({ licitationId }: CostComparisonTabProps) {
                 <Badge variant="secondary">
                   {product.offers.length} {product.offers.length === 1 ? "oferta" : "ofertas"}
                 </Badge>
+                <Button size="sm" variant="outline" asChild>
+                  <Link href={newOfferHref(callNumber, product)}>Cargar oferta</Link>
+                </Button>
               </div>
               <div className="overflow-x-auto">
                 <Table>
