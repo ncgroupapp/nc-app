@@ -65,6 +65,8 @@ export function QuotationItemForm({
     // The offer price is the COST of the item; the sale price is not overwritten.
     onChange({
       ...data,
+      // Link the item to the offered product: the PDF takes the part code from it
+      productId: offer.productId ? String(offer.productId) : data.productId,
       productName: offer.product?.name || offer.name || data.productName,
       brand: offer.product?.brand || data.brand,
       origin: offer.origin ?? offer.product?.origin ?? data.origin,
