@@ -100,11 +100,11 @@ export function BillingChartCard({ data }: { data: DashboardOverview['billing'] 
                       >
                         <span
                           className={cn(
-                            'w-full max-w-[30px] rounded-t-[4px] transition-colors',
+                            'nc-bar w-full max-w-[30px] rounded-t-[4px] transition-colors',
                             isLast ? 'bg-brand-blue' : 'bg-[#9CC8EA] group-hover:bg-[#6FAEDF]',
                             hovered === i && !isLast && 'bg-[#6FAEDF]',
                           )}
-                          style={{ height: `${(value / top) * 100}%`, minHeight: value > 0 ? 2 : 0 }}
+                          style={{ height: `${(value / top) * 100}%`, minHeight: value > 0 ? 2 : 0, animationDelay: `${i * 45}ms` }}
                         />
                         {isLast && hovered === null && value > 0 && (
                           <span

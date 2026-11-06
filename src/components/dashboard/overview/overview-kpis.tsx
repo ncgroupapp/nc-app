@@ -4,12 +4,13 @@ import { Card } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import { DashboardOverview } from '@/services/dashboard.service'
 import { formatCompactMoney, percentChange } from './format'
+import { CountUp } from './count-up'
 import { Sparkline } from './sparkline'
 
 interface TileProps {
   label: string
   icon: LucideIcon
-  value: string
+  value: React.ReactNode
   children: React.ReactNode
 }
 
@@ -52,18 +53,18 @@ export function OverviewKpis({ data }: { data: DashboardOverview }) {
 
   return (
     <section className="grid grid-cols-2 gap-2.5 md:gap-4 xl:grid-cols-4">
-      <Tile label="Facturado neto (mes)" icon={CircleDollarSign} value={formatCompactMoney(billing.thisMonth.UYU)}>
+      <Tile label="Facturado neto (mes)" icon={CircleDollarSign} value={<CountUp value={billing.thisMonth.UYU} format={(n) => formatCompactMoney(n)} />}>
         <Delta value={percentChange(billing.thisMonth.UYU, billing.lastMonth.UYU)} suffix="%" />
         <Sparkline values={billing.monthly.map((m) => m.UYU)} area label="Facturación neta de los últimos 12 meses" />
       </Tile>
-      <Tile label="Licitaciones activas" icon={FileText} value={String(licitations.active)}>
+      <Tile label="Licitaciones activas" icon={FileText} value={<CountUp value={licitations.active} format={(n) => String(Math.round(n))} />}>
         <p className="text-xs text-muted-foreground">
           {licitations.closingToday > 0 && <span className="font-semibold text-red-700">{licitations.closingToday} cierran hoy · </span>}
           {licitations.closingThisWeek} en 7 días
         </p>
         <Sparkline values={licitations.createdMonthly} label="Licitaciones recibidas por mes" />
       </Tile>
-      <Tile label="Tasa de adjudicación" icon={Target} value={rate === null ? '—' : `${rate.toLocaleString('es-UY')}%`}>
+      <Tile label="Tasa de adjudicación" icon={Target} value={rate === null ? '—' : <CountUp value={rate} format={(n) => `${n.toLocaleString('es-UY', { maximumFractionDigits: 1 })}%`} />}>
         {rate === null ? (
           <p className="text-xs text-muted-foreground">Sin licitaciones resueltas en 90 días</p>
         ) : (
@@ -74,7 +75,7 @@ export function OverviewKpis({ data }: { data: DashboardOverview }) {
       <Tile
         label="Margen promedio"
         icon={TrendingUp}
-        value={margin.last90Days === null ? '—' : `${margin.last90Days.toLocaleString('es-UY', { maximumFractionDigits: 1 })}%`}
+        value={margin.last90Days === null ? '—' : <CountUp value={margin.last90Days} format={(n) => `${n.toLocaleString('es-UY', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`} />}
       >
         <p className="text-xs text-muted-foreground">
           {margin.last90Days === null ? 'Faltan costos en las cotizaciones' : `Mínimo esperado ${margin.minMargin}%`}

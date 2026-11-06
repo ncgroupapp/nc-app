@@ -290,3 +290,22 @@
 
 /* Thin brand gradient line (used under the dashboard top bar) */
 .nc-brand-line { background: var(--brand-gradient); }
+
+/* Dashboard motion: sweeping brand line, live dot, ticker, bars and funnel that grow in */
+.nc-sweep { background: linear-gradient(90deg, transparent, var(--brand-cyan), var(--brand-blue), transparent);
+  background-size: 50% 100%; background-repeat: no-repeat; animation: nc-sweep 5s linear infinite; }
+.nc-live-dot { animation: nc-live 1.8s ease-in-out infinite; }
+.nc-ticker { mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); }
+.nc-ticker-run { display: inline-flex; animation: nc-ticker var(--nc-ticker-duration, 40s) linear infinite; }
+.nc-ticker:hover .nc-ticker-run { animation-play-state: paused; }
+.nc-bar { transform-origin: bottom; animation: nc-bar-grow 0.9s cubic-bezier(.2,.8,.2,1) both; }
+.nc-fill { transform-origin: left; animation: nc-grow 1.1s cubic-bezier(.2,.8,.2,1) both; }
+
+@keyframes nc-sweep { from { background-position: -100% 0; } to { background-position: 200% 0; } }
+@keyframes nc-live { 0%, 100% { box-shadow: 0 0 0 0 rgb(52 211 153 / 0.6); } 50% { box-shadow: 0 0 0 6px rgb(52 211 153 / 0); } }
+@keyframes nc-ticker { to { transform: translateX(-50%); } }
+@keyframes nc-bar-grow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .nc-sweep, .nc-live-dot, .nc-ticker-run, .nc-bar, .nc-fill { animation: none !important; }
+}

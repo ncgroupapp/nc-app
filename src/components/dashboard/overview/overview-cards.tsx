@@ -32,11 +32,14 @@ export function FunnelCard({ funnel }: { funnel: DashboardOverview['licitations'
     <Card className="gap-0 rounded-2xl p-0 shadow-xs">
       <CardHead title="Embudo de licitaciones" subtitle="Recibidas en los últimos 90 días" />
       <div className="space-y-3 px-4 pb-4 pt-4 md:px-5 md:pb-5">
-        {STAGES.map((stage) => (
+        {STAGES.map((stage, i) => (
           <div key={stage.key} className="grid grid-cols-[96px_1fr_36px] items-center gap-2.5 text-[13px]">
             <span>{stage.label}</span>
             <div className="h-3 overflow-hidden rounded-md bg-slate-100">
-              <div className="h-full rounded-md" style={{ width: `${(funnel[stage.key] / base) * 100}%`, background: stage.color }} />
+              <div
+                className="nc-fill h-full rounded-md"
+                style={{ width: `${(funnel[stage.key] / base) * 100}%`, background: stage.color, animationDelay: `${300 + i * 150}ms` }}
+              />
             </div>
             <span className="text-right font-bold tabular-nums">{funnel[stage.key]}</span>
           </div>
