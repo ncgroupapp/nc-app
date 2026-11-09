@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Gavel } from "lucide-react";
 import { Licitation } from "@/services/licitaciones.service";
 import { getEstadoInfo } from "../utils/statusHelpers";
+import { EditLicitationDialog } from "./dialogs/EditLicitationDialog";
 
 interface LicitationHeaderProps {
   licitation: Licitation;
@@ -39,12 +40,15 @@ export const LicitationHeader = ({ licitation }: LicitationHeaderProps) => {
           </div>
         </div>
       </div>
-      <Badge
-        className={`${estadoInfo.bgColor} ${estadoInfo.color} border-none text-sm px-3 py-1 font-medium`}
-      >
-        <estadoInfo.icon className="mr-2 h-4 w-4" />
-        {estadoInfo.label}
-      </Badge>
+      <div className="flex items-center gap-3">
+        <EditLicitationDialog licitation={licitation} />
+        <Badge
+          className={`${estadoInfo.bgColor} ${estadoInfo.color} border-none text-sm px-3 py-1 font-medium`}
+        >
+          <estadoInfo.icon className="mr-2 h-4 w-4" />
+          {estadoInfo.label}
+        </Badge>
+      </div>
     </div>
   );
 };
