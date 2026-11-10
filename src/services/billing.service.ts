@@ -71,12 +71,25 @@ export interface BillingFilters {
   dateTo?: string;
   sort?: BillingSort;
   clientId?: number;
+  /** por_cobrar: invoices not collected yet; vencida: those past their due date */
+  collection?: 'por_cobrar' | 'vencida';
+}
+
+/** Documents each tab of the page would show, with the other filters applied */
+export interface BillingTabCounts {
+  all: number;
+  invoices: number;
+  creditNotes: number;
+  toCollect: number;
+  overdue: number;
 }
 
 export interface BillingListResponse {
   data: BillingDocument[];
   meta: PaginationMeta;
   summary: BillingSummaryRow[];
+  /** Missing on backends older than the tabs */
+  tabCounts?: BillingTabCounts;
 }
 
 export type BillingDocumentInput = Partial<

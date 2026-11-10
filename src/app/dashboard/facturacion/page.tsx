@@ -3,7 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   AlertTriangle,
+  Banknote,
   Check,
+  Clock,
   ChevronLeft,
   ChevronRight,
   Eye,
@@ -12,13 +14,13 @@ import {
   Pencil,
   Receipt,
   RefreshCw,
+  SlidersHorizontal,
   Trash2,
   Upload,
   UserRound,
   X,
 } from 'lucide-react'
 
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -36,6 +38,7 @@ import { showSnackbar } from '@/components/ui/snackbar'
 import { FadeIn } from '@/components/common/fade-in'
 import { PageHeader } from '@/components/common/page-header'
 import { SearchInput } from '@/components/common/search-input'
+import { CountUp } from '@/components/dashboard/overview/count-up'
 import { BillingDocumentDialog } from '@/components/facturacion/billing-document-dialog'
 import { ClientPicker, PickedClient } from '@/components/facturacion/client-picker'
 import { PdfPreviewDialog, PdfRequest } from '@/components/remitos/pdf-preview-dialog'
@@ -43,17 +46,17 @@ import { PdfPreviewDialog, PdfRequest } from '@/components/remitos/pdf-preview-d
 import { useConfirm } from '@/hooks/use-confirm'
 import { useDebounce } from '@/hooks/use-debounce'
 import { handleActionError } from '@/lib/error-handler'
+import { cn } from '@/lib/utils'
 import { formatIsoDate } from '@/services/remitos.service'
 import {
   BILLING_SORT_LABELS,
-  BILLING_TYPE_CLASSES,
   BILLING_TYPE_LABELS,
-  CLIENT_MATCH_LABELS,
   BillingCurrency,
   BillingDocument,
-  BillingDocumentType,
   BillingListResponse,
   BillingSort,
+  BillingSummaryRow,
+  BillingTabCounts,
   billingService,
   formatBillingNumber,
   formatMoney,
@@ -62,32 +65,107 @@ import {
 
 const todayInUruguay = () => new Date().toLocaleDateString('en-CA', { timeZone: 'America/Montevideo' })
 
-/** Invoices: collected (click to undo) or the due date at 60 business days plus a button to mark them collected */
+/** "2027-02-01" → "01/02" */
+const shortDate = (iso: string) => formatIsoDate(iso).slice(0, 5)
+
+/**
+ * Invoices: a green "Cobrada" chip (click to undo), or the due date at 60 business days as an
+ * amber (pending) or red (overdue) chip with a button to mark it collected.
+ */
 function PaymentCell({ doc, onToggle }: { doc: BillingDocument; onToggle: (doc: BillingDocument) => void }) {
-  if (doc.type !== 'factura' || !doc.issueDate) return <span className="text-xs text-muted-foreground">-</span>
+  if (doc.type !== 'factura' || !doc.issueDate) return <span className="text-xs text-muted-foreground">—</span>
   if (doc.paidAt) {
     return (
       <button
         type="button"
         onClick={() => onToggle(doc)}
         title="Marcar como no cobrada"
-        className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-800 hover:bg-emerald-200"
+        className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-800 hover:bg-emerald-200"
       >
-        <Check className="h-3 w-3" aria-hidden="true" /> Cobrada {formatIsoDate(doc.paidAt)}
+        <Check className="h-3 w-3" aria-hidden="true" /> Cobrada {shortDate(doc.paidAt)}
       </button>
     )
   }
   const due = paymentDueDate(doc.issueDate)
   const overdue = due < todayInUruguay()
   return (
-    <div className="flex flex-col items-start gap-1">
-      <span className={`text-xs ${overdue ? 'font-semibold text-red-700' : 'text-muted-foreground'}`}>
-        {overdue ? 'Venció' : 'Vence'} {formatIsoDate(due)}
+    <div className="flex items-center gap-1.5">
+      <span
+        className={cn(
+          'inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold',
+          overdue ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-800',
+        )}
+        title={`Vence a los 60 días hábiles: ${formatIsoDate(due)}`}
+      >
+        {overdue ? <AlertTriangle className="h-3 w-3" aria-hidden="true" /> : <Clock className="h-3 w-3" aria-hidden="true" />}
+        {overdue ? 'Venció' : 'Vence'} {shortDate(due)}
       </span>
-      <Button variant="outline" size="sm" className="h-6 px-2 text-xs" onClick={() => onToggle(doc)}>
-        <Check className="mr-1 h-3 w-3" aria-hidden="true" /> Cobrada
+      <Button
+        variant="outline"
+        size="icon"
+        className="size-7 rounded-full text-emerald-700 hover:bg-emerald-50"
+        title="Marcar como cobrada"
+        aria-label={`Marcar ${formatBillingNumber(doc)} como cobrada`}
+        onClick={() => onToggle(doc)}
+      >
+        <Check className="h-3.5 w-3.5" />
       </Button>
     </div>
+  )
+}
+
+/** "INTENDENCIA DE SALTO" → "IS" */
+const initials = (name: string) => {
+  const words = name.split(/\s+/).filter((word) => word.length > 2)
+  return (words.length > 1 ? words.slice(0, 2).map((word) => word[0]).join('') : name.slice(0, 2)).toUpperCase()
+}
+
+type BillingTab = 'all' | 'factura' | 'nota_credito' | 'por_cobrar' | 'vencida'
+
+const TABS: Array<{ value: BillingTab; label: string; count: keyof BillingTabCounts }> = [
+  { value: 'all', label: 'Todas', count: 'all' },
+  { value: 'factura', label: 'Facturas', count: 'invoices' },
+  { value: 'nota_credito', label: 'Notas de crédito', count: 'creditNotes' },
+  { value: 'por_cobrar', label: 'Por cobrar', count: 'toCollect' },
+  { value: 'vencida', label: 'Vencidas', count: 'overdue' },
+]
+
+/** Net billed in one currency, with the invoiced and credited amounts under it */
+function TotalsCard({ row }: { row: BillingSummaryRow }) {
+  const usd = row.currency === 'USD'
+  return (
+    <Card className={cn('gap-0 py-0 shadow-sm', usd ? 'border-blue-200 bg-blue-50/70' : 'border-emerald-200 bg-emerald-50/70')}>
+      <CardContent className="p-5">
+        <div className="flex items-center gap-4">
+          <div
+            className={cn(
+              'flex size-12 shrink-0 items-center justify-center rounded-xl text-white shadow-sm',
+              usd ? 'bg-brand-blue' : 'bg-emerald-600',
+            )}
+          >
+            {usd ? <span className="text-sm font-extrabold tracking-wide">USD</span> : <Banknote className="h-6 w-6" aria-hidden="true" />}
+          </div>
+          <div className="min-w-0">
+            <p className={cn('text-sm font-medium', usd ? 'text-blue-900/70' : 'text-emerald-900/70')}>
+              Neto facturado en {usd ? 'dólares' : 'pesos'}
+            </p>
+            <p className={cn('whitespace-nowrap text-[28px] font-extrabold leading-tight tracking-tight tabular-nums', usd ? 'text-brand-navy' : 'text-emerald-900')}>
+              <CountUp value={row.net} format={(n) => formatMoney(n, row.currency)} />
+            </p>
+          </div>
+        </div>
+        <div className={cn('mt-4 flex flex-wrap gap-x-6 gap-y-1 border-t pt-3 text-[13px]', usd ? 'border-blue-200 text-blue-900/80' : 'border-emerald-200 text-emerald-900/80')}>
+          <span>
+            Facturado <b className="font-semibold tabular-nums">{formatMoney(row.invoiceTotal, row.currency)}</b> · {row.invoiceCount}{' '}
+            {row.invoiceCount === 1 ? 'factura' : 'facturas'}
+          </span>
+          <span>
+            Notas de crédito <b className="font-semibold tabular-nums text-red-700">− {formatMoney(row.creditNoteTotal, row.currency)}</b> ·{' '}
+            {row.creditNoteCount} {row.creditNoteCount === 1 ? 'nota' : 'notas'}
+          </span>
+        </div>
+      </CardContent>
+    </Card>
   )
 }
 
@@ -104,7 +182,8 @@ export default function FacturacionPage() {
   const [uploading, setUploading] = useState(false)
   const [rereading, setRereading] = useState(false)
   const [search, setSearch] = useState('')
-  const [type, setType] = useState<BillingDocumentType | 'all'>('all')
+  const [tab, setTab] = useState<BillingTab>('all')
+  const [showFilters, setShowFilters] = useState(false)
   const [currency, setCurrency] = useState<BillingCurrency | 'all'>('all')
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
@@ -122,7 +201,8 @@ export default function FacturacionPage() {
         page,
         limit: PAGE_SIZE,
         search: debouncedSearch || undefined,
-        type: type === 'all' ? undefined : type,
+        type: tab === 'factura' || tab === 'nota_credito' ? tab : undefined,
+        collection: tab === 'por_cobrar' || tab === 'vencida' ? tab : undefined,
         currency: currency === 'all' ? undefined : currency,
         dateFrom: dateFrom || undefined,
         dateTo: dateTo || undefined,
@@ -134,7 +214,7 @@ export default function FacturacionPage() {
     } finally {
       if (!quiet) setLoading(false)
     }
-  }, [page, debouncedSearch, type, currency, dateFrom, dateTo, sort, clientFilter])
+  }, [page, debouncedSearch, tab, currency, dateFrom, dateTo, sort, clientFilter])
 
   useEffect(() => { load() }, [load])
   useEffect(() => {
@@ -142,13 +222,15 @@ export default function FacturacionPage() {
     return () => clearInterval(timer)
   }, [load])
   // Any filter change goes back to the first page
-  useEffect(() => { setPage(1) }, [debouncedSearch, type, currency, dateFrom, dateTo, sort, clientFilter])
+  useEffect(() => { setPage(1) }, [debouncedSearch, tab, currency, dateFrom, dateTo, sort, clientFilter])
 
   const documents = result?.data ?? []
   const meta = result?.meta
   // Documents whose currency could not be read are flagged "Revisar datos" in the table instead of totalled
   const totals = result?.summary.filter((row) => row.currency !== '-') ?? []
-  const hasFilters = !!(search || type !== 'all' || currency !== 'all' || dateFrom || dateTo || clientFilter)
+  const hasFilters = !!(search || tab !== 'all' || currency !== 'all' || dateFrom || dateTo || clientFilter)
+  // Filters folded under the button, apart from the search and the tabs
+  const activeFilters = [currency !== 'all', !!dateFrom || !!dateTo, !!clientFilter, sort !== 'numero_desc'].filter(Boolean).length
 
   const uploadFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return
@@ -281,169 +363,217 @@ export default function FacturacionPage() {
       />
 
       {totals.length > 0 && (
-        <div className="mb-4 grid gap-3 md:grid-cols-2">
-          {totals.map((row) => (
-            <Card key={row.currency} className="py-4">
-              <CardContent className="grid grid-cols-3 gap-3 px-4">
-                <div>
-                  <p className="text-xs text-muted-foreground">Facturado {row.currency}</p>
-                  <p className="text-lg font-semibold tabular-nums">{formatMoney(row.invoiceTotal, row.currency)}</p>
-                  <p className="text-xs text-muted-foreground">{row.invoiceCount} {row.invoiceCount === 1 ? 'factura' : 'facturas'}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Notas de crédito</p>
-                  <p className="text-lg font-semibold tabular-nums text-amber-700">− {formatMoney(row.creditNoteTotal, row.currency)}</p>
-                  <p className="text-xs text-muted-foreground">{row.creditNoteCount} {row.creditNoteCount === 1 ? 'nota' : 'notas'}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Neto</p>
-                  <p className="text-lg font-bold tabular-nums text-brand-navy">{formatMoney(row.net, row.currency)}</p>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+        <div className="mb-5 grid gap-4 md:grid-cols-2">
+          {[...totals]
+            .sort((a, b) => (a.currency === 'UYU' ? -1 : b.currency === 'UYU' ? 1 : 0))
+            .map((row) => <TotalsCard key={row.currency} row={row} />)}
         </div>
       )}
 
-      <Card>
-        <CardContent className="space-y-4 pt-6">
-          <div className="flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-center">
-            <SearchInput
-              placeholder="Buscar por número, cliente, RUT o archivo..."
-              value={search}
-              onChange={setSearch}
-              className="lg:max-w-sm"
-            />
-            <Select value={type} onValueChange={(v) => setType(v as BillingDocumentType | 'all')}>
-              <SelectTrigger className="lg:w-48" aria-label="Filtrar por tipo"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Facturas y notas de crédito</SelectItem>
-                <SelectItem value="factura">Solo facturas</SelectItem>
-                <SelectItem value="nota_credito">Solo notas de crédito</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={currency} onValueChange={(v) => setCurrency(v as BillingCurrency | 'all')}>
-              <SelectTrigger className="lg:w-36" aria-label="Filtrar por moneda"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Toda moneda</SelectItem>
-                <SelectItem value="UYU">Pesos</SelectItem>
-                <SelectItem value="USD">Dólares</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={sort} onValueChange={(v) => setSort(v as BillingSort)}>
-              <SelectTrigger className="lg:w-64" aria-label="Ordenar"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {(Object.keys(BILLING_SORT_LABELS) as BillingSort[]).map((value) => (
-                  <SelectItem key={value} value={value}>{BILLING_SORT_LABELS[value]}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {clientFilter ? (
-              <span className="inline-flex h-9 items-center gap-2 rounded-md border bg-[#EAF3FB] px-3 text-sm font-medium text-brand-navy">
-                <UserRound className="h-4 w-4" aria-hidden="true" />
-                <span className="max-w-48 truncate">{clientFilter.name}</span>
-                <button type="button" aria-label="Quitar filtro de cliente" onClick={() => setClientFilter(null)} className="text-muted-foreground hover:text-foreground">
-                  <X className="h-4 w-4" />
-                </button>
-              </span>
-            ) : (
-              <ClientPicker trigger={<><UserRound className="mr-2 h-4 w-4" />Cliente</>} onSelect={setClientFilter} />
-            )}
-            <div className="flex items-center gap-2">
-              <Input type="date" aria-label="Desde" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="w-40" />
-              <span className="text-sm text-muted-foreground">a</span>
-              <Input type="date" aria-label="Hasta" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="w-40" />
+      <Card className="gap-0 overflow-hidden py-0 shadow-sm">
+        <CardContent className="p-0">
+          <div className="flex flex-col gap-3 border-b p-4 lg:flex-row lg:items-center">
+            <div className="flex flex-wrap gap-1.5" role="tablist" aria-label="Qué documentos ver">
+              {TABS.map((item) => {
+                const count = result?.tabCounts?.[item.count]
+                const active = tab === item.value
+                return (
+                  <button
+                    key={item.value}
+                    type="button"
+                    role="tab"
+                    aria-selected={active}
+                    onClick={() => setTab(item.value)}
+                    className={cn(
+                      'inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors',
+                      active ? 'bg-brand-navy text-white shadow-sm' : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                    )}
+                  >
+                    {item.label}
+                    {count !== undefined && (
+                      <span
+                        className={cn(
+                          'rounded-full px-1.5 text-xs tabular-nums',
+                          active ? 'bg-white/20' : item.value === 'vencida' && count > 0 ? 'bg-red-100 text-red-700' : 'bg-muted',
+                        )}
+                      >
+                        {count}
+                      </span>
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+            <div className="flex flex-1 items-center gap-2 lg:justify-end">
+              <SearchInput
+                placeholder="Buscar número, cliente o RUT..."
+                value={search}
+                onChange={setSearch}
+                className="w-full lg:max-w-xs"
+              />
+              <Button variant={showFilters || activeFilters ? 'secondary' : 'outline'} onClick={() => setShowFilters((v) => !v)} className="shrink-0">
+                <SlidersHorizontal className="mr-2 h-4 w-4" aria-hidden="true" /> Filtros
+                {activeFilters > 0 && <span className="ml-1.5 rounded-full bg-brand-navy px-1.5 text-xs text-white">{activeFilters}</span>}
+              </Button>
             </div>
           </div>
+
+          {showFilters && (
+            <div className="flex flex-col gap-3 border-b bg-muted/30 px-4 py-3 lg:flex-row lg:flex-wrap lg:items-center">
+              <Select value={currency} onValueChange={(v) => setCurrency(v as BillingCurrency | 'all')}>
+                <SelectTrigger className="bg-card lg:w-36" aria-label="Filtrar por moneda"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toda moneda</SelectItem>
+                  <SelectItem value="UYU">Pesos</SelectItem>
+                  <SelectItem value="USD">Dólares</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={sort} onValueChange={(v) => setSort(v as BillingSort)}>
+                <SelectTrigger className="bg-card lg:w-64" aria-label="Ordenar"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {(Object.keys(BILLING_SORT_LABELS) as BillingSort[]).map((value) => (
+                    <SelectItem key={value} value={value}>{BILLING_SORT_LABELS[value]}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {clientFilter ? (
+                <span className="inline-flex h-9 items-center gap-2 rounded-md border bg-[#EAF3FB] px-3 text-sm font-medium text-brand-navy">
+                  <UserRound className="h-4 w-4" aria-hidden="true" />
+                  <span className="max-w-48 truncate">{clientFilter.name}</span>
+                  <button type="button" aria-label="Quitar filtro de cliente" onClick={() => setClientFilter(null)} className="text-muted-foreground hover:text-foreground">
+                    <X className="h-4 w-4" />
+                  </button>
+                </span>
+              ) : (
+                <ClientPicker trigger={<><UserRound className="mr-2 h-4 w-4" />Cliente</>} onSelect={setClientFilter} />
+              )}
+              <div className="flex items-center gap-2">
+                <Input type="date" aria-label="Desde" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="w-40 bg-card" />
+                <span className="text-sm text-muted-foreground">a</span>
+                <Input type="date" aria-label="Hasta" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="w-40 bg-card" />
+              </div>
+              {activeFilters > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setCurrency('all')
+                    setSort('numero_desc')
+                    setClientFilter(null)
+                    setDateFrom('')
+                    setDateTo('')
+                  }}
+                >
+                  Limpiar filtros
+                </Button>
+              )}
+            </div>
+          )}
 
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead>N.º</TableHead>
+                <TableRow className="bg-muted/40 hover:bg-muted/40">
+                  <TableHead className="pl-4">N.º</TableHead>
                   <TableHead>Fecha</TableHead>
                   <TableHead>Cliente</TableHead>
                   <TableHead className="text-right">Total</TableHead>
                   <TableHead>Cobro</TableHead>
-                  <TableHead>Origen</TableHead>
-                  <TableHead className="w-[110px] text-right">Acciones</TableHead>
+                  <TableHead className="w-[96px] pr-4 text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
-                  <TableRow><TableCell colSpan={8} className="py-10 text-center text-muted-foreground">Cargando...</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={6} className="py-10 text-center text-muted-foreground">Cargando...</TableCell></TableRow>
                 ) : documents.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="py-10 text-center text-muted-foreground">
+                    <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
                       {hasFilters
                         ? 'No hay documentos con esos filtros.'
                         : 'Todavía no hay facturas. Cuando bajes una a la carpeta Ventas NC GROUP aparece acá, o subila con "Subir archivos".'}
                     </TableCell>
                   </TableRow>
-                ) : documents.map((doc) => (
-                  <TableRow key={doc.id}>
-                    <TableCell>
-                      <Badge variant="outline" className={BILLING_TYPE_CLASSES[doc.type]}>{BILLING_TYPE_LABELS[doc.type]}</Badge>
+                ) : documents.map((doc) => {
+                  const creditNote = doc.type === 'nota_credito'
+                  const clientName = doc.client?.name ?? doc.clientName
+                  return (
+                  <TableRow key={doc.id} className="group">
+                    <TableCell className="pl-4">
+                      <div className={cn('flex items-center gap-1.5 font-mono font-semibold', creditNote && 'text-amber-700')}>
+                        {formatBillingNumber(doc)}
+                        <span title={doc.source === 'carpeta' ? `Desde la carpeta · ${doc.fileName}` : `Subida a mano · ${doc.fileName}`}>
+                          {doc.source === 'carpeta'
+                            ? <FolderSync className="h-3 w-3 text-muted-foreground/60" aria-label="Desde la carpeta" />
+                            : <Upload className="h-3 w-3 text-muted-foreground/60" aria-label="Subida a mano" />}
+                        </span>
+                      </div>
+                      {creditNote && (
+                        <span className="text-xs font-medium text-amber-700">
+                          Nota de crédito{doc.referenceNumber ? ` · ref. ${doc.referenceNumber}` : ''}
+                        </span>
+                      )}
                       {doc.needsReview && (
-                        <span className="mt-1 flex items-center gap-1 text-xs text-amber-700">
+                        <span className="flex items-center gap-1 text-xs font-medium text-amber-700">
                           <AlertTriangle className="h-3 w-3" aria-hidden="true" /> Revisar datos
                         </span>
                       )}
                     </TableCell>
-                    <TableCell className="font-mono font-semibold">
-                      {formatBillingNumber(doc)}
-                      {doc.referenceNumber && (
-                        <span className="block font-sans text-xs font-normal text-muted-foreground">Ref. factura {doc.referenceNumber}</span>
-                      )}
-                    </TableCell>
-                    <TableCell>{formatIsoDate(doc.issueDate)}</TableCell>
+                    <TableCell className="whitespace-nowrap text-muted-foreground">{formatIsoDate(doc.issueDate)}</TableCell>
                     <TableCell>
-                      {doc.client ? (
-                        <>
-                          <button
-                            type="button"
-                            className="text-left font-medium hover:text-brand-blue hover:underline"
-                            title="Ver solo las facturas de este cliente"
-                            onClick={() => setClientFilter({ id: doc.client!.id, name: doc.client!.name })}
-                          >
-                            {doc.client.name}
-                          </button>
-                          <div className="text-xs text-muted-foreground">
-                            {doc.clientMatch ? CLIENT_MATCH_LABELS[doc.clientMatch] : 'Vinculado'}
-                            {doc.clientRut && ` · RUT ${doc.clientRut}`}
-                          </div>
-                        </>
-                      ) : (
-                        <>
-                          <div className="font-medium">{doc.clientName || '-'}</div>
-                          <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
-                            {(doc.clientName || doc.clientRut) && (
-                              <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-800">Sin vincular</span>
+                      <div className="flex items-center gap-3">
+                        <span
+                          className={cn(
+                            'flex size-8 shrink-0 items-center justify-center rounded-full text-[11px] font-bold',
+                            doc.client ? 'bg-[#EAF3FB] text-brand-blue' : 'bg-amber-100 text-amber-800',
+                          )}
+                          aria-hidden="true"
+                        >
+                          {clientName ? initials(clientName) : '?'}
+                        </span>
+                        <div className="min-w-0">
+                          {doc.client ? (
+                            <button
+                              type="button"
+                              className="text-left font-medium hover:text-brand-blue hover:underline"
+                              title="Ver solo las facturas de este cliente"
+                              onClick={() => setClientFilter({ id: doc.client!.id, name: doc.client!.name })}
+                            >
+                              {doc.client.name}
+                            </button>
+                          ) : (
+                            <div className="font-medium">{doc.clientName || '-'}</div>
+                          )}
+                          <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+                            {doc.clientRut && <span>RUT {doc.clientRut}</span>}
+                            {!doc.client && (
+                              <>
+                                {(doc.clientName || doc.clientRut) && (
+                                  <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-800">Sin vincular</span>
+                                )}
+                                <ClientPicker
+                                  trigger={<span className="text-xs">Vincular cliente</span>}
+                                  variant="secondary"
+                                  className="h-6 px-2"
+                                  onSelect={(client) => linkClient(doc, client)}
+                                />
+                              </>
                             )}
-                            <ClientPicker
-                              trigger={<span className="text-xs">Vincular cliente</span>}
-                              variant="secondary"
-                              className="h-6 px-2"
-                              onSelect={(client) => linkClient(doc, client)}
-                            />
                           </div>
-                          {doc.clientRut && <div className="text-xs text-muted-foreground">RUT {doc.clientRut}</div>}
-                        </>
-                      )}
+                        </div>
+                      </div>
                     </TableCell>
-                    <TableCell className={`text-right font-semibold tabular-nums ${doc.type === 'nota_credito' ? 'text-amber-700' : ''}`}>
-                      {doc.type === 'nota_credito' && doc.total !== null ? '− ' : ''}{formatMoney(doc.total !== null ? Math.abs(doc.total) : null, doc.currency)}
+                    <TableCell
+                      className={cn(
+                        'whitespace-nowrap text-right font-mono font-semibold tabular-nums',
+                        creditNote ? 'text-red-700' : doc.currency === 'USD' ? 'text-brand-blue' : 'text-foreground',
+                      )}
+                    >
+                      {creditNote && doc.total !== null ? '− ' : ''}{formatMoney(doc.total !== null ? Math.abs(doc.total) : null, doc.currency)}
                     </TableCell>
                     <TableCell>
                       <PaymentCell doc={doc} onToggle={togglePaid} />
                     </TableCell>
-                    <TableCell>
-                      <span className="flex items-center gap-1 text-xs text-muted-foreground" title={doc.fileName}>
-                        {doc.source === 'carpeta' ? <><FolderSync className="h-3.5 w-3.5" aria-hidden="true" /> Carpeta</> : <><Upload className="h-3.5 w-3.5" aria-hidden="true" /> Manual</>}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="pr-4 text-right">
                       <div className="flex justify-end gap-1">
                         <Button variant="ghost" size="icon" title="Ver archivo" aria-label={`Ver ${doc.fileName}`} onClick={() => showFile(doc)}>
                           <Eye className="h-4 w-4" />
@@ -470,7 +600,8 @@ export default function FacturacionPage() {
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
+                  )
+                })}
               </TableBody>
             </Table>
           </div>
