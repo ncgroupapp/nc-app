@@ -6,13 +6,9 @@ import {
   AlertTriangle,
   ChevronDown,
   ChevronRight,
-  CircleDollarSign,
   FileSpreadsheet,
-  FileText,
   Loader2,
-  Percent,
   Settings2,
-  TrendingUp,
 } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
@@ -26,6 +22,7 @@ import { FadeIn } from '@/components/common/fade-in'
 import { PageHeader } from '@/components/common/page-header'
 import { SearchInput } from '@/components/common/search-input'
 import { exportProfitabilityToExcel } from '@/components/rentabilidad/export-excel'
+import { MARGIN_GOOD, ProfitabilityInsights, ProfitabilityKpis, marginTone } from '@/components/rentabilidad/insights'
 import { SettingsDialog } from '@/components/rentabilidad/settings-dialog'
 
 import { useDebounce } from '@/hooks/use-debounce'
@@ -50,6 +47,16 @@ const pct = (value: number | null) =>
   value === null ? '—' : `${value.toLocaleString('es-UY', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} %`
 const day = (iso: string) => new Date(iso).toLocaleDateString('es-UY', { day: '2-digit', month: '2-digit', year: '2-digit' })
 
+const TABS = [
+  { key: 'todas', label: 'Todas', match: () => true },
+  { key: 'adjudicadas', label: 'Adjudicadas', match: (l: ProfitabilityLicitation) => l.status === 'adjudicada' },
+  { key: 'presentadas', label: 'Presentadas', match: (l: ProfitabilityLicitation) => l.status === 'presentada' },
+  { key: 'bajo', label: 'Margen bajo', match: (l: ProfitabilityLicitation) => l.margin !== null && l.margin < MARGIN_GOOD },
+] as const
+type TabKey = (typeof TABS)[number]['key']
+
+const MARGIN_BAR = { good: 'bg-emerald-600', mid: 'bg-amber-500', low: 'bg-red-600', none: 'bg-transparent' } as const
+
 const STATUS_STYLES: Record<ProfitabilityStatus, string> = {
   abierta: 'border-sky-200 bg-sky-50 text-sky-700',
   presentada: 'border-amber-200 bg-amber-50 text-amber-700',
@@ -72,6 +79,7 @@ export default function RentabilidadPage() {
   const [dateTo, setDateTo] = useState('')
   const [status, setStatus] = useState<string>(ALL)
   const [clientId, setClientId] = useState<string>(ALL)
+  const [tab, setTab] = useState<TabKey>('todas')
   const debouncedSearch = useDebounce(search, 300)
   const debouncedProduct = useDebounce(product, 300)
 
@@ -125,8 +133,9 @@ export default function RentabilidadPage() {
   }
 
   const settings = report?.settings ?? null
-  const summary = report?.summary
   const minMargin = settings?.minMargin ?? 5
+  const activeTab = TABS.find((t) => t.key === tab) ?? TABS[0]
+  const rows = report?.licitations.filter(activeTab.match) ?? []
 
   return (
     <div className="space-y-6">
@@ -169,22 +178,24 @@ export default function RentabilidadPage() {
       )}
 
       <FadeIn delay={100}>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Kpi icon={FileText} label="Licitaciones" value={summary ? String(summary.licitations) : '—'}
-            hint={summary ? `${summary.belowMinMargin} bajo el margen mínimo` : undefined} />
-          <Kpi icon={CircleDollarSign} label="Monto ofertado" value={summary ? usd(summary.offeredUsd) : '—'}
-            hint={summary ? `Costo ${usd(summary.costUsd)}` : undefined} />
-          <Kpi icon={TrendingUp} label="Ganancia estimada" value={summary ? usd(summary.profitUsd) : '—'} dark
-            hint={summary?.itemsWithoutOffer ? `${summary.itemsWithoutOffer} ítems sin oferta no cuentan` : 'Sobre ítems con oferta elegida'} />
-          <Kpi icon={Percent} label="Margen promedio" value={summary ? pct(summary.margin) : '—'}
-            hint={summary ? `Markup ${pct(summary.markup)}` : undefined}
-            tone={summary?.margin == null ? undefined : summary.margin < minMargin ? 'bad' : 'ok'} />
-        </div>
+        {report ? (
+          <ProfitabilityKpis report={report} minMargin={minMargin} />
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-24 animate-pulse rounded-xl bg-muted" />)}
+          </div>
+        )}
       </FadeIn>
+
+      {report && report.licitations.length > 0 && (
+        <FadeIn delay={150}>
+          <ProfitabilityInsights rows={report.licitations} />
+        </FadeIn>
+      )}
 
       <FadeIn delay={200}>
         <Card className="gap-0 overflow-hidden py-0">
-          <div className="grid gap-3 border-b p-4 md:grid-cols-2 xl:grid-cols-[1.4fr_1.2fr_150px_150px_160px_200px_auto]">
+          <div className="grid gap-3 border-b p-4 md:grid-cols-2 lg:grid-cols-[1fr_1fr_150px_150px] 2xl:grid-cols-[1.4fr_1.2fr_150px_150px_160px_200px_auto]">
             <SearchInput placeholder="Licitación, N° interno o cliente..." value={search} onChange={setSearch} />
             <SearchInput placeholder="Producto (nombre o código)..." value={product} onChange={setProduct} />
             <Input type="date" aria-label="Desde" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
@@ -215,6 +226,26 @@ export default function RentabilidadPage() {
             </Button>
           </div>
 
+          <div className="flex flex-wrap gap-2 border-b px-4 py-3" role="tablist" aria-label="Vista">
+            {TABS.map((t) => {
+              const count = report?.licitations.filter(t.match).length ?? 0
+              const active = t.key === tab
+              return (
+                <button
+                  key={t.key}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => setTab(t.key)}
+                  className={`flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors ${active ? 'border-brand-navy bg-brand-navy text-white' : 'bg-card hover:bg-accent'}`}
+                >
+                  {t.label}
+                  <span className={`rounded-full px-1.5 text-xs font-bold ${active ? 'bg-white/20' : 'bg-muted text-muted-foreground'}`}>{count}</span>
+                </button>
+              )
+            })}
+          </div>
+
           <CardContent className="p-0">
             <Table>
               <TableHeader className="bg-muted/50">
@@ -237,14 +268,14 @@ export default function RentabilidadPage() {
                       <Loader2 className="mx-auto h-5 w-5 animate-spin" />
                     </TableCell>
                   </TableRow>
-                ) : report && report.licitations.length === 0 ? (
+                ) : report && rows.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={9} className="py-12 text-center text-muted-foreground">
                       No hay licitaciones con estos filtros
                     </TableCell>
                   </TableRow>
                 ) : (
-                  report?.licitations.map((l) => (
+                  rows.map((l) => (
                     <Fragment key={l.id}>
                       <LicitationRow licitation={l} open={expanded.has(l.id)} onToggle={() => toggle(l.id)} />
                       {expanded.has(l.id) && <DetailRow licitation={l} minMargin={minMargin} />}
@@ -305,7 +336,19 @@ function LicitationRow({ licitation: l, open, onToggle }: { licitation: Profitab
       <TableCell className={`whitespace-nowrap text-right font-semibold tabular-nums ${hasCost ? (l.profitUsd < 0 ? 'text-red-600' : 'text-emerald-700') : ''}`}>
         {hasCost ? usd(l.profitUsd) : '—'}
       </TableCell>
-      <TableCell className="text-center"><MarginPill value={l.margin} below={l.belowMinMargin} /></TableCell>
+      <TableCell>
+        <div className="flex items-center justify-center gap-2">
+          <MarginPill value={l.margin} below={l.belowMinMargin} />
+          {l.margin !== null && (
+            <span className="hidden h-1.5 w-14 overflow-hidden rounded-full bg-muted lg:block" aria-hidden="true">
+              <span
+                className={`block h-full rounded-full ${MARGIN_BAR[marginTone(l.margin)]}`}
+                style={{ width: `${Math.min(Math.max(l.margin, 0), 60) / 60 * 100}%` }}
+              />
+            </span>
+          )}
+        </div>
+      </TableCell>
       <TableCell className="pr-4 text-right tabular-nums">{pct(l.markup)}</TableCell>
     </TableRow>
   )
@@ -407,37 +450,5 @@ function Legend({ color, text }: { color: string; text: string }) {
       <i className={`inline-block size-2.5 rounded-full ${color}`} />
       {text}
     </span>
-  )
-}
-
-interface KpiProps {
-  icon: React.ComponentType<{ className?: string }>
-  label: string
-  value: string
-  hint?: string
-  dark?: boolean
-  tone?: 'ok' | 'bad'
-}
-
-function Kpi({ icon: Icon, label, value, hint, dark, tone }: KpiProps) {
-  return (
-    <Card className={`relative overflow-hidden py-4 ${dark ? 'border-brand-navy bg-brand-navy text-white' : ''}`}>
-      <CardContent className="flex items-center gap-4 px-5">
-        <div className={`grid size-11 shrink-0 place-items-center rounded-xl ${dark ? 'bg-white/10 text-white' : 'bg-[#E8F2FA] text-brand-blue'}`}>
-          <Icon className="h-5 w-5" />
-        </div>
-        <div className="min-w-0">
-          <div className={`text-[11px] font-bold uppercase tracking-wider ${dark ? 'text-[#AFC0DA]' : 'text-muted-foreground'}`}>{label}</div>
-          <div
-            className={`truncate text-xl font-extrabold ${dark ? 'text-white' : tone === 'bad' ? 'text-red-600' : tone === 'ok' ? 'text-emerald-700' : 'text-brand-navy'}`}
-            title={value}
-          >
-            {value}
-          </div>
-          {hint && <div className={`truncate text-xs ${dark ? 'text-[#AFC0DA]' : 'text-muted-foreground'}`}>{hint}</div>}
-        </div>
-      </CardContent>
-      {dark && <div className="absolute inset-x-0 bottom-0 h-[3px] bg-gradient-to-r from-[#2B7FD0] to-[#50D2DC]" />}
-    </Card>
   )
 }
