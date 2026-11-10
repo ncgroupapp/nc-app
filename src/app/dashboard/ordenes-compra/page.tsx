@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
-import { ChevronLeft, ChevronRight, Eye, FileCheck2, FileText, MoreHorizontal, Pencil, Plus, Trash2 } from 'lucide-react'
+import { Banknote, ChevronLeft, ChevronRight, Eye, FileCheck2, FileText, MoreHorizontal, Pencil, Plus, ReceiptText, Trash2, type LucideIcon } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -13,6 +13,7 @@ import { showSnackbar } from '@/components/ui/snackbar'
 import { FadeIn } from '@/components/common/fade-in'
 import { PageHeader } from '@/components/common/page-header'
 import { SearchInput } from '@/components/common/search-input'
+import { CountUp } from '@/components/dashboard/overview/count-up'
 import { PurchaseOrderDialog } from '@/components/ordenes-compra/purchase-order-dialog'
 import { PdfPreviewDialog, PdfRequest } from '@/components/remitos/pdf-preview-dialog'
 import { useConfirm } from '@/hooks/use-confirm'
@@ -25,13 +26,44 @@ import { formatIsoDate } from '@/services/remitos.service'
 
 const PAGE_SIZE = 25
 
-function Metric({ label, value, hint, warn }: { label: string; value: string; hint: string; warn?: boolean }) {
+const METRIC_TONES = {
+  navy: { card: 'border-blue-200 bg-blue-50/70', icon: 'bg-brand-navy text-white', value: 'text-brand-navy' },
+  green: { card: 'border-emerald-200 bg-emerald-50/70', icon: 'bg-emerald-600 text-white', value: 'text-emerald-800' },
+  sky: { card: 'border-sky-200 bg-sky-50/60', icon: 'bg-brand-blue text-white', value: 'text-brand-blue' },
+  amber: { card: 'border-amber-200 bg-amber-50', icon: 'bg-amber-500 text-white', value: 'text-amber-800' },
+  quiet: { card: 'border-slate-200 bg-slate-50', icon: 'bg-slate-400 text-white', value: 'text-slate-700' },
+} as const
+
+function Metric({
+  label,
+  value,
+  hint,
+  icon: Icon,
+  tone,
+}: {
+  label: string
+  value: React.ReactNode
+  hint: string
+  /** A Lucide icon, or a short text such as "USD" */
+  icon: LucideIcon | string
+  tone: keyof typeof METRIC_TONES
+}) {
+  const style = METRIC_TONES[tone]
   return (
-    <Card className="gap-0 py-0 shadow-xs">
-      <CardContent className="p-4">
-        <p className="text-[12.5px] font-medium text-muted-foreground">{label}</p>
-        <p className={cn('mt-0.5 text-2xl font-extrabold tracking-tight', warn && 'text-amber-700')}>{value}</p>
-        <p className="text-xs text-muted-foreground">{hint}</p>
+    <Card className={cn('h-full gap-0 py-0 shadow-sm', style.card)}>
+      <CardContent className="flex items-center gap-3.5 p-4">
+        <div className={cn('flex size-11 shrink-0 items-center justify-center rounded-xl shadow-sm', style.icon)}>
+          {typeof Icon === "string" ? (
+            <span className="text-sm font-extrabold tracking-wide" aria-hidden="true">{Icon}</span>
+          ) : (
+            <Icon className="h-6 w-6" aria-hidden="true" />
+          )}
+        </div>
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-muted-foreground">{label}</p>
+          <p className={cn('whitespace-nowrap text-2xl font-extrabold leading-tight tracking-tight tabular-nums', style.value)}>{value}</p>
+          <p className="text-xs leading-snug text-muted-foreground">{hint}</p>
+        </div>
       </CardContent>
     </Card>
   )
@@ -111,10 +143,6 @@ export default function OrdenesCompraPage() {
   const showFile = (order: PurchaseOrder) =>
     setPreview({ title: `Orden de compra ${order.number}`, fileName: order.fileName ?? `${order.number}.pdf`, load: () => purchaseOrdersService.getFile(order) })
 
-  const amounts = metrics
-    ? [metrics.amounts.UYU && formatMoney(metrics.amounts.UYU, 'UYU'), metrics.amounts.USD && formatMoney(metrics.amounts.USD, 'USD')].filter(Boolean)
-    : []
-
   return (
     <div className="space-y-6">
       <PageHeader
@@ -129,16 +157,40 @@ export default function OrdenesCompraPage() {
         }
       />
 
-      <FadeIn className="grid grid-cols-2 gap-3 md:gap-4 xl:grid-cols-4">
+      <FadeIn className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {metrics ? (
           <>
-            <Metric label="Órdenes cargadas" value={String(metrics.total)} hint={`${metrics.thisMonth} este mes`} />
-            <Metric label="Monto total" value={amounts[0] || formatMoney(0, 'UYU')} hint={amounts[1] ? `+ ${amounts[1]}` : 'Suma de todas las órdenes'} />
-            <Metric label="Sin facturar" value={String(metrics.withoutInvoice)} hint="Sin factura vinculada" warn={metrics.withoutInvoice > 0} />
-            <Metric label="Sin remito" value={String(metrics.withoutRemito)} hint="Sin entrega vinculada" warn={metrics.withoutRemito > 0} />
+            <Metric
+              label="Órdenes cargadas"
+              icon={FileCheck2}
+              tone="navy"
+              value={<CountUp value={metrics.total} format={(n) => String(Math.round(n))} />}
+              hint={`${metrics.thisMonth} ${metrics.thisMonth === 1 ? 'cargada' : 'cargadas'} este mes`}
+            />
+            <Metric
+              label="Total en pesos"
+              icon={Banknote}
+              tone="green"
+              value={<CountUp value={metrics.amounts.UYU} format={(n) => formatMoney(n, 'UYU')} />}
+              hint="Suma de las órdenes en pesos"
+            />
+            <Metric
+              label="Total en dólares"
+              icon="USD"
+              tone="sky"
+              value={<CountUp value={metrics.amounts.USD} format={(n) => formatMoney(n, 'USD')} />}
+              hint="Suma de las órdenes en dólares"
+            />
+            <Metric
+              label="Sin facturar"
+              icon={ReceiptText}
+              tone={metrics.withoutInvoice > 0 ? 'amber' : 'quiet'}
+              value={<CountUp value={metrics.withoutInvoice} format={(n) => String(Math.round(n))} />}
+              hint={metrics.withoutInvoice > 0 ? 'Órdenes sin factura vinculada' : 'Todas tienen factura'}
+            />
           </>
         ) : (
-          Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)
+          Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-28 rounded-xl" />)
         )}
       </FadeIn>
 
