@@ -58,6 +58,22 @@ export interface PurchaseOrderMetrics {
   withoutFile: number;
 }
 
+/** What the app could read from an order PDF before saving it */
+export interface PurchaseOrderReading {
+  /** False for scanned PDFs: there is no text to read */
+  readable: boolean;
+  number: string | null;
+  issueDate: string | null;
+  clientName: string | null;
+  clientRut: string | null;
+  currency: 'UYU' | 'USD' | null;
+  total: number | null;
+  purchaseNumber: string | null;
+  client: { id: number; name: string } | null;
+  licitation: { id: number; callNumber: string; internalNumber: string | null } | null;
+  existingOrderId: number | null;
+}
+
 export interface PurchaseOrderList {
   data: PurchaseOrder[];
   meta: { total: number; page: number; limit: number; lastPage: number };
@@ -91,6 +107,15 @@ export const purchaseOrdersService = {
 
   delete: async (id: number): Promise<void> => {
     await api.delete(`/purchase-orders/${id}`);
+  },
+
+  read: async (file: File): Promise<PurchaseOrderReading> => {
+    const form = new FormData();
+    form.append('file', file, file.name);
+    const response = await api.post<ApiResponse<PurchaseOrderReading>>('/purchase-orders/read', form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data.data;
   },
 
   uploadFile: async (id: number, file: File): Promise<PurchaseOrder> => {

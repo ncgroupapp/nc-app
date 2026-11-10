@@ -54,10 +54,13 @@ export function PurchaseOrderDialog({ open, order, onOpenChange, onSaved }: Purc
   const [licitation, setLicitation] = useState<LinkedLicitation>(null);
   const [invoices, setInvoices] = useState<PurchaseOrderInvoice[]>([]);
   const [remitos, setRemitos] = useState<PurchaseOrderRemito[]>([]);
+  const [reading, setReading] = useState(false);
+  const [readNote, setReadNote] = useState<{ tone: "ok" | "warn"; text: string } | null>(null);
 
   useEffect(() => {
     if (!open) return;
     setFile(null);
+    setReadNote(null);
     setNumber(order?.number ?? "");
     setIssueDate(order?.issueDate ?? "");
     setClient(order?.clientId ? { id: order.clientId, name: order.clientName ?? "" } : null);
@@ -68,6 +71,43 @@ export function PurchaseOrderDialog({ open, order, onOpenChange, onSaved }: Purc
     setInvoices(order?.invoices ?? []);
     setRemitos(order?.remitos ?? []);
   }, [open, order]);
+
+  /** Reads the chosen PDF and fills in only the fields that are still empty */
+  const chooseFile = async (chosen: File | null) => {
+    setFile(chosen);
+    setReadNote(null);
+    if (!chosen) return;
+    try {
+      setReading(true);
+      const read = await purchaseOrdersService.read(chosen);
+      if (!read.readable) {
+        setReadNote({ tone: "warn", text: "Es un PDF escaneado (sin texto): completá los datos a mano." });
+        return;
+      }
+      if (read.number) setNumber((current) => current || read.number!);
+      if (read.issueDate) setIssueDate((current) => current || read.issueDate!);
+      if (read.client) setClient((current) => current ?? read.client);
+      if (read.currency) setCurrency(read.currency);
+      if (read.total !== null) setTotal((current) => current || String(read.total).replace(".", ","));
+      if (read.licitation) setLicitation((current) => current ?? read.licitation);
+
+      const found = [read.number, read.issueDate && "fecha", read.client ? "cliente" : read.clientName, read.total !== null && "total", read.licitation && "licitación"]
+        .filter(Boolean).length;
+      const missing = [
+        !read.client && (read.clientName ? `el cliente "${read.clientName}" no está cargado en la app` : "no encontré el cliente"),
+        !read.licitation && read.purchaseNumber && `no hay licitación ${read.purchaseNumber}`,
+      ].filter(Boolean);
+      setReadNote(
+        read.existingOrderId
+          ? { tone: "warn", text: `Ojo: la orden ${read.number} ya está cargada.` }
+          : { tone: missing.length ? "warn" : "ok", text: `Leí ${found} datos del PDF. Revisalos antes de guardar.${missing.length ? ` (${missing.join("; ")})` : ""}` },
+      );
+    } catch {
+      setReadNote({ tone: "warn", text: "No se pudo leer el PDF: completá los datos a mano." });
+    } finally {
+      setReading(false);
+    }
+  };
 
   const pickLicitation = (picked: Licitation) => {
     setLicitation({ id: picked.id, callNumber: picked.callNumber, internalNumber: picked.internalNumber ?? null });
@@ -130,16 +170,31 @@ export function PurchaseOrderDialog({ open, order, onOpenChange, onSaved }: Purc
               type="file"
               accept=".pdf,.png,.jpg,.jpeg,.webp"
               className="hidden"
-              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+              onChange={(e) => chooseFile(e.target.files?.[0] ?? null)}
             />
             <button
               type="button"
               onClick={() => fileInput.current?.click()}
+              disabled={reading}
               className="flex w-full items-center justify-center gap-2 rounded-md border border-dashed px-3 py-4 text-sm text-muted-foreground hover:bg-muted/50"
             >
-              <FileUp className="h-4 w-4" aria-hidden="true" />
-              {file ? file.name : order?.fileName ? `${order.fileName} · tocá para reemplazarlo` : "Tocá para elegir el PDF"}
+              {reading ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <FileUp className="h-4 w-4" aria-hidden="true" />}
+              {reading
+                ? "Leyendo la orden..."
+                : file
+                  ? file.name
+                  : order?.fileName
+                    ? `${order.fileName} · tocá para reemplazarlo`
+                    : "Tocá para elegir el PDF: la app lee los datos sola"}
             </button>
+            {readNote && (
+              <p
+                className={`rounded-md px-3 py-2 text-xs ${readNote.tone === "ok" ? "bg-emerald-50 text-emerald-800" : "bg-amber-50 text-amber-800"}`}
+                role="status"
+              >
+                {readNote.text}
+              </p>
+            )}
           </div>
 
           <div className="grid min-w-0 gap-4 sm:grid-cols-2">
