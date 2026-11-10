@@ -14,7 +14,7 @@ export default function DashboardLayout({
     <AuthGuard>
       <SidebarProvider>
         <AppSidebar />
-        <SidebarInset>
+        <SidebarInset className="min-w-0">
           <header className="relative flex h-14 shrink-0 items-center gap-2 bg-card px-4">
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 h-4" />
@@ -26,7 +26,7 @@ export default function DashboardLayout({
             </div>
             <div className="nc-brand-line absolute inset-x-0 bottom-0 h-0.5" aria-hidden="true" />
           </header>
-          <main id="main-content" className="flex-1 p-6" tabIndex={-1}>
+          <main id="main-content" className="min-w-0 flex-1 p-6" tabIndex={-1}>
             <ErrorBoundary>
               {children}
             </ErrorBoundary>

@@ -35,6 +35,10 @@ export interface StockSummary {
   unitsInStock: number;
   productsWithCost: number;
   valueByCurrency: Array<{ currency: StockCurrency; value: number }>;
+  /** Products with 1 or 2 units left (missing on older backends) */
+  lowStock?: number;
+  /** Brands with the most products in stock (missing on older backends) */
+  topBrands?: Array<{ brand: string; products: number; units: number }>;
 }
 
 export interface StockPurchaseForm {
@@ -52,6 +56,9 @@ export interface StockFilters {
   page?: number;
   limit?: number;
   search?: string;
+  /** pocas: 1 or 2 units; sin_costo: no purchase registered */
+  view?: 'pocas' | 'sin_costo';
+  brand?: string;
 }
 
 export const stockService = {
@@ -60,6 +67,8 @@ export const stockService = {
     if (filters.page) params.append('page', filters.page.toString());
     if (filters.limit) params.append('limit', filters.limit.toString());
     if (filters.search) params.append('search', filters.search);
+    if (filters.view) params.append('view', filters.view);
+    if (filters.brand) params.append('brand', filters.brand);
     const response = await api.get<PaginatedResponse<StockItem>>(`/stock?${params.toString()}`);
     return response.data;
   },
