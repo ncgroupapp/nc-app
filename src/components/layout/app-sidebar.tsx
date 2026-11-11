@@ -7,7 +7,7 @@ import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { removeClientCookie } from "@/lib/utils";
 import { removeAuthToken } from "@/lib/auth-actions";
-import { BadgeCheck, BookOpen, Calculator, ChevronDown, ChevronUp, ClipboardList, FileCheck2, FileText, Gavel, Home, Inbox, LogOut, Package, Receipt, Settings, Ship, Tag, TrendingUp, Truck, User, Users, Warehouse } from "lucide-react";
+import { BadgeCheck, BookOpen, Landmark, Calculator, ChevronDown, ChevronUp, ClipboardList, FileCheck2, FileText, Gavel, Home, Inbox, LogOut, Package, Receipt, Settings, Ship, Tag, TrendingUp, Truck, User, Users, Warehouse } from "lucide-react";
 import { featureFlags } from "@/lib/feature-flags";
 import {
   Sidebar,
@@ -101,6 +101,11 @@ const sidebarNavItems: NavItem[] = [
         title: "Facturación",
         href: "/dashboard/facturacion",
         icon: Receipt,
+      },
+      {
+        title: "Cobranzas",
+        href: "/dashboard/cobranzas",
+        icon: Landmark,
       },
       {
         title: "Certificados",
